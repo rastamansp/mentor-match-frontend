@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { eventsApi, ticketsApi, paymentsApi } from '../services/api'
-import { Event, TicketCategory, Ticket, Payment } from '../types'
+import { Event, TicketCategory } from '../types'
 import { useAuth } from '../contexts/AuthContext'
-import { Calendar, MapPin, Users, Clock, CreditCard, QrCode } from 'lucide-react'
+import { Calendar, MapPin, Users, Clock } from 'lucide-react'
 
 const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -65,7 +65,7 @@ const EventDetail: React.FC = () => {
         ticketId: ticket.id,
         userId: user.id,
         amount: selectedCategory.price * quantity,
-        method: 'PIX',
+        method: 'PIX' as const,
       }
 
       const payment = await paymentsApi.create(paymentData)

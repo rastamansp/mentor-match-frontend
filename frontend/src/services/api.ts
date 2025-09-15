@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { User, Event, Ticket, Payment, TicketCategory, LoginData, RegisterData } from '../types'
+import { Event, Ticket, Payment, TicketCategory, LoginData, RegisterData } from '../types'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
