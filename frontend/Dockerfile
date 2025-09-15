@@ -1,4 +1,4 @@
-# Frontend Dockerfile
+# Frontend Dockerfile Simplificado
 FROM node:18-alpine AS builder
 
 WORKDIR /app
@@ -23,20 +23,6 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copiar build da aplicação
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Criar usuário não-root
-RUN addgroup -g 1001 -S nginx
-RUN adduser -S nginx -u 1001
-
-# Mudar propriedade dos arquivos
-RUN chown -R nginx:nginx /usr/share/nginx/html
-RUN chown -R nginx:nginx /var/cache/nginx
-RUN chown -R nginx:nginx /var/log/nginx
-RUN chown -R nginx:nginx /etc/nginx/conf.d
-RUN touch /var/run/nginx.pid
-RUN chown -R nginx:nginx /var/run/nginx.pid
-
-USER nginx
 
 # Expor porta
 EXPOSE 80
