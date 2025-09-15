@@ -34,6 +34,11 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Copy built application from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# Create necessary directories and set permissions
+RUN mkdir -p /var/log/nginx && \
+    chown -R nginx:nginx /usr/share/nginx/html && \
+    chown -R nginx:nginx /var/log/nginx
+
 # Expose port
 EXPOSE 80
 
