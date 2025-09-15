@@ -1,43 +1,19 @@
-# ========================================
-# BUILD STAGE
-# ========================================
-FROM node:18-alpine AS builder
+# Dockerfile Ultra Simples
+FROM node:18-alpine
 
 WORKDIR /app
 
-# Copiar arquivos de dependências
-COPY package.json package-lock.json* ./
-
-# Instalar dependências
-RUN npm install
-
-# Copiar código fonte
+# Copiar tudo de uma vez
 COPY . .
 
-# Build da aplicação
-RUN npm run build
-
-# ========================================
-# PRODUCTION STAGE
-# ========================================
-FROM node:18-alpine AS production
-
-WORKDIR /app
+# Instalar dependências e fazer build
+RUN npm install && npm run build
 
 # Criar usuário não-root
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nestjs -u 1001
+RUN addgroup -g 1001 -S nodejs && adduser -S nestjs -u 1001
 
-# Copiar arquivos de dependências
-COPY package.json package-lock.json* ./
-
-# Instalar apenas dependências de produção
-RUN npm install --production
-
-# Copiar código buildado
-COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
-
-# Mudar para usuário não-root
+# Mudar propriedade dos arquivos
+RUN chown -R nestjs:nodejs /app
 USER nestjs
 
 # Expor porta

@@ -115,6 +115,13 @@ docker logs gwan-shop-frontend -f
    - Verifique configuração do DNS
    - Verifique logs do Traefik
 
+4. **Erro de build Docker**:
+   - **Limpe o cache do Docker** no Portainer:
+     - Vá para **Images**
+     - Remova imagens antigas do projeto
+     - Ou execute no servidor: `docker system prune -a`
+   - **Force rebuild** da stack no Portainer
+
 ### Comandos de Debug
 
 ```bash
@@ -126,6 +133,9 @@ docker ps -a | grep gwan-shop
 
 # Verificar logs do Traefik
 docker logs traefik -f
+
+# Limpar cache do Docker (CUIDADO: remove todas as imagens não utilizadas)
+docker system prune -a
 ```
 
 ## 📞 Suporte
