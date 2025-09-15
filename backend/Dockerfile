@@ -5,20 +5,17 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Instalar pnpm
-RUN npm install -g pnpm
-
 # Copiar arquivos de dependências
 COPY package.json package-lock.json* ./
 
 # Instalar dependências
-RUN pnpm install --frozen-lockfile
+RUN npm install
 
 # Copiar código fonte
 COPY . .
 
 # Build da aplicação
-RUN pnpm run build
+RUN npm run build
 
 # ========================================
 # PRODUCTION STAGE
@@ -26,9 +23,6 @@ RUN pnpm run build
 FROM node:18-alpine AS production
 
 WORKDIR /app
-
-# Instalar pnpm
-RUN npm install -g pnpm
 
 # Criar usuário não-root
 RUN addgroup -g 1001 -S nodejs
@@ -38,7 +32,7 @@ RUN adduser -S nestjs -u 1001
 COPY package.json package-lock.json* ./
 
 # Instalar apenas dependências de produção
-RUN pnpm install --prod --frozen-lockfile
+RUN npm install --production
 
 # Copiar código buildado
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
