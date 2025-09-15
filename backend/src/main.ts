@@ -7,8 +7,21 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Configuração de CORS
+  const corsOrigins = process.env.NODE_ENV === 'production' 
+    ? [
+        'https://events.gwan.com.br',
+        'https://www.events.gwan.com.br',
+        'http://events.gwan.com.br',
+        'http://www.events.gwan.com.br',
+        'https://api-events.gwan.com.br',
+        'https://www.api-events.gwan.com.br',
+        'http://api-events.gwan.com.br',
+        'http://www.api-events.gwan.com.br'
+      ]
+    : ['http://localhost:3000', 'http://localhost:5173'];
+
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:5173'],
+    origin: corsOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
