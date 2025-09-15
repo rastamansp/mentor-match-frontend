@@ -6,6 +6,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      no_cache: true
+      pull: true
     container_name: gwan-shop-backend
     restart: unless-stopped
     environment:
@@ -34,6 +36,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      no_cache: true
+      pull: true
     container_name: gwan-shop-frontend
     restart: unless-stopped
     environment:
