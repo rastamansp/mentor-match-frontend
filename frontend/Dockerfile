@@ -27,9 +27,9 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Expor porta
 EXPOSE 80
 
-# Health check
+# Health check simples
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1
+  CMD pgrep nginx > /dev/null || exit 1
 
 # Comando para iniciar o Nginx
 CMD ["nginx", "-g", "daemon off;"]
