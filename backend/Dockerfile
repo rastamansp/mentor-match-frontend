@@ -6,7 +6,7 @@ WORKDIR /app
 # Copiar package.json e package-lock.json
 COPY package*.json ./
 
-# Instalar dependências
+# Instalar todas as dependências (incluindo devDependencies para build)
 RUN npm ci
 
 # Copiar código fonte
@@ -20,9 +20,11 @@ FROM node:18-alpine AS production
 
 WORKDIR /app
 
-# Instalar dependências de produção
+# Copiar apenas package.json e package-lock.json
 COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+
+# Instalar apenas dependências de produção
+RUN npm ci --production && npm cache clean --force
 
 # Copiar build da aplicação
 COPY --from=builder /app/dist ./dist
