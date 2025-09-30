@@ -36,6 +36,11 @@ async function bootstrap() {
     transform: true,
   }));
 
+  // Rota raiz para redirecionar para a documentação
+  app.getHttpAdapter().get('/', (req, res) => {
+    res.redirect('/api');
+  });
+
   // Configuração do Swagger
   const config = new DocumentBuilder()
     .setTitle('Gwan Shop API')
