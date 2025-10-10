@@ -1,4 +1,8 @@
-# 🚀 Gwan Shop - Instruções de Execução
+# 🚀 Gwan Events - Instruções de Execução
+
+> **Repositórios Separados**: Este projeto foi dividido em dois repositórios independentes:
+> - **Frontend**: [gwan-events](https://github.com/rastamansp/gwan-events) (este repositório)
+> - **Backend**: [gwan-events-backend](https://github.com/rastamansp/gwan-events-backend)
 
 ## Pré-requisitos
 - Node.js 18+ instalado
@@ -6,13 +10,38 @@
 
 ## 🏃‍♂️ Execução Rápida
 
-### 1. Instalar todas as dependências
+### 1. Clonar o repositório do frontend
+
 ```bash
-npm run install:all
+git clone https://github.com/rastamansp/gwan-events.git
+cd gwan-events
+npm install
 ```
 
-### 2. Executar em modo desenvolvimento
+### 2. Executar apenas o frontend
+
 ```bash
+npm run dev
+```
+
+Isso irá iniciar:
+- ✅ Frontend na porta 3000 (http://localhost:3000)
+
+### 3. Executar com backend (opcional)
+
+Para uma experiência completa, você também precisa do backend:
+
+**Backend:**
+```bash
+git clone https://github.com/rastamansp/gwan-events-backend.git
+cd gwan-events-backend
+npm install
+npm run start:dev
+```
+
+**Frontend (em outro terminal):**
+```bash
+cd gwan-events
 npm run dev
 ```
 
@@ -23,18 +52,36 @@ Isso irá iniciar:
 
 ## 🔧 Execução Separada
 
+### Frontend apenas
+```bash
+cd gwan-events
+npm install
+npm run dev
+```
+
 ### Backend apenas
 ```bash
-cd backend
+cd gwan-events-backend
 npm install
 npm run start:dev
 ```
 
+## 🐳 Execução com Docker
+
 ### Frontend apenas
 ```bash
-cd frontend
-npm install
-npm run dev
+docker-compose up -d
+```
+
+### Frontend + Backend (exemplo)
+```bash
+docker-compose -f docker-compose.example.yml up -d
+```
+
+### Build manual
+```bash
+docker build -t gwan-events-frontend .
+docker run -p 80:80 gwan-events-frontend
 ```
 
 ## 👤 Usuários de Teste

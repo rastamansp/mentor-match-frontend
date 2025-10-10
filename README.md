@@ -1,6 +1,8 @@
-# Gwan Shop - Plataforma de Eventos
+# 🚀 Gwan Events - Frontend
 
-Uma plataforma completa para criação, gestão e venda de ingressos para eventos, desenvolvida com React no frontend e NestJS no backend.
+Frontend da plataforma de eventos e venda de ingressos, desenvolvido com React + TypeScript e Vite.
+
+> **Backend**: [gwan-events-backend](https://github.com/rastamansp/gwan-events-backend)
 
 ## 🚀 Funcionalidades
 
@@ -26,14 +28,6 @@ Uma plataforma completa para criação, gestão e venda de ingressos para evento
 
 ## 🛠️ Tecnologias Utilizadas
 
-### Backend
-- **NestJS**: Framework Node.js para APIs escaláveis
-- **TypeScript**: Tipagem estática para maior segurança
-- **JWT**: Autenticação baseada em tokens
-- **Swagger**: Documentação automática da API
-- **bcryptjs**: Criptografia de senhas
-- **QRCode**: Geração de códigos QR para ingressos
-
 ### Frontend
 - **React 18**: Biblioteca para interfaces de usuário
 - **TypeScript**: Tipagem estática
@@ -43,30 +37,43 @@ Uma plataforma completa para criação, gestão e venda de ingressos para evento
 - **Axios**: Cliente HTTP para comunicação com a API
 - **Lucide React**: Ícones modernos e consistentes
 
+> **Nota**: O backend está em um repositório separado: [gwan-events-backend](https://github.com/rastamansp/gwan-events-backend)
+
 ## 📁 Estrutura do Projeto
 
 ```
-gwan-shop/
-├── backend/                 # API NestJS
-│   ├── src/
-│   │   ├── auth/           # Módulo de autenticação
-│   │   ├── events/         # Módulo de eventos
-│   │   ├── tickets/        # Módulo de ingressos
-│   │   ├── payments/       # Módulo de pagamentos
-│   │   ├── users/          # Módulo de usuários
-│   │   ├── admin/          # Módulo administrativo
-│   │   └── main.ts         # Arquivo principal
-│   └── package.json
-├── frontend/               # Aplicação React
-│   ├── src/
-│   │   ├── components/    # Componentes reutilizáveis
-│   │   ├── pages/         # Páginas da aplicação
-│   │   ├── services/      # Serviços de API
-│   │   ├── contexts/      # Contextos React
-│   │   ├── types/         # Definições TypeScript
-│   │   └── hooks/         # Hooks customizados
-│   └── package.json
-└── package.json           # Configuração do workspace
+gwan-events/
+├── src/
+│   ├── components/    # Componentes reutilizáveis
+│   │   ├── Footer.tsx
+│   │   ├── Header.tsx
+│   │   ├── Layout.tsx
+│   │   └── ProtectedRoute.tsx
+│   ├── pages/         # Páginas da aplicação
+│   │   ├── Home.tsx
+│   │   ├── Events.tsx
+│   │   ├── EventDetail.tsx
+│   │   ├── Login.tsx
+│   │   ├── Register.tsx
+│   │   ├── Dashboard.tsx
+│   │   ├── MyTickets.tsx
+│   │   └── AdminDashboard.tsx
+│   ├── services/      # Serviços de API
+│   │   └── api.ts
+│   ├── contexts/      # Contextos React
+│   │   └── AuthContext.tsx
+│   ├── types/         # Definições TypeScript
+│   │   └── index.ts
+│   ├── App.tsx        # Componente principal
+│   ├── main.tsx       # Arquivo de entrada
+│   └── index.css      # Estilos globais
+├── public/            # Arquivos estáticos
+├── package.json       # Dependências e scripts
+├── vite.config.ts     # Configuração do Vite
+├── tailwind.config.js # Configuração do Tailwind
+├── tsconfig.json      # Configuração do TypeScript
+├── Dockerfile         # Configuração Docker
+└── nginx.conf         # Configuração Nginx
 ```
 
 ## 🚀 Como Executar
@@ -79,38 +86,53 @@ gwan-shop/
 
 1. **Clone o repositório**
 ```bash
-git clone <url-do-repositorio>
-cd gwan-shop
+git clone https://github.com/rastamansp/gwan-events.git
+cd gwan-events
 ```
 
 2. **Instale as dependências**
 ```bash
-npm run install:all
+npm install
 ```
 
-3. **Execute o projeto em modo desenvolvimento**
+3. **Configure as variáveis de ambiente**
+```bash
+cp .env.example .env
+```
+
+4. **Execute o projeto em modo desenvolvimento**
 ```bash
 npm run dev
 ```
 
-Isso irá iniciar:
-- Backend na porta 3001 (http://localhost:3001)
-- Frontend na porta 3000 (http://localhost:3000)
-- Documentação da API em http://localhost:3001/api
+O frontend será iniciado na porta 3000 (http://localhost:3000)
 
-### Executando Separadamente
+### Executando com Backend
 
-**Backend:**
+Para uma experiência completa, você também precisa do backend:
+
+1. **Clone o repositório do backend**
 ```bash
-cd backend
+git clone https://github.com/rastamansp/gwan-events-backend.git
+cd gwan-events-backend
+npm install
 npm run start:dev
 ```
 
-**Frontend:**
+2. **Configure a URL da API no frontend**
+```env
+VITE_API_URL=http://localhost:3001/api
+```
+
+### Executando apenas o Frontend
+
+Se você quiser executar apenas o frontend (modo standalone):
+
 ```bash
-cd frontend
 npm run dev
 ```
+
+O frontend funcionará em modo de desenvolvimento, mas as funcionalidades que dependem da API não estarão disponíveis.
 
 ## 📚 Documentação da API
 
@@ -192,16 +214,12 @@ O sistema utiliza JWT (JSON Web Tokens) para autenticação. Os usuários podem:
 
 ### Variáveis de Ambiente
 
-**Backend (.env):**
-```env
-PORT=3001
-JWT_SECRET=your-secret-key
-NODE_ENV=development
-```
-
 **Frontend (.env):**
 ```env
 VITE_API_URL=http://localhost:3001/api
+VITE_APP_NAME=Gwan Events
+VITE_APP_VERSION=1.0.0
+VITE_NODE_ENV=development
 ```
 
 ### Customização
@@ -225,9 +243,19 @@ O projeto inclui dados simulados para demonstração:
 npm run build
 ```
 
+### Docker
+```bash
+docker build -t gwan-events-frontend .
+docker run -p 80:80 gwan-events-frontend
+```
+
+### Deploy com Docker Compose
+```bash
+docker-compose up -d
+```
+
 ### Variáveis de Ambiente de Produção
 - Configure URLs de produção
-- Configure secrets seguros
 - Configure CORS adequadamente
 - Configure logs e monitoramento
 
@@ -247,8 +275,8 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 
 Para suporte e dúvidas:
 - Email: contato@gwanshop.com
-- Documentação: http://localhost:3001/api (quando rodando)
+- Documentação: http://localhost:3001/api (quando backend estiver rodando)
 
 ---
 
-**Gwan Shop** - Conectando pessoas através de experiências únicas! 🎉
+**Gwan Events** - Conectando pessoas através de experiências únicas! 🎉

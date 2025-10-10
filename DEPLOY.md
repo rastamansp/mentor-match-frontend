@@ -1,29 +1,44 @@
-# 🚀 Deploy do Gwan Shop no Portainer
+# 🚀 Deploy do Gwan Events Frontend
 
-Este projeto está configurado para ser deployado no Portainer usando Docker Compose com Traefik.
+Este projeto contém apenas o frontend da aplicação Gwan Events, configurado para deploy com Docker.
 
 ## 📋 Pré-requisitos
 
-- Portainer configurado e funcionando
-- Traefik já configurado no servidor
-- Rede Docker `gwan` existente
-- Domínios configurados no DNS:
+- Docker e Docker Compose instalados
+- Portainer configurado (opcional)
+- Traefik configurado (para produção)
+- Domínio configurado no DNS:
   - `events.gwan.com.br` → Frontend
-  - `api-events.gwan.com.br` → Backend API
+
+## 🔗 Repositórios
+
+- **Frontend**: [gwan-events](https://github.com/rastamansp/gwan-events) (este repositório)
+- **Backend**: [gwan-events-backend](https://github.com/rastamansp/gwan-events-backend)
 
 ## 🔧 Configuração
 
 ### 1. Variáveis de Ambiente
 
-Copie o arquivo `env.production.example` para `.env` e configure:
+Copie o arquivo `.env.example` para `.env` e configure:
 
 ```bash
-cp env.production.example .env
+cp .env.example .env
 ```
 
-**IMPORTANTE**: Altere o `JWT_SECRET` para um valor seguro em produção!
+Configure as variáveis:
+```env
+VITE_API_URL=https://api-events.gwan.com.br/api
+VITE_APP_NAME=Gwan Events
+VITE_APP_VERSION=1.0.0
+```
 
-### 2. Deploy no Portainer
+### 2. Deploy Local
+
+```bash
+docker-compose up -d
+```
+
+### 3. Deploy no Portainer
 
 1. **Acesse o Portainer**
 2. **Vá para Stacks**
@@ -34,19 +49,19 @@ cp env.production.example .env
 
 ## 🌐 URLs de Acesso
 
-Após o deploy, as aplicações estarão disponíveis em:
+Após o deploy, o frontend estará disponível em:
 
 - **Frontend**: https://events.gwan.com.br
-- **Backend API**: https://api-events.gwan.com.br/api
-- **Documentação Swagger**: https://api-events.gwan.com.br/api
+- **Local**: http://localhost:80
+
+> **Nota**: O backend deve ser deployado separadamente no repositório [gwan-events-backend](https://github.com/rastamansp/gwan-events-backend)
 
 ## 🔍 Monitoramento
 
 ### Health Checks
 
-Ambos os serviços possuem health checks configurados:
+O frontend possui health check configurado:
 
-- **Backend**: Verifica endpoint `/api/events`
 - **Frontend**: Verifica endpoint `/health`
 
 ### Logs
@@ -54,7 +69,7 @@ Ambos os serviços possuem health checks configurados:
 Para visualizar os logs no Portainer:
 
 1. Vá para **Containers**
-2. Selecione o container desejado
+2. Selecione o container `gwan-events-frontend`
 3. Clique em **Logs**
 
 ## 🛠️ Comandos Úteis
@@ -70,17 +85,14 @@ Para visualizar os logs no Portainer:
 
 ```bash
 # No servidor, execute:
-docker ps --filter "name=gwan-shop"
+docker ps --filter "name=gwan-events"
 ```
 
 ### Acessar Logs via Terminal
 
 ```bash
-# Backend
-docker logs gwan-shop-backend -f
-
 # Frontend
-docker logs gwan-shop-frontend -f
+docker logs gwan-events-frontend -f
 ```
 
 ## 🔐 Segurança
@@ -94,17 +106,18 @@ docker logs gwan-shop-frontend -f
 
 ### Recomendações Adicionais
 
-1. **Altere o JWT_SECRET** para um valor único e seguro
-2. **Configure backup** dos dados (quando implementar banco)
-3. **Monitore logs** regularmente
-4. **Atualize dependências** periodicamente
+1. **Configure backup** dos dados (quando implementar banco)
+2. **Monitore logs** regularmente
+3. **Atualize dependências** periodicamente
+4. **Configure CDN** para assets estáticos
+5. **Configure SSL** adequadamente
 
 ## 🐛 Troubleshooting
 
 ### Problemas Comuns
 
 1. **Container não inicia**:
-   - Verifique logs: `docker logs gwan-shop-backend`
+   - Verifique logs: `docker logs gwan-events-frontend`
    - Verifique variáveis de ambiente
 
 2. **Erro 502 Bad Gateway**:
@@ -122,6 +135,11 @@ docker logs gwan-shop-frontend -f
      - Ou execute no servidor: `docker system prune -a`
    - **Force rebuild** da stack no Portainer
 
+5. **Frontend não carrega**:
+   - Verifique se o backend está rodando
+   - Verifique a variável `VITE_API_URL`
+   - Verifique logs do container
+
 ### Comandos de Debug
 
 ```bash
@@ -129,7 +147,7 @@ docker logs gwan-shop-frontend -f
 docker network ls | grep gwan
 
 # Verificar containers
-docker ps -a | grep gwan-shop
+docker ps -a | grep gwan-events
 
 # Verificar logs do Traefik
 docker logs traefik -f
@@ -142,8 +160,9 @@ docker system prune -a
 
 Para suporte e dúvidas:
 - Verifique os logs primeiro
-- Consulte a documentação da API em `/api`
+- Consulte a documentação da API em `/api` (quando backend estiver rodando)
 - Teste os health checks
+- Verifique se o backend está rodando
 
 ---
 
