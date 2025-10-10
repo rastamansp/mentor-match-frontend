@@ -1,0 +1,457 @@
+# 🚀 Cursor Rules - Gwan Events Frontend
+
+## 📋 Visão Geral do Projeto
+
+Este é um projeto React + TypeScript + Vite que implementa o frontend da plataforma de eventos e venda de ingressos. O projeto segue os princípios de Clean Architecture, SOLID e melhores práticas de desenvolvimento frontend.
+
+## 🚫 **REGRAS CRÍTICAS - NUNCA VIOLAR**
+
+### ❌ **NUNCA desabilitar funcionalidades essenciais:**
+- ❌ **NUNCA** usar `any` type
+- ❌ **NUNCA** usar `console.log` (usar logger estruturado ou remover)
+- ❌ **NUNCA** remover validações de props
+- ❌ **NUNCA** desabilitar tratamento de erros
+- ❌ **NUNCA** remover interfaces ou tipos TypeScript
+- ❌ **NUNCA** fazer operações síncronas bloqueantes
+- ❌ **NUNCA** misturar lógica de negócio com componentes de UI
+
+### ✅ **SEMPRE corrigir problemas de configuração:**
+- ✅ **SEMPRE** verificar variáveis de ambiente
+- ✅ **SEMPRE** configurar APIs corretamente
+- ✅ **SEMPRE** implementar fallbacks e retry logic
+- ✅ **SEMPRE** usar logging estruturado para debug
+- ✅ **SEMPRE** seguir princípios de resiliência
+
+## 🏗️ Arquitetura e Padrões
+
+### Clean Architecture (Adaptada para Frontend)
+- **Entities**: Tipos e interfaces de domínio
+- **Use Cases**: Custom hooks e lógica de negócio
+- **Interface Adapters**: Services, API clients, Context providers
+- **Frameworks & Drivers**: React, Vite, Tailwind, Axios
+
+### SOLID Principles (Adaptados para Frontend)
+- **S**: Single Responsibility Principle (componentes com uma responsabilidade)
+- **O**: Open/Closed Principle (extensível via props, fechado para modificação)
+- **L**: Liskov Substitution Principle (componentes substituíveis)
+- **I**: Interface Segregation Principle (interfaces específicas)
+- **D**: Dependency Inversion Principle (depender de abstrações, não implementações)
+
+### Design Patterns
+- **Repository Pattern**: Para acesso a dados via services
+- **Factory Pattern**: Para criação de objetos complexos
+- **Observer Pattern**: Para gerenciamento de estado (Context API)
+- **Command Pattern**: Para ações do usuário
+- **Provider Pattern**: Para injeção de dependências
+
+## 📁 Estrutura de Pastas
+
+```
+src/
+├── main.tsx                    # Ponto de entrada
+├── App.tsx                     # Componente principal
+├── components/                 # Componentes reutilizáveis
+│   ├── Layout.tsx
+│   ├── Header.tsx
+│   ├── Footer.tsx
+│   └── ProtectedRoute.tsx
+├── pages/                      # Páginas da aplicação
+│   ├── Home.tsx
+│   ├── Events.tsx
+│   ├── EventDetail.tsx
+│   ├── Login.tsx
+│   ├── Register.tsx
+│   ├── Dashboard.tsx
+│   ├── MyTickets.tsx
+│   └── AdminDashboard.tsx
+├── services/                   # Serviços de API
+│   └── api.ts
+├── contexts/                   # Contextos React
+│   └── AuthContext.tsx
+├── types/                      # Definições TypeScript
+│   └── index.ts
+├── hooks/                      # Custom hooks (futuro)
+├── utils/                      # Utilitários (futuro)
+└── index.css                   # Estilos globais
+```
+
+## 🔧 Padrões de Código
+
+### Nomenclatura
+- **Componentes**: PascalCase (ex: `EventCard`, `UserProfile`)
+- **Interfaces**: PascalCase com prefixo I (ex: `IEvent`, `IUser`)
+- **Funções**: camelCase (ex: `handleSubmit`, `validateForm`)
+- **Variáveis**: camelCase (ex: `eventList`, `userData`)
+- **Constantes**: UPPER_SNAKE_CASE (ex: `API_BASE_URL`, `MAX_EVENTS`)
+- **Arquivos**: PascalCase para componentes, camelCase para outros (ex: `EventCard.tsx`, `apiService.ts`)
+
+### Estrutura de Componentes
+```typescript
+// Sempre usar TypeScript strict
+interface IEventCardProps {
+  event: IEvent;
+  onSelect?: (event: IEvent) => void;
+  className?: string;
+}
+
+export const EventCard: React.FC<IEventCardProps> = ({ 
+  event, 
+  onSelect, 
+  className 
+}) => {
+  // Hooks primeiro
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Handlers
+  const handleClick = useCallback(() => {
+    onSelect?.(event);
+  }, [event, onSelect]);
+  
+  // Render
+  return (
+    <div className={className} onClick={handleClick}>
+      {/* JSX */}
+    </div>
+  );
+};
+```
+
+### Interfaces e Tipos
+```typescript
+// Sempre definir interfaces para props e dados
+export interface IEvent {
+  id: string;
+  title: string;
+  description: string;
+  date: Date;
+  location: string;
+  price: number;
+  category: EventCategory;
+}
+
+export interface IUser {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  createdAt: Date;
+}
+
+// Enums para valores fixos
+export enum EventCategory {
+  MUSIC = 'MUSIC',
+  SPORTS = 'SPORTS',
+  CULTURE = 'CULTURE',
+  BUSINESS = 'BUSINESS'
+}
+
+export enum UserRole {
+  USER = 'USER',
+  ORGANIZER = 'ORGANIZER',
+  ADMIN = 'ADMIN'
+}
+```
+
+## 🎯 Padrões de Custom Hooks
+
+### Estrutura de Custom Hook
+```typescript
+// Sempre usar TypeScript strict
+export const useEvents = () => {
+  const [events, setEvents] = useState<IEvent[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const fetchEvents = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await apiService.getEvents();
+      setEvents(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+  
+  return {
+    events,
+    loading,
+    error,
+    refetch: fetchEvents
+  };
+};
+```
+
+## 🔌 Padrões de Services
+
+### Estrutura de Service
+```typescript
+// Sempre usar interfaces para abstrações
+export interface IApiService {
+  getEvents(): Promise<IEvent[]>;
+  getEvent(id: string): Promise<IEvent>;
+  createEvent(event: ICreateEventRequest): Promise<IEvent>;
+  updateEvent(id: string, event: IUpdateEventRequest): Promise<IEvent>;
+  deleteEvent(id: string): Promise<void>;
+}
+
+// Implementação concreta
+export class ApiService implements IApiService {
+  private baseURL: string;
+  
+  constructor(baseURL: string = import.meta.env.VITE_API_URL) {
+    this.baseURL = baseURL;
+  }
+  
+  async getEvents(): Promise<IEvent[]> {
+    try {
+      const response = await fetch(`${this.baseURL}/events`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      throw new Error(`Failed to fetch events: ${error}`);
+    }
+  }
+  
+  // Outros métodos...
+}
+```
+
+## 🎨 Padrões de Context
+
+### Estrutura de Context
+```typescript
+// Sempre definir interface para o contexto
+interface IAuthContext {
+  user: IUser | null;
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  loading: boolean;
+}
+
+// Criar contexto
+export const AuthContext = createContext<IAuthContext | undefined>(undefined);
+
+// Provider
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
+  children 
+}) => {
+  const [user, setUser] = useState<IUser | null>(null);
+  const [loading, setLoading] = useState(false);
+  
+  const login = useCallback(async (email: string, password: string) => {
+    try {
+      setLoading(true);
+      const userData = await apiService.login(email, password);
+      setUser(userData);
+    } catch (error) {
+      throw new Error('Login failed');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  
+  const logout = useCallback(() => {
+    setUser(null);
+  }, []);
+  
+  const value: IAuthContext = {
+    user,
+    isAuthenticated: !!user,
+    login,
+    logout,
+    loading
+  };
+  
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+```
+
+## 📝 Padrões de Logging
+
+### Estrutura de Logs
+```typescript
+// Sempre usar logging estruturado
+export const logger = {
+  info: (message: string, data?: Record<string, unknown>) => {
+    if (import.meta.env.DEV) {
+      console.log(`[INFO] ${message}`, data);
+    }
+  },
+  
+  error: (message: string, error?: Error, data?: Record<string, unknown>) => {
+    if (import.meta.env.DEV) {
+      console.error(`[ERROR] ${message}`, { error, data });
+    }
+  },
+  
+  warn: (message: string, data?: Record<string, unknown>) => {
+    if (import.meta.env.DEV) {
+      console.warn(`[WARN] ${message}`, data);
+    }
+  }
+};
+```
+
+## 🧪 Padrões de Testes
+
+### Estrutura de Testes
+```typescript
+// Testes de componentes
+import { render, screen, fireEvent } from '@testing-library/react';
+import { EventCard } from './EventCard';
+
+describe('EventCard', () => {
+  const mockEvent: IEvent = {
+    id: '1',
+    title: 'Test Event',
+    description: 'Test Description',
+    date: new Date(),
+    location: 'Test Location',
+    price: 100,
+    category: EventCategory.MUSIC
+  };
+  
+  it('should render event information', () => {
+    render(<EventCard event={mockEvent} />);
+    
+    expect(screen.getByText('Test Event')).toBeInTheDocument();
+    expect(screen.getByText('Test Description')).toBeInTheDocument();
+  });
+  
+  it('should call onSelect when clicked', () => {
+    const mockOnSelect = jest.fn();
+    render(<EventCard event={mockEvent} onSelect={mockOnSelect} />);
+    
+    fireEvent.click(screen.getByRole('button'));
+    
+    expect(mockOnSelect).toHaveBeenCalledWith(mockEvent);
+  });
+});
+```
+
+## 🔒 Padrões de Segurança
+
+### Validação de Props
+```typescript
+// Sempre validar props críticas
+interface ILoginFormProps {
+  onSubmit: (email: string, password: string) => Promise<void>;
+  loading?: boolean;
+}
+
+export const LoginForm: React.FC<ILoginFormProps> = ({ 
+  onSubmit, 
+  loading = false 
+}) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  const validateForm = useCallback(() => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!email || !email.includes('@')) {
+      newErrors.email = 'Email inválido';
+    }
+    
+    if (!password || password.length < 6) {
+      newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [email, password]);
+  
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    try {
+      await onSubmit(email, password);
+    } catch (error) {
+      logger.error('Login failed', error as Error);
+    }
+  }, [email, password, onSubmit, validateForm]);
+  
+  // Render...
+};
+```
+
+## 📊 Padrões de Performance
+
+### Otimizações
+```typescript
+// Usar React.memo para componentes puros
+export const EventCard = React.memo<IEventCardProps>(({ event, onSelect }) => {
+  // Componente otimizado
+});
+
+// Usar useMemo para cálculos pesados
+const expensiveValue = useMemo(() => {
+  return events.filter(event => event.category === selectedCategory);
+}, [events, selectedCategory]);
+
+// Usar useCallback para funções estáveis
+const handleEventSelect = useCallback((event: IEvent) => {
+  setSelectedEvent(event);
+}, []);
+```
+
+## 🚫 O que NÃO fazer
+
+- ❌ Não usar `any` type
+- ❌ Não fazer `console.log` (usar logger estruturado)
+- ❌ Não deixar props sem validação
+- ❌ Não misturar lógica de negócio com UI
+- ❌ Não usar `var` (sempre `const` ou `let`)
+- ❌ Não fazer operações síncronas bloqueantes
+- ❌ Não esquecer de tratar erros
+- ❌ Não usar variáveis globais
+- ❌ Não criar componentes muito grandes (>200 linhas)
+- ❌ Não usar `useEffect` sem dependências corretas
+
+## ✅ O que SEMPRE fazer
+
+- ✅ Usar TypeScript strict mode
+- ✅ Definir interfaces para todas as props
+- ✅ Usar hooks apropriadamente
+- ✅ Validar entrada de dados
+- ✅ Tratar erros adequadamente
+- ✅ Usar logs estruturados
+- ✅ Seguir princípios SOLID
+- ✅ Implementar Clean Architecture
+- ✅ Usar React.memo quando apropriado
+- ✅ Usar useCallback e useMemo quando necessário
+- ✅ Separar lógica de negócio de UI
+- ✅ Criar custom hooks para lógica reutilizável
+
+## 🔄 Fluxo de Desenvolvimento
+
+1. **Definir Interface** - Como o componente se comunica
+2. **Criar Componente** - Implementação seguindo os padrões
+3. **Adicionar Hooks** - Lógica de estado e efeitos
+4. **Validar Props** - Verificar entrada de dados
+5. **Tratar Erros** - Implementar tratamento adequado
+6. **Testar** - Componente funciona corretamente
+7. **Otimizar** - Performance quando necessário
+
+---
+
+**Lembre-se**: Este arquivo define os padrões do projeto frontend. Sempre consulte antes de implementar novas funcionalidades para garantir consistência e qualidade do código. **NUNCA desabilite funcionalidades essenciais - sempre corrija os problemas de configuração!**
