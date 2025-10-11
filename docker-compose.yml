@@ -16,7 +16,7 @@ services:
       - VITE_APP_NAME=${VITE_APP_NAME:-Gwan Events}
       - VITE_APP_VERSION=${VITE_APP_VERSION:-1.0.0}
     networks:
-      - gwan-network
+      - gwan
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`events.gwan.com.br`)"
@@ -33,5 +33,5 @@ services:
       start_period: 40s
 
 networks:
-  gwan-network:
+  gwan:
     external: true
