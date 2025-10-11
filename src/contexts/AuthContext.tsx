@@ -1,6 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { User, AuthContextType, RegisterData } from '../types'
-import { authApi } from '../services/api'
+import { User } from '../domain/entities/User.entity'
+import { RegisterDto } from '../application/dto/RegisterDto'
+import { container } from '../shared/di/container'
+
+interface AuthContextType {
+  user: User | null
+  login: (email: string, password: string) => Promise<void>
+  register: (userData: RegisterDto) => Promise<void>
+  logout: () => void
+  loading: boolean
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -20,7 +29,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         setUser(JSON.parse(savedUser))
         // Verificar se o token ainda é válido
-        authApi.getProfile().catch(() => {
+        container.authRepository.getProfile().catch(() => {
           localStorage.removeItem('token')
           localStorage.removeItem('user')
           setUser(null)
@@ -36,24 +45,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await authApi.login({ email, password })
+      const response = await container.loginUseCase.execute({ email, password })
       
-      if (response.access_token) {
-        localStorage.setItem('token', response.access_token)
-        localStorage.setItem('user', JSON.stringify(response.user))
-        setUser(response.user)
-      } else {
-        throw new Error('Credenciais inválidas')
-      }
+      localStorage.setItem('token', response.token)
+      localStorage.setItem('user', JSON.stringify(response.user))
+      setUser(response.user)
     } catch (error) {
       throw error
     }
   }
 
-  const register = async (userData: RegisterData) => {
+  const register = async (userData: RegisterDto) => {
     try {
-      const response = await authApi.register(userData)
-      return response
+      const response = await container.registerUseCase.execute(userData)
+      localStorage.setItem('token', response.token)
+      localStorage.setItem('user', JSON.stringify(response.user))
+      setUser(response.user)
     } catch (error) {
       throw error
     }

@@ -1,14 +1,14 @@
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import Layout from './components/Layout'
-import Home from './pages/Home'
-import Events from './pages/Events'
-import EventDetail from './pages/EventDetail'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import Dashboard from './pages/Dashboard'
-import MyTickets from './pages/MyTickets'
-import AdminDashboard from './pages/AdminDashboard'
+import { HomePage } from './presentation/pages/Home.page'
+import { EventsPage } from './presentation/pages/Events.page'
+import { EventDetailPage } from './presentation/pages/EventDetail.page'
+import { LoginPage } from './presentation/pages/Login.page'
+import { RegisterPage } from './presentation/pages/Register.page'
+import { DashboardPage } from './presentation/pages/Dashboard.page'
+import { MyTicketsPage } from './presentation/pages/MyTickets.page'
+import { AdminDashboardPage } from './presentation/pages/AdminDashboard.page'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -16,24 +16,24 @@ function App() {
     <AuthProvider>
       <Layout>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/events/:id" element={<EventDetail />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
+          <Route path="/" element={<HomePage />} />
+                  <Route path="/events" element={<EventsPage />} />
+                  <Route path="/events/:id" element={<EventDetailPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/dashboard" element={
+                    <ProtectedRoute>
+                      <DashboardPage />
+                    </ProtectedRoute>
+                  } />
           <Route path="/my-tickets" element={
             <ProtectedRoute>
-              <MyTickets />
+              <MyTicketsPage />
             </ProtectedRoute>
           } />
           <Route path="/admin" element={
             <ProtectedRoute requiredRole="ADMIN">
-              <AdminDashboard />
+              <AdminDashboardPage />
             </ProtectedRoute>
           } />
         </Routes>

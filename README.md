@@ -36,44 +36,85 @@ Frontend da plataforma de eventos e venda de ingressos, desenvolvido com React +
 - **Tailwind CSS**: Framework CSS utilitário
 - **Axios**: Cliente HTTP para comunicação com a API
 - **Lucide React**: Ícones modernos e consistentes
+- **Zod**: Validação de esquemas e tipos
+- **Sentry**: Monitoramento de erros e performance
+
+### Arquitetura
+- **Clean Architecture**: Separação clara entre camadas de domínio, aplicação, infraestrutura e apresentação
+- **SOLID Principles**: Princípios de design orientado a objetos
+- **Repository Pattern**: Abstração de acesso a dados
+- **Use Cases**: Lógica de negócio encapsulada
+- **Dependency Injection**: Injeção de dependências para melhor testabilidade
 
 > **Nota**: O backend está em um repositório separado: [gwan-events-backend](https://github.com/rastamansp/gwan-events-backend)
 
-## 📁 Estrutura do Projeto
+## 📁 Estrutura do Projeto (Clean Architecture)
 
 ```
 gwan-events/
 ├── src/
-│   ├── components/    # Componentes reutilizáveis
-│   │   ├── Footer.tsx
-│   │   ├── Header.tsx
-│   │   ├── Layout.tsx
-│   │   └── ProtectedRoute.tsx
-│   ├── pages/         # Páginas da aplicação
-│   │   ├── Home.tsx
-│   │   ├── Events.tsx
-│   │   ├── EventDetail.tsx
-│   │   ├── Login.tsx
-│   │   ├── Register.tsx
-│   │   ├── Dashboard.tsx
-│   │   ├── MyTickets.tsx
-│   │   └── AdminDashboard.tsx
-│   ├── services/      # Serviços de API
-│   │   └── api.ts
-│   ├── contexts/      # Contextos React
-│   │   └── AuthContext.tsx
-│   ├── types/         # Definições TypeScript
-│   │   └── index.ts
-│   ├── App.tsx        # Componente principal
-│   ├── main.tsx       # Arquivo de entrada
-│   └── index.css      # Estilos globais
-├── public/            # Arquivos estáticos
-├── package.json       # Dependências e scripts
-├── vite.config.ts     # Configuração do Vite
-├── tailwind.config.js # Configuração do Tailwind
-├── tsconfig.json      # Configuração do TypeScript
-├── Dockerfile         # Configuração Docker
-└── nginx.conf         # Configuração Nginx
+│   ├── domain/                    # Camada de Domínio
+│   │   ├── entities/             # Entidades de negócio
+│   │   │   ├── Event.entity.ts
+│   │   │   ├── User.entity.ts
+│   │   │   ├── Ticket.entity.ts
+│   │   │   └── Payment.entity.ts
+│   │   ├── repositories/         # Interfaces dos repositórios
+│   │   │   ├── IEventRepository.ts
+│   │   │   ├── IAuthRepository.ts
+│   │   │   └── ITicketRepository.ts
+│   │   └── errors/               # Erros de domínio
+│   │       └── DomainError.ts
+│   ├── application/              # Camada de Aplicação
+│   │   ├── use-cases/           # Casos de uso
+│   │   │   ├── events/          # Use cases de eventos
+│   │   │   ├── auth/            # Use cases de autenticação
+│   │   │   └── tickets/         # Use cases de ingressos
+│   │   ├── dto/                 # Data Transfer Objects
+│   │   │   ├── CreateEventDto.ts
+│   │   │   ├── LoginDto.ts
+│   │   │   └── RegisterDto.ts
+│   │   └── validators/          # Validadores Zod
+│   ├── infrastructure/           # Camada de Infraestrutura
+│   │   ├── repositories/        # Implementações dos repositórios
+│   │   │   ├── EventRepository.ts
+│   │   │   ├── AuthRepository.ts
+│   │   │   └── TicketRepository.ts
+│   │   ├── logging/            # Sistema de logging
+│   │   │   ├── ILogger.ts
+│   │   │   ├── SentryLogger.ts
+│   │   │   └── ConsoleLogger.ts
+│   │   └── http/               # Cliente HTTP
+│   ├── presentation/           # Camada de Apresentação
+│   │   ├── hooks/             # Custom hooks
+│   │   │   ├── useEvents.ts
+│   │   │   ├── useAuth.ts
+│   │   │   └── useCreateEvent.ts
+│   │   ├── components/        # Componentes React
+│   │   │   ├── events/        # Componentes de eventos
+│   │   │   ├── common/        # Componentes comuns
+│   │   │   └── layout/        # Componentes de layout
+│   │   ├── pages/            # Páginas da aplicação
+│   │   │   └── Events.page.tsx
+│   │   └── contexts/         # Contextos React
+│   │       └── AuthContext.tsx
+│   ├── shared/              # Código compartilhado
+│   │   ├── di/             # Container de injeção de dependências
+│   │   │   └── container.ts
+│   │   ├── constants/      # Constantes
+│   │   └── utils/          # Utilitários
+│   ├── components/         # Componentes legados (em migração)
+│   ├── pages/             # Páginas legadas (em migração)
+│   ├── App.tsx            # Componente principal
+│   ├── main.tsx           # Arquivo de entrada
+│   └── index.css          # Estilos globais
+├── public/               # Arquivos estáticos
+├── package.json          # Dependências e scripts
+├── vite.config.ts        # Configuração do Vite
+├── tailwind.config.js    # Configuração do Tailwind
+├── tsconfig.json         # Configuração do TypeScript
+├── Dockerfile            # Configuração Docker
+└── nginx.conf            # Configuração Nginx
 ```
 
 ## 🚀 Como Executar
@@ -220,6 +261,7 @@ VITE_API_URL=http://localhost:3001/api
 VITE_APP_NAME=Gwan Events
 VITE_APP_VERSION=1.0.0
 VITE_NODE_ENV=development
+VITE_SENTRY_DSN=your-sentry-dsn-here
 ```
 
 ### Customização
