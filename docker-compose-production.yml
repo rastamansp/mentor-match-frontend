@@ -1,42 +1,7 @@
-version: '3.8'
+# Docker Compose para Produção - Gwan Events Frontend
+# Frontend apenas - PostgreSQL, Redis e Traefik já estão em produção
 
 services:
-  # Traefik - Reverse Proxy e Load Balancer
-  traefik:
-    image: traefik:v2.10
-    container_name: traefik-production
-    restart: unless-stopped
-    command:
-      - --api.dashboard=true
-      - --api.insecure=false
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --entrypoints.web.address=:80
-      - --entrypoints.websecure.address=:443
-      - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
-      - --certificatesresolvers.letsencrypt.acme.email=admin@gwan.com.br
-      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
-      - --log.level=INFO
-      - --accesslog=true
-      - --metrics.prometheus=true
-    ports:
-      - "80:80"
-      - "443:443"
-      - "8080:8080"  # Dashboard do Traefik
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - traefik-letsencrypt:/letsencrypt
-      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
-    networks:
-      - gwan-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.gwan.com.br`)"
-      - "traefik.http.routers.traefik.entrypoints=websecure"
-      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
-      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
-
   # Frontend - React App
   frontend:
     build:
@@ -48,6 +13,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+      - NGINX_LOG_LEVEL=debug
     env_file:
       - .env.production
     volumes:
@@ -63,8 +29,7 @@ services:
       - "traefik.http.routers.frontend.middlewares=frontend-headers"
       - "traefik.http.middlewares.frontend-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
       - "traefik.http.middlewares.frontend-headers.headers.customrequestheaders.X-Forwarded-Port=443"
-    depends_on:
-      - backend
+    # Dependências externas (PostgreSQL, Redis e Traefik já em produção)
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
@@ -72,72 +37,36 @@ services:
       retries: 3
       start_period: 40s
 
-  # Backend - API (referência externa)
-  backend:
-    image: gwan-events-backend:latest
-    container_name: gwan-events-backend
-    restart: unless-stopped
-    environment:
-      - NODE_ENV=production
-      - PORT=3001
-      - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET}
-      - CORS_ORIGIN=https://events.gwan.com.br
-    networks:
-      - gwan-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`api-events.gwan.com.br`)"
-      - "traefik.http.routers.backend.entrypoints=websecure"
-      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
-      - "traefik.http.services.backend.loadbalancer.server.port=3001"
-      - "traefik.http.routers.backend.middlewares=backend-headers"
-      - "traefik.http.middlewares.backend-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
-      - "traefik.http.middlewares.backend-headers.headers.customrequestheaders.X-Forwarded-Port=443"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+  # Backend - API (referência externa - deploy separado)
+  # backend:
+  #   image: gwan-events-backend:latest
+  #   container_name: gwan-events-backend
+  #   restart: unless-stopped
+  #   environment:
+  #     - NODE_ENV=production
+  #     - PORT=3001
+  #     - DATABASE_URL=${DATABASE_URL}
+  #     - JWT_SECRET=${JWT_SECRET}
+  #     - CORS_ORIGIN=https://events.gwan.com.br
+  #   networks:
+  #     - gwan-network
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.backend.rule=Host(`api-events.gwan.com.br`)"
+  #     - "traefik.http.routers.backend.entrypoints=websecure"
+  #     - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+  #     - "traefik.http.services.backend.loadbalancer.server.port=3001"
+  #     - "traefik.http.routers.backend.middlewares=backend-headers"
+  #     - "traefik.http.middlewares.backend-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+  #     - "traefik.http.middlewares.backend-headers.headers.customrequestheaders.X-Forwarded-Port=443"
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 40s
 
-  # Banco de Dados - PostgreSQL
-  postgres:
-    image: postgres:15-alpine
-    container_name: gwan-events-postgres
-    restart: unless-stopped
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB:-gwan_events}
-      - POSTGRES_USER=${POSTGRES_USER:-gwan_user}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    networks:
-      - gwan-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gwan_user} -d ${POSTGRES_DB:-gwan_events}"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  # Redis - Cache e Sessões
-  redis:
-    image: redis:7-alpine
-    container_name: gwan-events-redis
-    restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
-    volumes:
-      - redis-data:/data
-    networks:
-      - gwan-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+  # PostgreSQL e Redis já estão em produção (removidos deste compose)
 
   # Monitoramento - Prometheus
   prometheus:
@@ -184,12 +113,6 @@ services:
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
 volumes:
-  traefik-letsencrypt:
-    driver: local
-  postgres-data:
-    driver: local
-  redis-data:
-    driver: local
   prometheus-data:
     driver: local
   grafana-data:
@@ -197,7 +120,4 @@ volumes:
 
 networks:
   gwan-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
+    external: true
