@@ -14,8 +14,9 @@ services:
     environment:
       - NODE_ENV=production
       - NGINX_LOG_LEVEL=debug
+      - VITE_API_URL=https://api-events.gwan.com.br/api
     env_file:
-      - .env.production
+      - env.production
     volumes:
       - ./nginx/nginx.production.conf:/etc/nginx/nginx.conf:ro
     networks:
