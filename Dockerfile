@@ -42,5 +42,5 @@ RUN mkdir -p /var/log/nginx && \
 # Expose port
 EXPOSE 80
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start nginx with debug logging
+CMD ["nginx", "-g", "daemon off; error_log /var/log/nginx/error.log debug;"]
