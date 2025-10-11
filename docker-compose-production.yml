@@ -17,8 +17,7 @@ services:
       - VITE_API_URL=https://api-events.gwan.com.br/api
     env_file:
       - env.production
-    volumes:
-      - ./nginx/nginx.production.conf:/etc/nginx/nginx.conf:ro
+    # Usando configuração padrão do Dockerfile
     networks:
       - gwan
     labels:
