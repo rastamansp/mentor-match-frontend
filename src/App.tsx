@@ -14,6 +14,7 @@ import { RegisterPage } from './presentation/pages/Register.page'
 import { DashboardPage } from './presentation/pages/Dashboard.page'
 import { MyTicketsPage } from './presentation/pages/MyTickets.page'
 import { AdminDashboardPage } from './presentation/pages/AdminDashboard.page'
+import { ManageUsersPage } from './presentation/pages/ManageUsers.page'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -83,6 +84,11 @@ function App() {
           <Route path="/admin" element={
             <ProtectedRoute requiredRole="ADMIN">
               <AdminDashboardPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/users" element={
+            <ProtectedRoute requiredRole="ADMIN">
+              <ManageUsersPage />
             </ProtectedRoute>
           } />
         </Routes>

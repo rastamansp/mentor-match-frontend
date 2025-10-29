@@ -1,8 +1,10 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAdminStats } from '../hooks/useAdminStats'
 import { Users, Calendar, CreditCard, TrendingUp, BarChart3, PieChart } from 'lucide-react'
 
 export const AdminDashboardPage: React.FC = () => {
+  const navigate = useNavigate()
   const { stats, loading, error } = useAdminStats()
 
   if (loading) {
@@ -166,7 +168,10 @@ export const AdminDashboardPage: React.FC = () => {
       <div className="card">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Ações Administrativas</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <button className="btn-primary">
+          <button 
+            onClick={() => navigate('/admin/users')}
+            className="btn-primary"
+          >
             Gerenciar Usuários
           </button>
           <button className="btn-secondary">

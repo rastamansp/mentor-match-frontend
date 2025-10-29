@@ -370,6 +370,7 @@ export const EditEventPage: React.FC = () => {
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
+                autoComplete="off"
                 placeholder="Ex: Festival de Música Eletrônica"
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
                   errors.title ? 'border-red-500' : 'border-gray-300 focus:ring-blue-500'
@@ -388,6 +389,7 @@ export const EditEventPage: React.FC = () => {
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
+                autoComplete="off"
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
                   errors.category ? 'border-red-500' : 'border-gray-300 focus:ring-blue-500'
                 }`}
@@ -411,6 +413,7 @@ export const EditEventPage: React.FC = () => {
               name="description"
               value={formData.description}
               onChange={handleChange}
+              autoComplete="off"
               rows={4}
               placeholder="Descreva o evento em detalhes..."
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
@@ -433,6 +436,7 @@ export const EditEventPage: React.FC = () => {
                 name="date"
                 value={formData.date}
                 onChange={handleChange}
+                autoComplete="off"
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
                   errors.date ? 'border-red-500' : 'border-gray-300 focus:ring-blue-500'
                 }`}
@@ -451,6 +455,7 @@ export const EditEventPage: React.FC = () => {
                 name="maxCapacity"
                 value={formData.maxCapacity || ''}
                 onChange={handleChange}
+                autoComplete="off"
                 min="1"
                 placeholder="Ex: 5000"
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
@@ -479,6 +484,7 @@ export const EditEventPage: React.FC = () => {
                   name="location"
                   value={formData.location}
                   onChange={handleChange}
+                  autoComplete="off"
                   placeholder="Ex: Parque da Cidade"
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
                     errors.location ? 'border-red-500' : 'border-gray-300 focus:ring-blue-500'
@@ -497,6 +503,7 @@ export const EditEventPage: React.FC = () => {
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
+                  autoComplete="street-address"
                   placeholder="Ex: Av. das Flores, 123"
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
                     errors.address ? 'border-red-500' : 'border-gray-300 focus:ring-blue-500'
@@ -517,6 +524,7 @@ export const EditEventPage: React.FC = () => {
                   name="city"
                   value={formData.city}
                   onChange={handleChange}
+                  autoComplete="address-level2"
                   placeholder="Ex: São Paulo"
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
                     errors.city ? 'border-red-500' : 'border-gray-300 focus:ring-blue-500'
@@ -534,6 +542,7 @@ export const EditEventPage: React.FC = () => {
                   name="state"
                   value={formData.state}
                   onChange={handleChange}
+                  autoComplete="address-level1"
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
                     errors.state ? 'border-red-500' : 'border-gray-300 focus:ring-blue-500'
                   }`}
@@ -560,6 +569,7 @@ export const EditEventPage: React.FC = () => {
               name="image"
               value={formData.image}
               onChange={handleChange}
+              autoComplete="off"
               placeholder="https://images.unsplash.com/..."
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
                 errors.image ? 'border-red-500' : 'border-gray-300 focus:ring-blue-500'
@@ -687,8 +697,10 @@ export const EditEventPage: React.FC = () => {
                 <input
                   type="text"
                   id="categoryName"
+                  name="categoryName"
                   value={categoryFormData.name}
                   onChange={(e) => setCategoryFormData(prev => ({ ...prev, name: e.target.value }))}
+                  autoComplete="off"
                   placeholder="Ex: Pista, VIP, Camarote"
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
                     categoryErrors.name ? 'border-red-500' : 'border-gray-300 focus:ring-blue-500'
@@ -703,8 +715,10 @@ export const EditEventPage: React.FC = () => {
                 </label>
                 <textarea
                   id="categoryDescription"
+                  name="categoryDescription"
                   value={categoryFormData.description}
                   onChange={(e) => setCategoryFormData(prev => ({ ...prev, description: e.target.value }))}
+                  autoComplete="off"
                   rows={3}
                   placeholder="Ex: Acesso à pista principal com barracas de comida"
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
@@ -722,9 +736,11 @@ export const EditEventPage: React.FC = () => {
                   <input
                     type="number"
                     id="categoryPrice"
+                    name="categoryPrice"
                     step="0.01"
                     value={categoryFormData.price || ''}
                     onChange={(e) => setCategoryFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                    autoComplete="off"
                     placeholder="150.00"
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
                       categoryErrors.price ? 'border-red-500' : 'border-gray-300 focus:ring-blue-500'
@@ -740,8 +756,10 @@ export const EditEventPage: React.FC = () => {
                   <input
                     type="number"
                     id="categoryMaxQuantity"
+                    name="categoryMaxQuantity"
                     value={categoryFormData.maxQuantity || ''}
                     onChange={(e) => setCategoryFormData(prev => ({ ...prev, maxQuantity: parseInt(e.target.value) || 0 }))}
+                    autoComplete="off"
                     placeholder="800"
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
                       categoryErrors.maxQuantity ? 'border-red-500' : 'border-gray-300 focus:ring-blue-500'
@@ -758,9 +776,12 @@ export const EditEventPage: React.FC = () => {
                 <div className="flex space-x-2 mb-2">
                   <input
                     type="text"
+                    id="benefitInput"
+                    name="benefitInput"
                     value={benefitInput}
                     onChange={(e) => setBenefitInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddBenefit())}
+                    autoComplete="off"
                     placeholder="Ex: Acesso à pista"
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />

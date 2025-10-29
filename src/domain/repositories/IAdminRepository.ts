@@ -1,7 +1,18 @@
+import { User } from '../entities/User.entity'
+
 export interface IAdminRepository {
   getDashboardStats(): Promise<DashboardStats>
   getEventAnalytics(eventId: string): Promise<EventAnalytics>
   getUserAnalytics(userId: string): Promise<UserAnalytics>
+  getAllUsers(): Promise<User[]>
+  updateUser(userId: string, data: UpdateUserData): Promise<User>
+}
+
+export interface UpdateUserData {
+  name?: string
+  email?: string
+  phone?: string
+  role?: 'USER' | 'ORGANIZER' | 'ADMIN'
 }
 
 export interface DashboardStats {

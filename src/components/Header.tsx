@@ -43,9 +43,14 @@ const Header: React.FC = () => {
                 </Link>
                 
                 {user.role === 'ADMIN' && (
-                  <Link to="/admin" className="text-gray-600 hover:text-gray-900 transition-colors">
-                    Admin
-                  </Link>
+                  <>
+                    <Link to="/admin" className="text-gray-600 hover:text-gray-900 transition-colors">
+                      Admin
+                    </Link>
+                    <Link to="/admin/users" className="text-gray-600 hover:text-gray-900 transition-colors">
+                      Usuários
+                    </Link>
+                  </>
                 )}
                 
                 <div className="flex items-center space-x-2">
@@ -104,9 +109,14 @@ const Header: React.FC = () => {
                   </Link>
                   
                   {user.role === 'ADMIN' && (
-                    <Link to="/admin" className="text-gray-600 hover:text-gray-900 transition-colors">
-                      Admin
-                    </Link>
+                    <>
+                      <Link to="/admin" className="text-gray-600 hover:text-gray-900 transition-colors">
+                        Admin
+                      </Link>
+                      <Link to="/admin/users" className="text-gray-600 hover:text-gray-900 transition-colors">
+                        Usuários
+                      </Link>
+                    </>
                   )}
                   
                   <div className="flex items-center space-x-2 text-gray-600">
