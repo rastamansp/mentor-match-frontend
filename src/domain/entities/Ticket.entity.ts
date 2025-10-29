@@ -5,7 +5,7 @@ export const TicketCategorySchema = z.object({
   eventId: z.string().uuid(),
   name: z.string().min(3).max(100),
   description: z.string().min(10).max(500),
-  price: z.number().positive(),
+  price: z.union([z.number().positive(), z.string()]),
   maxQuantity: z.number().int().positive(),
   soldQuantity: z.number().int().min(0),
   benefits: z.array(z.string()),
@@ -33,6 +33,10 @@ export const TicketSchema = z.object({
   usedDate: z.string().datetime().optional(),
   transferDate: z.string().datetime().optional(),
   transferredTo: z.string().optional(),
+  participantFirstName: z.string().optional(),
+  participantLastName: z.string().optional(),
+  participantEmail: z.string().email().optional(),
+  participantDocument: z.string().optional(),
 })
 
 export type Ticket = z.infer<typeof TicketSchema>

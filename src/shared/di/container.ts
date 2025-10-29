@@ -4,6 +4,7 @@ import { AuthRepository } from '../../infrastructure/repositories/AuthRepository
 import { TicketRepository } from '../../infrastructure/repositories/TicketRepository'
 import { PaymentRepository } from '../../infrastructure/repositories/PaymentRepository'
 import { AdminRepository } from '../../infrastructure/repositories/AdminRepository'
+import { ChatRepository } from '../../infrastructure/repositories/ChatRepository'
 import { SentryLogger } from '../../infrastructure/logging/SentryLogger'
 import { ListEventsUseCase } from '../../application/use-cases/events/ListEvents.usecase'
 import { GetEventByIdUseCase } from '../../application/use-cases/events/GetEventById.usecase'
@@ -24,7 +25,10 @@ const httpClient = axios.create({
 httpClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) {
+    console.log('🔑 Token encontrado, adicionando ao header Authorization')
     config.headers.Authorization = `Bearer ${token}`
+  } else {
+    console.warn('⚠️ Token não encontrado no localStorage')
   }
   return config
 })
@@ -34,9 +38,17 @@ httpClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      console.error('401 Unauthorized - Token inválido ou expirado')
+      console.error('Error details:', error.response?.data)
+      
+      // Limpar dados de autenticação
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      window.location.href = '/login'
+      
+      // Apenas redirecionar se não estiver já na página de login
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   }
@@ -50,6 +62,7 @@ const authRepository = new AuthRepository(httpClient)
 const ticketRepository = new TicketRepository(httpClient)
 const paymentRepository = new PaymentRepository(httpClient)
 const adminRepository = new AdminRepository(httpClient)
+const chatRepository = new ChatRepository(httpClient)
 
 // Use Cases
 const listEventsUseCase = new ListEventsUseCase(eventRepository, logger)
@@ -67,6 +80,7 @@ export const container = {
   ticketRepository,
   paymentRepository,
   adminRepository,
+  chatRepository,
   
   // Use Cases
   listEventsUseCase,

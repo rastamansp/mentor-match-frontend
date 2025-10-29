@@ -8,15 +8,19 @@ Frontend da plataforma de eventos e venda de ingressos, desenvolvido com React +
 
 ### Para Participantes
 - **Exploração de Eventos**: Navegue por eventos por categoria, cidade e data
-- **Compra de Ingressos**: Sistema completo de compra com diferentes categorias de ingressos
-- **Pagamentos**: Suporte a PIX, cartão de crédito e outras formas de pagamento
+- **Compra de Ingressos**: Sistema completo de compra com checkout e coleta de dados de participantes
+- **Checkout Interativo**: Formulário dinâmico para coletar dados de cada participante com validação em tempo real
+- **Pagamentos**: Suporte a PIX, cartão de crédito (com parcelas) e débito
 - **Ingressos Digitais**: QR Code único para cada ingresso
 - **Área do Cliente**: Dashboard pessoal com histórico de compras e ingressos
 - **Transferência de Ingressos**: Possibilidade de transferir ingressos para outros usuários
+- **Chat de Suporte**: Assistente virtual integrado para suporte ao cliente (24/7)
 
 ### Para Organizadores
-- **Gestão de Eventos**: Criação e edição de eventos com informações detalhadas
-- **Categorias de Ingressos**: Diferentes tipos de ingressos (pista, VIP, estudante, etc.)
+- **Gestão de Eventos**: Criação e edição completa de eventos com informações detalhadas
+- **Gerenciamento de Categorias**: Criação, edição e exclusão de categorias de ingressos para seus eventos
+- **Página "Meus Eventos"**: Visualização e gerenciamento de todos os eventos criados
+- **Categorias de Ingressos**: Diferentes tipos de ingressos (pista, VIP, estudante, etc.) com benefícios
 - **Relatórios**: Analytics detalhados sobre vendas e participação
 - **Painel Administrativo**: Interface completa para gerenciamento
 
@@ -37,6 +41,9 @@ Frontend da plataforma de eventos e venda de ingressos, desenvolvido com React +
 - **Axios**: Cliente HTTP para comunicação com a API
 - **Lucide React**: Ícones modernos e consistentes
 - **Zod**: Validação de esquemas e tipos
+- **react-hot-toast**: Sistema de notificações elegante
+- **React Hook Form**: Gerenciamento de formulários
+- **date-fns**: Manipulação e formatação de datas
 - **Sentry**: Monitoramento de erros e performance
 
 ### Arquitetura
@@ -62,40 +69,79 @@ gwan-events/
 │   │   ├── repositories/         # Interfaces dos repositórios
 │   │   │   ├── IEventRepository.ts
 │   │   │   ├── IAuthRepository.ts
-│   │   │   └── ITicketRepository.ts
+│   │   │   ├── ITicketRepository.ts
+│   │   │   ├── IChatRepository.ts
+│   │   │   └── IPaymentRepository.ts
 │   │   └── errors/               # Erros de domínio
 │   │       └── DomainError.ts
 │   ├── application/              # Camada de Aplicação
 │   │   ├── use-cases/           # Casos de uso
 │   │   │   ├── events/          # Use cases de eventos
+│   │   │   │   ├── CreateEvent.usecase.ts
+│   │   │   │   ├── UpdateEvent.usecase.ts
+│   │   │   │   ├── ListEvents.usecase.ts
+│   │   │   │   └── GetEventById.usecase.ts
 │   │   │   ├── auth/            # Use cases de autenticação
+│   │   │   │   ├── Login.usecase.ts
+│   │   │   │   └── Register.usecase.ts
 │   │   │   └── tickets/         # Use cases de ingressos
 │   │   ├── dto/                 # Data Transfer Objects
 │   │   │   ├── CreateEventDto.ts
+│   │   │   ├── CreateTicketCategoryDto.ts
 │   │   │   ├── LoginDto.ts
-│   │   │   └── RegisterDto.ts
+│   │   │   ├── RegisterDto.ts
+│   │   │   ├── ParticipantData.ts
+│   │   │   ├── PurchaseTicketDto.ts
+│   │   │   └── ChatMessageDto.ts
 │   │   └── validators/          # Validadores Zod
 │   ├── infrastructure/           # Camada de Infraestrutura
 │   │   ├── repositories/        # Implementações dos repositórios
 │   │   │   ├── EventRepository.ts
 │   │   │   ├── AuthRepository.ts
-│   │   │   └── TicketRepository.ts
+│   │   │   ├── TicketRepository.ts
+│   │   │   ├── ChatRepository.ts
+│   │   │   └── PaymentRepository.ts
 │   │   ├── logging/            # Sistema de logging
 │   │   │   ├── ILogger.ts
 │   │   │   ├── SentryLogger.ts
 │   │   │   └── ConsoleLogger.ts
-│   │   └── http/               # Cliente HTTP
+│   │   ├── http/               # Cliente HTTP
+│   │   └── storage/            # Storage local
 │   ├── presentation/           # Camada de Apresentação
 │   │   ├── hooks/             # Custom hooks
 │   │   │   ├── useEvents.ts
-│   │   │   ├── useAuth.ts
-│   │   │   └── useCreateEvent.ts
+│   │   │   ├── useEventDetail.ts
+│   │   │   ├── useCreateEvent.ts
+│   │   │   ├── useUpdateEvent.ts
+│   │   │   ├── useTicketCategories.ts
+│   │   │   ├── useTicketCategoryManagement.ts
+│   │   │   ├── usePurchaseTicket.ts
+│   │   │   ├── useTickets.ts
+│   │   │   ├── useCheckIn.ts
+│   │   │   ├── useChat.ts
+│   │   │   └── useAuth.ts
 │   │   ├── components/        # Componentes React
-│   │   │   ├── events/        # Componentes de eventos
-│   │   │   ├── common/        # Componentes comuns
-│   │   │   └── layout/        # Componentes de layout
+│   │   │   ├── chat/           # Componentes de chat
+│   │   │   │   ├── ChatWidget.tsx
+│   │   │   │   └── ChatWindow.tsx
+│   │   │   ├── events/         # Componentes de eventos
+│   │   │   │   ├── EventCard.tsx
+│   │   │   │   └── EventFilters.tsx
+│   │   │   ├── common/         # Componentes comuns
+│   │   │   └── layout/         # Componentes de layout
 │   │   ├── pages/            # Páginas da aplicação
-│   │   │   └── Events.page.tsx
+│   │   │   ├── Home.page.tsx
+│   │   │   ├── Events.page.tsx
+│   │   │   ├── EventDetail.page.tsx
+│   │   │   ├── CreateEvent.page.tsx
+│   │   │   ├── EditEvent.page.tsx
+│   │   │   ├── MyEvents.page.tsx
+│   │   │   ├── Checkout.page.tsx
+│   │   │   ├── MyTickets.page.tsx
+│   │   │   ├── Dashboard.page.tsx
+│   │   │   ├── AdminDashboard.page.tsx
+│   │   │   ├── Login.page.tsx
+│   │   │   └── Register.page.tsx
 │   │   └── contexts/         # Contextos React
 │   │       └── AuthContext.tsx
 │   ├── shared/              # Código compartilhado
@@ -103,8 +149,13 @@ gwan-events/
 │   │   │   └── container.ts
 │   │   ├── constants/      # Constantes
 │   │   └── utils/          # Utilitários
-│   ├── components/         # Componentes legados (em migração)
-│   ├── pages/             # Páginas legadas (em migração)
+│   ├── components/         # Componentes compartilhados
+│   │   ├── Layout.tsx
+│   │   ├── Header.tsx
+│   │   ├── Footer.tsx
+│   │   └── ProtectedRoute.tsx
+│   ├── contexts/           # Contextos globais
+│   │   └── AuthContext.tsx
 │   ├── App.tsx            # Componente principal
 │   ├── main.tsx           # Arquivo de entrada
 │   └── index.css          # Estilos globais
@@ -179,11 +230,12 @@ O frontend funcionará em modo de desenvolvimento, mas as funcionalidades que de
 
 A documentação completa da API está disponível em `/api` quando o backend estiver rodando. Ela inclui:
 
-- Endpoints de autenticação
-- CRUD de eventos
-- Gestão de ingressos
-- Sistema de pagamentos
-- Funcionalidades administrativas
+- **Endpoints de autenticação**: Login, registro, refresh token
+- **CRUD de eventos**: Listagem, criação, edição, exclusão
+- **Gestão de ingressos**: Compra, visualização, transferência
+- **Sistema de pagamentos**: Processamento de pagamentos
+- **Funcionalidades administrativas**: Dashboard, relatórios, analytics
+- **Checkout**: Compra de ingressos com dados de participantes
 
 ## 🔐 Autenticação
 
@@ -208,6 +260,19 @@ O sistema utiliza JWT (JSON Web Tokens) para autenticação. Os usuários podem:
 - Preços personalizados
 - Benefícios específicos por categoria
 - Controle de lotes e disponibilidade
+
+### Processo de Compra (Checkout)
+- **Seleção de Ingressos**: Escolha da categoria e quantidade desejada
+- **Checkout com Dados de Participantes**: 
+  - Formulário dinâmico que gera campos para cada participante
+  - Botão "Usar meus dados" para preenchimento automático
+  - Validação de CPF com máscara automática
+  - Validação de email
+- **Seleção de Método de Pagamento**:
+  - PIX (pagamento instantâneo)
+  - Cartão de Crédito (com opção de parcelamento até 12x)
+  - Cartão de Débito
+- **Resumo do Pedido**: Visualização clara de quantidade, preço unitário e total
 
 ## 💳 Sistema de Pagamentos
 
@@ -277,6 +342,143 @@ O projeto inclui dados simulados para demonstração:
 - **Eventos**: Festival de música, workshop de programação
 - **Ingressos**: Diferentes categorias e status
 - **Pagamentos**: Transações simuladas com diferentes métodos
+- **Checkout**: Fluxo completo de compra com participantes
+
+## 🗺️ Fluxos da Aplicação
+
+### Fluxo de Navegação Geral
+
+O diagrama abaixo mostra o fluxo de navegação completo da aplicação:
+
+```mermaid
+graph TB
+    Start([Usuário Acessa])
+    Start --> Home[Home Page]
+    
+    Home --> Events[Lista de Eventos]
+    Home --> Login[Login]
+    Home --> Register[Registro]
+    
+    Events --> EventDetail[Detalhes do Evento]
+    Events --> Chat[Chat Suporte]
+    
+    EventDetail --> |Não Logado| Login
+    EventDetail --> |Logado| Checkout[Checkout]
+    
+    Checkout --> MyTickets[Meus Ingressos]
+    
+    Login --> Dashboard[Dashboard]
+    Register --> Login
+    
+    Dashboard --> CreateEvent[Criar Evento]
+    Dashboard --> MyEvents[Meus Eventos]
+    Dashboard --> MyTickets
+    
+    MyEvents --> EditEvent[Editar Evento]
+    MyEvents --> ViewEvent[Ver Detalhes]
+    
+    EditEvent --> ManageCategories[Gerenciar Categorias]
+    
+    CreateEvent --> MyEvents
+    
+    MyTickets --> CheckIn[Check-in]
+    MyTickets --> ViewTicket[Ver QR Code]
+    
+    Home --> Admin{Admin?}
+    Admin --> |Sim| AdminDashboard[Dashboard Admin]
+    Admin --> |Não| Dashboard
+    
+    AdminDashboard --> Stats[Estatísticas]
+    AdminDashboard --> ManageEvents[Gerenciar Eventos]
+    AdminDashboard --> ManageUsers[Gerenciar Usuários]
+    
+    Chat -.->|Sempre Disponível| Home
+    
+    style Checkout fill:#9333ea,color:#fff
+    style MyTickets fill:#9333ea,color:#fff
+    style Dashboard fill:#9333ea,color:#fff
+    style MyEvents fill:#10b981,color:#fff
+    style EditEvent fill:#10b981,color:#fff
+    style CreateEvent fill:#10b981,color:#fff
+    style AdminDashboard fill:#dc2626,color:#fff
+    style Chat fill:#3b82f6,color:#fff
+```
+
+### Fluxo de Compra de Ingressos
+
+Diagrama detalhado do processo completo de compra:
+
+```mermaid
+sequenceDiagram
+    participant U as Usuário
+    participant ED as Event Detail
+    participant CO as Checkout
+    participant API as Backend API
+    participant MT as Meus Ingressos
+    
+    U->>ED: Seleciona categoria de ingresso
+    U->>ED: Define quantidade (1-N)
+    U->>ED: Clica em "Comprar Ingresso"
+    
+    ED->>ED: Valida usuário logado
+    ED->>CO: Navega com dados do evento
+    
+    CO->>U: Exibe formulário dinâmico
+    Note over CO: Campos por participante:<br/>Nome, Sobrenome, Email, CPF
+    
+    loop Para cada participante
+        U->>CO: Preenche dados
+        CO->>CO: Valida CPF (máscara)
+        CO->>CO: Valida email
+        U->>CO: Opção "Usar meus dados"
+    end
+    
+    U->>CO: Seleciona método de pagamento
+    Note over CO: PIX, Cartão Crédito,<br/>ou Cartão Débito
+    
+    U->>CO: Confirma compra
+    CO->>API: POST /api/tickets
+    Note over API: eventId, categoryId,<br/>quantity, participants,<br/>paymentMethod
+    
+    API-->>CO: Retorna ingressos criados
+    CO->>U: Toast de sucesso
+    CO->>MT: Redireciona
+    
+    MT->>U: Exibe ingressos com QR codes
+```
+
+### Fluxo de Gerenciamento de Eventos
+
+Diagrama para organizadores criarem e gerenciarem eventos:
+
+```mermaid
+graph LR
+    A[Dashboard] --> B[Meus Eventos]
+    B --> C{Criar ou Editar}
+    
+    C -->|Novo| D[Criar Evento]
+    C -->|Existente| E[Editar Evento]
+    
+    D --> F[Preencher Formulário]
+    E --> F
+    
+    F --> G[Adicionar Imagem]
+    F --> H[Definir Categorias]
+    
+    H --> I[Adicionar Categoria]
+    I --> J[Formulário de Categoria]
+    J --> K[Preço, Quantidade, Benefícios]
+    
+    K --> L[Salvar Categoria]
+    L --> H
+    
+    H --> M[Publicar Evento]
+    M --> B
+    
+    style D fill:#10b981,color:#fff
+    style E fill:#3b82f6,color:#fff
+    style M fill:#9333ea,color:#fff
+```
 
 ## 🚀 Deploy e Produção
 
@@ -300,6 +502,7 @@ docker-compose up -d
 - Configure URLs de produção
 - Configure CORS adequadamente
 - Configure logs e monitoramento
+- Configure Sentry para produção
 
 ## 🤝 Contribuição
 
@@ -313,11 +516,65 @@ docker-compose up -d
 
 Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
 
+## 📚 Documentação Adicional
+
+- **[Fluxo de Navegação](./FLUXO-NAVEGACAO.md)**: Diagrama e descrições detalhadas do fluxo da aplicação
+- **[Deploy](./DEPLOY.md)**: Instruções para deploy em produção
+- **[Deploy Produção](./DEPLOY-PRODUCTION.md)**: Configurações específicas de produção
+
+## 📱 Chat de Suporte
+
+### Funcionalidades
+- **Disponível 24/7**: Assistente virtual sempre disponível em todas as páginas
+- **Interface Flutuante**: Botão de acesso rápido no canto inferior direito
+- **Histórico de Conversa**: Mantém histórico durante a sessão do usuário
+- **Respostas Inteligentes**: Integração com backend para respostas contextuais
+- **Múltiplas Ferramentas**: Chat pode executar ações através de tools (funções)
+
+### Tecnologia
+- Integração via `/api/chat`
+- Renderização de Markdown básico
+- Indicador de digitação
+- Notificações elegantes com react-hot-toast
+
+## 📝 Sistema de Notificações
+
+### Notificações Toast
+O projeto utiliza `react-hot-toast` para todas as notificações:
+
+- **Toast de Sucesso**: Operações bem-sucedidas (verde)
+- **Toast de Erro**: Erros e falhas (vermelho)
+- **Toast de Aviso**: Avisos importantes (amarelo)
+- **Toast de Info**: Informações relevantes (azul)
+
+### Configuração
+```typescript
+<Toaster
+  position="top-right"
+  toastOptions={{
+    duration: 4000,
+    style: { background: '#363636', color: '#fff' },
+    success: { duration: 3000 },
+    error: { duration: 4000 }
+  }}
+/>
+```
+
+## 🔄 Validações
+
+### Validações Implementadas
+- **CPF**: Máscara automática e validação de formato
+- **Email**: Validação de formato com regex
+- **Campos Obrigatórios**: Identificação e bloqueio de campos vazios
+- **Validação em Tempo Real**: Feedback instantâneo ao usuário
+- **Validação de Zod**: Esquemas de validação centralizados
+
 ## 📞 Suporte
 
 Para suporte e dúvidas:
 - Email: contato@gwanshop.com
 - Documentação: http://localhost:3001/api (quando backend estiver rodando)
+- Chat de Suporte: Disponível no canto inferior direito de todas as páginas
 
 ---
 

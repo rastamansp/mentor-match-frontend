@@ -1,9 +1,11 @@
 import React from 'react'
-import { useAuth } from '../hooks/useAuth'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext'
 import { useDashboardData } from '../hooks/useDashboardData'
-import { Calendar, Users, CreditCard, TrendingUp, Eye } from 'lucide-react'
+import { Calendar, Users, CreditCard, TrendingUp, Eye, Plus } from 'lucide-react'
 
 export const DashboardPage: React.FC = () => {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const { data, loading, error } = useDashboardData(user?.id)
 
@@ -12,6 +14,11 @@ export const DashboardPage: React.FC = () => {
       day: '2-digit',
       month: 'short',
     })
+  }
+
+  const formatPrice = (price: string | number): string => {
+    const numPrice = typeof price === 'string' ? parseFloat(price) : price
+    return numPrice.toFixed(2)
   }
 
   const totalSpent = data.payments
@@ -43,9 +50,18 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-        <p className="text-gray-600">Bem-vindo de volta, {user?.name}!</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+          <p className="text-gray-600">Bem-vindo de volta, {user?.name}!</p>
+        </div>
+        <button
+          onClick={() => navigate('/events/create')}
+          className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <Plus className="w-5 h-5" />
+          <span>Criar Evento</span>
+        </button>
       </div>
 
       {/* Stats Cards */}
@@ -158,7 +174,7 @@ export const DashboardPage: React.FC = () => {
                        ticket.status === 'USED' ? 'Usado' : ticket.status}
                     </span>
                     <p className="text-sm font-medium text-blue-600 mt-1">
-                      R$ {ticket.price.toFixed(2)}
+                      R$ {formatPrice(ticket.price)}
                     </p>
                   </div>
                 </div>

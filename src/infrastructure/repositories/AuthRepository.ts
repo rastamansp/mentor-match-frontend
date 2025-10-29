@@ -8,7 +8,20 @@ export class AuthRepository implements IAuthRepository {
   async login(email: string, password: string): Promise<LoginResponse> {
     try {
       const response = await this.httpClient.post('/auth/login', { email, password })
-      return response.data
+      
+      console.log('🔐 AuthRepository.login - Resposta do backend:', response.data)
+      
+      // O backend pode retornar access_token ou token
+      const data = response.data
+      if (data.access_token && !data.token) {
+        // Converter access_token para token para manter compatibilidade
+        return {
+          user: data.user,
+          token: data.access_token
+        }
+      }
+      
+      return data
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         throw new UnauthorizedError('Credenciais inválidas')
@@ -23,7 +36,20 @@ export class AuthRepository implements IAuthRepository {
   async register(data: RegisterData): Promise<RegisterResponse> {
     try {
       const response = await this.httpClient.post('/auth/register', data)
-      return response.data
+      
+      console.log('🔐 AuthRepository.register - Resposta do backend:', response.data)
+      
+      // O backend pode retornar access_token ou token
+      const backendData = response.data
+      if (backendData.access_token && !backendData.token) {
+        // Converter access_token para token para manter compatibilidade
+        return {
+          user: backendData.user,
+          token: backendData.access_token
+        }
+      }
+      
+      return backendData
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new NetworkError(`Failed to register: ${error.message}`, error)

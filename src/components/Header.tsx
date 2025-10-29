@@ -31,6 +31,12 @@ const Header: React.FC = () => {
             
             {user ? (
               <div className="flex items-center space-x-4">
+                <Link to="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
+                  Dashboard
+                </Link>
+                <Link to="/my-events" className="text-gray-600 hover:text-gray-900 transition-colors">
+                  Meus Eventos
+                </Link>
                 <Link to="/my-tickets" className="flex items-center space-x-1 text-gray-600 hover:text-gray-900 transition-colors">
                   <Ticket className="h-4 w-4" />
                   <span>Meus Ingressos</span>
@@ -86,6 +92,12 @@ const Header: React.FC = () => {
               
               {user ? (
                 <>
+                  <Link to="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
+                    Dashboard
+                  </Link>
+                  <Link to="/my-events" className="text-gray-600 hover:text-gray-900 transition-colors">
+                    Meus Eventos
+                  </Link>
                   <Link to="/my-tickets" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors">
                     <Ticket className="h-4 w-4" />
                     <span>Meus Ingressos</span>

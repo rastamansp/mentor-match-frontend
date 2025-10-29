@@ -3,9 +3,10 @@ import { RegisterDto } from '../../application/dto/RegisterDto'
 import { container } from '../../shared/di/container'
 import { ILogger } from '../../infrastructure/logging/ILogger'
 import { ValidationError } from '../../domain/errors/DomainError'
+import { useAuth as useAuthContext } from '../../contexts/AuthContext'
 
 interface UseRegisterResult {
-  register: (data: RegisterDto) => Promise<void>
+  register: (data: RegisterDto) => Promise<{ success: boolean; hasToken: boolean }>
   loading: boolean
   error: string | null
 }
@@ -13,9 +14,10 @@ interface UseRegisterResult {
 export const useRegister = (): UseRegisterResult => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { register: contextRegister } = useAuthContext()
   const logger: ILogger = container.logger
 
-  const register = useCallback(async (data: RegisterDto): Promise<void> => {
+  const register = useCallback(async (data: RegisterDto): Promise<{ success: boolean; hasToken: boolean }> => {
     setLoading(true)
     setError(null)
     
@@ -24,11 +26,18 @@ export const useRegister = (): UseRegisterResult => {
       
       const response = await container.registerUseCase.execute(data)
       
-      // Armazenar token e dados do usuário
-      localStorage.setItem('token', response.token)
-      localStorage.setItem('user', JSON.stringify(response.user))
+      // Verificar se há token para login automático
+      const hasToken = !!response.token
       
-      logger.info('useRegister: Registration successful', { userId: response.user.id })
+      if (hasToken) {
+        // Usar o register do contexto que já atualiza o estado global
+        await contextRegister(data)
+        logger.info('useRegister: Registration successful with automatic login', { userId: response.user.id })
+      } else {
+        logger.info('useRegister: Registration successful without token - user needs to login', { userId: response.user.id })
+      }
+      
+      return { success: true, hasToken }
     } catch (err) {
       let errorMessage = 'Erro ao criar conta'
       
@@ -38,11 +47,11 @@ export const useRegister = (): UseRegisterResult => {
       
       setError(errorMessage)
       logger.error('useRegister: Registration failed', err as Error, { email: data.email })
-      throw err
+      return { success: false, hasToken: false }
     } finally {
       setLoading(false)
     }
-  }, [logger])
+  }, [logger, contextRegister])
 
   return {
     register,

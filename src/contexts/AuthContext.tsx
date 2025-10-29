@@ -47,10 +47,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await container.loginUseCase.execute({ email, password })
       
+      console.log('🔐 AuthContext.login - Resposta:', response)
+      console.log('🔐 Token:', response.token)
+      console.log('🔐 User:', response.user)
+      
       localStorage.setItem('token', response.token)
       localStorage.setItem('user', JSON.stringify(response.user))
       setUser(response.user)
+      
+      console.log('✅ AuthContext.login - Token salvo no localStorage')
     } catch (error) {
+      console.error('❌ AuthContext.login - Erro:', error)
       throw error
     }
   }
@@ -58,9 +65,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (userData: RegisterDto) => {
     try {
       const response = await container.registerUseCase.execute(userData)
-      localStorage.setItem('token', response.token)
-      localStorage.setItem('user', JSON.stringify(response.user))
-      setUser(response.user)
+      
+      // Apenas salvar token se existir
+      if (response.token) {
+        localStorage.setItem('token', response.token)
+        localStorage.setItem('user', JSON.stringify(response.user))
+        setUser(response.user)
+      }
     } catch (error) {
       throw error
     }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { toast } from 'react-hot-toast'
 import { useRegister } from '../hooks/useRegister'
 import { RegisterDto } from '../../application/dto/RegisterDto'
 import { Mail, Lock, User, Phone, Eye, EyeOff } from 'lucide-react'
@@ -25,12 +26,20 @@ export const RegisterPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    try {
-      await register(formData)
-      navigate('/')
-    } catch (err) {
-      // Error is handled by the hook
+    const result = await register(formData)
+    
+    if (result.success) {
+      if (result.hasToken) {
+        // Usuário criado com token - login automático
+        toast.success('Bem-vindo! Login realizado com sucesso.')
+        navigate('/')
+      } else {
+        // Usuário criado sem token - mostrar toast e redirecionar para login
+        toast.success('Conta criada com sucesso! Você será redirecionado para a tela de login.')
+        navigate('/login')
+      }
     }
+    // Error is handled by the hook
   }
 
   return (

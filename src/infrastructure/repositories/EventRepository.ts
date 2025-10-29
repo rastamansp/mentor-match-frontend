@@ -1,5 +1,6 @@
-import { IEventRepository, EventFilters, CreateEventData, UpdateEventData } from '../../domain/repositories/IEventRepository'
+import { IEventRepository, EventFilters, CreateEventData, UpdateEventData, CreateTicketCategoryData, UpdateTicketCategoryData } from '../../domain/repositories/IEventRepository'
 import { Event } from '../../domain/entities/Event.entity'
+import { TicketCategory } from '../../domain/entities/Ticket.entity'
 import { NotFoundError, NetworkError } from '../../domain/errors/DomainError'
 import axios, { AxiosInstance } from 'axios'
 
@@ -69,6 +70,62 @@ export class EventRepository implements IEventRepository {
       }
       if (axios.isAxiosError(error)) {
         throw new NetworkError(`Failed to delete event: ${error.message}`, error)
+      }
+      throw error
+    }
+  }
+
+  async getTicketCategories(eventId: string): Promise<TicketCategory[]> {
+    try {
+      const response = await this.httpClient.get(`/events/${eventId}/ticket-categories`)
+      return response.data
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        throw new NotFoundError('Event', eventId)
+      }
+      if (axios.isAxiosError(error)) {
+        throw new NetworkError(`Failed to fetch ticket categories: ${error.message}`, error)
+      }
+      throw error
+    }
+  }
+
+  async createTicketCategory(eventId: string, data: CreateTicketCategoryData): Promise<TicketCategory> {
+    try {
+      const response = await this.httpClient.post(`/events/${eventId}/ticket-categories`, data)
+      return response.data
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new NetworkError(`Failed to create ticket category: ${error.message}`, error)
+      }
+      throw error
+    }
+  }
+
+  async updateTicketCategory(categoryId: string, data: UpdateTicketCategoryData): Promise<TicketCategory> {
+    try {
+      const response = await this.httpClient.put(`/events/ticket-categories/${categoryId}`, data)
+      return response.data
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        throw new NotFoundError('Ticket Category', categoryId)
+      }
+      if (axios.isAxiosError(error)) {
+        throw new NetworkError(`Failed to update ticket category: ${error.message}`, error)
+      }
+      throw error
+    }
+  }
+
+  async deleteTicketCategory(categoryId: string): Promise<void> {
+    try {
+      await this.httpClient.delete(`/events/ticket-categories/${categoryId}`)
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        throw new NotFoundError('Ticket Category', categoryId)
+      }
+      if (axios.isAxiosError(error)) {
+        throw new NetworkError(`Failed to delete ticket category: ${error.message}`, error)
       }
       throw error
     }

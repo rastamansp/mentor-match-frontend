@@ -3,6 +3,7 @@ import { LoginDto } from '../../application/dto/LoginDto'
 import { container } from '../../shared/di/container'
 import { ILogger } from '../../infrastructure/logging/ILogger'
 import { ValidationError, UnauthorizedError } from '../../domain/errors/DomainError'
+import { useAuth as useAuthContext } from '../../contexts/AuthContext'
 
 interface UseLoginResult {
   login: (data: LoginDto) => Promise<void>
@@ -13,6 +14,7 @@ interface UseLoginResult {
 export const useLogin = (): UseLoginResult => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { login: contextLogin } = useAuthContext()
   const logger: ILogger = container.logger
 
   const login = useCallback(async (data: LoginDto): Promise<void> => {
@@ -22,13 +24,10 @@ export const useLogin = (): UseLoginResult => {
     try {
       logger.info('useLogin: Starting login process', { email: data.email })
       
-      const response = await container.loginUseCase.execute(data)
+      // Usar o login do contexto que já atualiza o estado global
+      await contextLogin(data.email, data.password)
       
-      // Armazenar token e dados do usuário
-      localStorage.setItem('token', response.token)
-      localStorage.setItem('user', JSON.stringify(response.user))
-      
-      logger.info('useLogin: Login successful', { userId: response.user.id })
+      logger.info('useLogin: Login successful')
     } catch (err) {
       let errorMessage = 'Erro ao fazer login'
       
@@ -44,7 +43,7 @@ export const useLogin = (): UseLoginResult => {
     } finally {
       setLoading(false)
     }
-  }, [logger])
+  }, [logger, contextLogin])
 
   return {
     login,

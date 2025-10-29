@@ -20,9 +20,24 @@ export const useTickets = (filters?: TicketFilters): UseTicketsResult => {
       setLoading(true)
       setError(null)
       
-      const data = await container.ticketRepository.findAll(filters)
-      setTickets(data)
+      console.log('🎫 useTickets.fetchTickets - Filtros:', filters)
+      
+      // Se não há filtros específicos, buscar meus tickets
+      const data = filters?.userId 
+        ? await container.ticketRepository.findAll(filters)
+        : await container.ticketRepository.findMyTickets()
+      
+      console.log('🎫 useTickets.fetchTickets - Tickets recebidos:', data)
+      console.log('🎫 useTickets.fetchTickets - Tipo:', typeof data)
+      console.log('🎫 useTickets.fetchTickets - É array?', Array.isArray(data))
+      
+      // Garantir que temos um array
+      const ticketsArray = Array.isArray(data) ? data : []
+      console.log('🎫 useTickets.fetchTickets - Quantidade de tickets:', ticketsArray.length)
+      
+      setTickets(ticketsArray)
     } catch (err) {
+      console.error('❌ useTickets.fetchTickets - Erro:', err)
       setError(err as Error)
       container.logger.error('useTickets: Failed to fetch tickets', err as Error, { filters })
     } finally {

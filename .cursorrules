@@ -14,6 +14,7 @@ Este é um projeto React + TypeScript + Vite que implementa o frontend da plataf
 - ❌ **NUNCA** remover interfaces ou tipos TypeScript
 - ❌ **NUNCA** fazer operações síncronas bloqueantes
 - ❌ **NUNCA** misturar lógica de negócio com componentes de UI
+- ❌ **NUNCA** usar `alert()` - sempre usar react-hot-toast
 
 ### ✅ **SEMPRE corrigir problemas de configuração:**
 - ✅ **SEMPRE** verificar variáveis de ambiente
@@ -21,14 +22,15 @@ Este é um projeto React + TypeScript + Vite que implementa o frontend da plataf
 - ✅ **SEMPRE** implementar fallbacks e retry logic
 - ✅ **SEMPRE** usar logging estruturado para debug
 - ✅ **SEMPRE** seguir princípios de resiliência
+- ✅ **SEMPRE** usar react-hot-toast para notificações
 
 ## 🏗️ Arquitetura e Padrões
 
 ### Clean Architecture (Adaptada para Frontend)
-- **Entities**: Tipos e interfaces de domínio
-- **Use Cases**: Custom hooks e lógica de negócio
-- **Interface Adapters**: Services, API clients, Context providers
-- **Frameworks & Drivers**: React, Vite, Tailwind, Axios
+- **Entities**: Tipos e interfaces de domínio (src/domain/entities)
+- **Use Cases**: Casos de uso da aplicação (src/application/use-cases)
+- **Interface Adapters**: Services, API clients, Context providers (src/infrastructure)
+- **Frameworks & Drivers**: React, Vite, Tailwind, Axios (src/presentation)
 
 ### SOLID Principles (Adaptados para Frontend)
 - **S**: Single Responsibility Principle (componentes com uma responsabilidade)
@@ -43,55 +45,61 @@ Este é um projeto React + TypeScript + Vite que implementa o frontend da plataf
 - **Observer Pattern**: Para gerenciamento de estado (Context API)
 - **Command Pattern**: Para ações do usuário
 - **Provider Pattern**: Para injeção de dependências
+- **Custom Hooks Pattern**: Para lógica de negócio reutilizável
 
-## 📁 Estrutura de Pastas
+## 📁 Estrutura de Pastas (Clean Architecture)
 
 ```
 src/
-├── main.tsx                    # Ponto de entrada
-├── App.tsx                     # Componente principal
-├── components/                 # Componentes reutilizáveis
-│   ├── Layout.tsx
-│   ├── Header.tsx
-│   ├── Footer.tsx
-│   └── ProtectedRoute.tsx
-├── pages/                      # Páginas da aplicação
-│   ├── Home.tsx
-│   ├── Events.tsx
-│   ├── EventDetail.tsx
-│   ├── Login.tsx
-│   ├── Register.tsx
-│   ├── Dashboard.tsx
-│   ├── MyTickets.tsx
-│   └── AdminDashboard.tsx
-├── services/                   # Serviços de API
-│   └── api.ts
-├── contexts/                   # Contextos React
-│   └── AuthContext.tsx
-├── types/                      # Definições TypeScript
-│   └── index.ts
-├── hooks/                      # Custom hooks (futuro)
-├── utils/                      # Utilitários (futuro)
-└── index.css                   # Estilos globais
+├── domain/                      # Camada de Domínio
+│   ├── entities/               # Entidades de negócio
+│   ├── repositories/           # Interfaces dos repositórios
+│   └── errors/                 # Erros de domínio
+├── application/                # Camada de Aplicação
+│   ├── use-cases/             # Casos de uso
+│   ├── dto/                   # Data Transfer Objects
+│   └── validators/            # Validadores Zod
+├── infrastructure/             # Camada de Infraestrutura
+│   ├── repositories/          # Implementações dos repositórios
+│   ├── logging/               # Sistema de logging
+│   └── http/                  # Cliente HTTP
+├── presentation/              # Camada de Apresentação
+│   ├── hooks/                # Custom hooks
+│   ├── components/           # Componentes React
+│   ├── pages/               # Páginas da aplicação
+│   └── contexts/             # Contextos React
+├── shared/                   # Código compartilhado
+│   ├── di/                  # Container de injeção de dependências
+│   ├── constants/           # Constantes
+│   └── utils/               # Utilitários
+├── components/              # Componentes compartilhados globais
+├── contexts/                # Contextos globais
+├── App.tsx                  # Componente principal com Toaster
+├── main.tsx                 # Arquivo de entrada
+└── index.css                # Estilos globais
 ```
 
 ## 🔧 Padrões de Código
 
 ### Nomenclatura
 - **Componentes**: PascalCase (ex: `EventCard`, `UserProfile`)
-- **Interfaces**: PascalCase com prefixo I (ex: `IEvent`, `IUser`)
+- **Interfaces**: PascalCase com prefixo I (ex: `IEvent`, `IUser`) OU sem prefixo (ex: `EventCardProps`)
 - **Funções**: camelCase (ex: `handleSubmit`, `validateForm`)
 - **Variáveis**: camelCase (ex: `eventList`, `userData`)
 - **Constantes**: UPPER_SNAKE_CASE (ex: `API_BASE_URL`, `MAX_EVENTS`)
 - **Arquivos**: PascalCase para componentes, camelCase para outros (ex: `EventCard.tsx`, `apiService.ts`)
+- **Páginas**: Sufixo `.page.tsx` (ex: `Events.page.tsx`, `Login.page.tsx`)
 
 ### Estrutura de Componentes
 ```typescript
-// Sempre usar TypeScript strict
+import React from 'react'
+import { toast } from 'react-hot-toast'
+// Imports específicos depois dos genéricos
+
 interface IEventCardProps {
-  event: IEvent;
-  onSelect?: (event: IEvent) => void;
-  className?: string;
+  event: IEvent
+  onSelect?: (event: IEvent) => void
+  className?: string
 }
 
 export const EventCard: React.FC<IEventCardProps> = ({ 
@@ -100,357 +108,391 @@ export const EventCard: React.FC<IEventCardProps> = ({
   className 
 }) => {
   // Hooks primeiro
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
   
-  // Handlers
+  // Handlers com useCallback
   const handleClick = useCallback(() => {
-    onSelect?.(event);
-  }, [event, onSelect]);
+    onSelect?.(event)
+  }, [event, onSelect])
+  
+  // useEffects
+  useEffect(() => {
+    // efeitos
+  }, [])
   
   // Render
   return (
     <div className={className} onClick={handleClick}>
       {/* JSX */}
     </div>
-  );
-};
+  )
+}
 ```
 
-### Interfaces e Tipos
+### Sistema de Notificações com react-hot-toast
+
+**SEMPRE use toast ao invés de alert():**
 ```typescript
-// Sempre definir interfaces para props e dados
-export interface IEvent {
-  id: string;
-  title: string;
-  description: string;
-  date: Date;
-  location: string;
-  price: number;
-  category: EventCategory;
-}
+import { toast } from 'react-hot-toast'
 
-export interface IUser {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  createdAt: Date;
-}
+// Sucesso
+toast.success('Operação realizada com sucesso!')
 
-// Enums para valores fixos
-export enum EventCategory {
-  MUSIC = 'MUSIC',
-  SPORTS = 'SPORTS',
-  CULTURE = 'CULTURE',
-  BUSINESS = 'BUSINESS'
-}
+// Erro
+toast.error('Erro ao realizar operação')
 
-export enum UserRole {
-  USER = 'USER',
-  ORGANIZER = 'ORGANIZER',
-  ADMIN = 'ADMIN'
-}
+// Aviso
+toast('Mensagem de aviso', { icon: '⚠️' })
+
+// Customizado
+toast((t) => (
+  <span>
+    Mensagem personalizada
+    <button onClick={() => toast.dismiss(t.id)}>Fechar</button>
+  </span>
+))
 ```
 
 ## 🎯 Padrões de Custom Hooks
 
 ### Estrutura de Custom Hook
 ```typescript
-// Sempre usar TypeScript strict
-export const useEvents = () => {
-  const [events, setEvents] = useState<IEvent[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+import { useState, useCallback } from 'react'
+import { container } from '../../shared/di/container'
+import { ILogger } from '../../infrastructure/logging/ILogger'
+
+interface UseCustomHookResult {
+  data: any
+  loading: boolean
+  error: Error | null
+  refetch: () => Promise<void>
+}
+
+export const useCustomHook = (): UseCustomHookResult => {
+  const [data, setData] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+  const logger: ILogger = container.logger
   
-  const fetchEvents = useCallback(async () => {
+  const fetch = useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
-      const data = await apiService.getEvents();
-      setEvents(data);
+      setLoading(true)
+      setError(null)
+      
+      const result = await container.repository.method()
+      setData(result)
+      
+      logger.info('Operation successful', { data: result })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      setError(err as Error)
+      logger.error('Operation failed', err as Error)
+      throw err
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [logger])
   
   useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
+    fetch()
+  }, [fetch])
   
   return {
-    events,
+    data,
     loading,
     error,
-    refetch: fetchEvents
-  };
-};
+    refetch: fetch
+  }
+}
 ```
 
-## 🔌 Padrões de Services
+## 🔌 Padrões de Repository
 
-### Estrutura de Service
+### Interface de Repository
 ```typescript
-// Sempre usar interfaces para abstrações
-export interface IApiService {
-  getEvents(): Promise<IEvent[]>;
-  getEvent(id: string): Promise<IEvent>;
-  createEvent(event: ICreateEventRequest): Promise<IEvent>;
-  updateEvent(id: string, event: IUpdateEventRequest): Promise<IEvent>;
-  deleteEvent(id: string): Promise<void>;
+import { Entity } from '../entities/Entity.entity'
+
+export interface IRepository {
+  findAll(filters?: any): Promise<Entity[]>
+  findById(id: string): Promise<Entity | null>
+  create(data: CreateData): Promise<Entity>
+  update(id: string, data: UpdateData): Promise<Entity>
+  delete(id: string): Promise<void>
 }
 
-// Implementação concreta
-export class ApiService implements IApiService {
-  private baseURL: string;
+export interface CreateData {
+  // campos
+}
+
+export interface UpdateData extends Partial<CreateData> {}
+```
+
+### Implementação de Repository
+```typescript
+import { AxiosInstance } from 'axios'
+import { IRepository } from './IRepository'
+import { Entity } from '../entities/Entity.entity'
+import { NetworkError, NotFoundError } from '../../domain/errors/DomainError'
+import axios from 'axios'
+
+export class EntityRepository implements IRepository {
+  constructor(private readonly httpClient: AxiosInstance) {}
   
-  constructor(baseURL: string = import.meta.env.VITE_API_URL) {
-    this.baseURL = baseURL;
-  }
-  
-  async getEvents(): Promise<IEvent[]> {
+  async findAll(filters?: any): Promise<Entity[]> {
     try {
-      const response = await fetch(`${this.baseURL}/events`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      const response = await this.httpClient.get('/entities', { params: filters })
+      return response.data
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new NetworkError(`Failed to fetch entities: ${error.message}`, error)
       }
-      return await response.json();
-    } catch (error) {
-      throw new Error(`Failed to fetch events: ${error}`);
+      throw error
     }
   }
   
-  // Outros métodos...
+  // Outros métodos seguindo mesmo padrão...
 }
 ```
 
-## 🎨 Padrões de Context
+## 🎨 Padrões de Páginas
 
-### Estrutura de Context
+### Estrutura de Página
 ```typescript
-// Sempre definir interface para o contexto
-interface IAuthContext {
-  user: IUser | null;
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-  loading: boolean;
-}
+import React, { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { toast } from 'react-hot-toast'
+import { useCustomHook } from '../hooks/useCustomHook'
+// Outros imports
 
-// Criar contexto
-export const AuthContext = createContext<IAuthContext | undefined>(undefined);
-
-// Provider
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
-  children 
-}) => {
-  const [user, setUser] = useState<IUser | null>(null);
-  const [loading, setLoading] = useState(false);
+export const EntityPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const { data, loading, error } = useCustomHook()
   
-  const login = useCallback(async (email: string, password: string) => {
+  // Estados
+  const [formData, setFormData] = useState<FormDataType>({
+    // campos
+  })
+  
+  // Handlers
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
     try {
-      setLoading(true);
-      const userData = await apiService.login(email, password);
-      setUser(userData);
-    } catch (error) {
-      throw new Error('Login failed');
-    } finally {
-      setLoading(false);
+      // operação
+      toast.success('Operação realizada com sucesso!')
+      navigate('/next-page')
+    } catch (err) {
+      toast.error('Erro ao realizar operação')
     }
-  }, []);
+  }
   
-  const logout = useCallback(() => {
-    setUser(null);
-  }, []);
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
   
-  const value: IAuthContext = {
-    user,
-    isAuthenticated: !!user,
-    login,
-    logout,
-    loading
-  };
+  // Error state
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600">{error.message}</p>
+      </div>
+    )
+  }
   
+  // Render
   return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+    <div className="container mx-auto px-4 py-8">
+      {/* Conteúdo */}
+    </div>
+  )
+}
 ```
 
-## 📝 Padrões de Logging
+## 📝 Padrões de Validação
 
-### Estrutura de Logs
+### Validação com Zod
 ```typescript
-// Sempre usar logging estruturado
-export const logger = {
-  info: (message: string, data?: Record<string, unknown>) => {
-    if (import.meta.env.DEV) {
-      console.log(`[INFO] ${message}`, data);
-    }
-  },
+import { z } from 'zod'
+
+export const EntitySchema = z.object({
+  title: z.string().min(3, 'Título deve ter no mínimo 3 caracteres').max(200),
+  description: z.string().min(10, 'Descrição deve ter no mínimo 10 caracteres'),
+  price: z.number().positive('Preço deve ser positivo'),
+})
+
+export type Entity = z.infer<typeof EntitySchema>
+
+// Uso em formulários
+const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { name, value } = e.target
+  setFormData(prev => ({
+    ...prev,
+    [name]: name === 'price' ? parseFloat(value) || 0 : value
+  }))
   
-  error: (message: string, error?: Error, data?: Record<string, unknown>) => {
-    if (import.meta.env.DEV) {
-      console.error(`[ERROR] ${message}`, { error, data });
-    }
-  },
-  
-  warn: (message: string, data?: Record<string, unknown>) => {
-    if (import.meta.env.DEV) {
-      console.warn(`[WARN] ${message}`, data);
-    }
+  // Limpar erro ao mudar
+  if (errors[name]) {
+    setErrors(prev => {
+      const newErrors = { ...prev }
+      delete newErrors[name]
+      return newErrors
+    })
   }
-};
-```
-
-## 🧪 Padrões de Testes
-
-### Estrutura de Testes
-```typescript
-// Testes de componentes
-import { render, screen, fireEvent } from '@testing-library/react';
-import { EventCard } from './EventCard';
-
-describe('EventCard', () => {
-  const mockEvent: IEvent = {
-    id: '1',
-    title: 'Test Event',
-    description: 'Test Description',
-    date: new Date(),
-    location: 'Test Location',
-    price: 100,
-    category: EventCategory.MUSIC
-  };
-  
-  it('should render event information', () => {
-    render(<EventCard event={mockEvent} />);
-    
-    expect(screen.getByText('Test Event')).toBeInTheDocument();
-    expect(screen.getByText('Test Description')).toBeInTheDocument();
-  });
-  
-  it('should call onSelect when clicked', () => {
-    const mockOnSelect = jest.fn();
-    render(<EventCard event={mockEvent} onSelect={mockOnSelect} />);
-    
-    fireEvent.click(screen.getByRole('button'));
-    
-    expect(mockOnSelect).toHaveBeenCalledWith(mockEvent);
-  });
-});
-```
-
-## 🔒 Padrões de Segurança
-
-### Validação de Props
-```typescript
-// Sempre validar props críticas
-interface ILoginFormProps {
-  onSubmit: (email: string, password: string) => Promise<void>;
-  loading?: boolean;
 }
 
-export const LoginForm: React.FC<ILoginFormProps> = ({ 
-  onSubmit, 
-  loading = false 
-}) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
+const validateForm = (): boolean => {
+  const newErrors: Record<string, string> = {}
   
-  const validateForm = useCallback(() => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!email || !email.includes('@')) {
-      newErrors.email = 'Email inválido';
-    }
-    
-    if (!password || password.length < 6) {
-      newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [email, password]);
+  if (!formData.title.trim()) {
+    newErrors.title = 'Título é obrigatório'
+  }
   
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-    
-    try {
-      await onSubmit(email, password);
-    } catch (error) {
-      logger.error('Login failed', error as Error);
-    }
-  }, [email, password, onSubmit, validateForm]);
-  
-  // Render...
-};
+  setErrors(newErrors)
+  return Object.keys(newErrors).length === 0
+}
 ```
 
-## 📊 Padrões de Performance
-
-### Otimizações
+### Máscara de CPF
 ```typescript
-// Usar React.memo para componentes puros
-export const EventCard = React.memo<IEventCardProps>(({ event, onSelect }) => {
-  // Componente otimizado
-});
-
-// Usar useMemo para cálculos pesados
-const expensiveValue = useMemo(() => {
-  return events.filter(event => event.category === selectedCategory);
-}, [events, selectedCategory]);
-
-// Usar useCallback para funções estáveis
-const handleEventSelect = useCallback((event: IEvent) => {
-  setSelectedEvent(event);
-}, []);
+const applyCPFMask = (value: string): string => {
+  const cleaned = value.replace(/\D/g, '')
+  if (cleaned.length <= 11) {
+    return cleaned
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+  }
+  return value
+}
 ```
 
-## 🚫 O que NÃO fazer
+## 🎨 Padrões de UI com react-hot-toast
 
-- ❌ Não usar `any` type
-- ❌ Não fazer `console.log` (usar logger estruturado)
-- ❌ Não deixar props sem validação
-- ❌ Não misturar lógica de negócio com UI
-- ❌ Não usar `var` (sempre `const` ou `let`)
-- ❌ Não fazer operações síncronas bloqueantes
-- ❌ Não esquecer de tratar erros
-- ❌ Não usar variáveis globais
-- ❌ Não criar componentes muito grandes (>200 linhas)
-- ❌ Não usar `useEffect` sem dependências corretas
+### Configuração Global
+```typescript
+// No App.tsx
+import { Toaster } from 'react-hot-toast'
+
+<Toaster
+  position="top-right"
+  toastOptions={{
+    duration: 4000,
+    style: {
+      background: '#363636',
+      color: '#fff',
+    },
+    success: {
+      duration: 3000,
+      iconTheme: {
+        primary: '#10b981',
+        secondary: '#fff',
+      },
+    },
+    error: {
+      duration: 4000,
+      iconTheme: {
+        primary: '#ef4444',
+        secondary: '#fff',
+      },
+    },
+  }}
+/>
+```
+
+## 🔄 Clean Architecture - Camadas
+
+### Domain (Domínio)
+- **Responsabilidade**: Entidades e regras de negócio
+- **Não depende de**: Camadas externas
+- **Exemplo**: `Event.entity.ts`, `IEventRepository.ts`
+
+### Application (Aplicação)
+- **Responsabilidade**: Casos de uso e DTOs
+- **Depende de**: Domain
+- **Exemplo**: `CreateEvent.usecase.ts`, `CreateEventDto.ts`
+
+### Infrastructure (Infraestrutura)
+- **Responsabilidade**: Implementações concretas
+- **Depende de**: Domain
+- **Exemplo**: `EventRepository.ts`, `AuthRepository.ts`
+
+### Presentation (Apresentação)
+- **Responsabilidade**: UI e interação com usuário
+- **Depende de**: Application e Infrastructure
+- **Exemplo**: `Events.page.tsx`, `useEvents.ts`
+
+## 🚫 O que NUNCA fazer
+
+- ❌ **NUNCA** usar `any` type - sempre tipar corretamente
+- ❌ **NUNCA** usar `console.log` - usar logger estruturado
+- ❌ **NUNCA** usar `alert()` - usar react-hot-toast
+- ❌ **NUNCA** deixar props sem validação
+- ❌ **NUNCA** misturar lógica de negócio com UI
+- ❌ **NUNCA** usar `var` (sempre `const` ou `let`)
+- ❌ **NUNCA** fazer operações síncronas bloqueantes
+- ❌ **NUNCA** esquecer de tratar erros
+- ❌ **NUNCA** usar variáveis globais
+- ❌ **NUNCA** criar componentes muito grandes (>400 linhas)
+- ❌ **NUNCA** usar `useEffect` sem dependências corretas
+- ❌ **NUNCA** remover validações existentes
+- ❌ **NUNCA** desabilitar tratamento de erros
 
 ## ✅ O que SEMPRE fazer
 
 - ✅ Usar TypeScript strict mode
 - ✅ Definir interfaces para todas as props
-- ✅ Usar hooks apropriadamente
-- ✅ Validar entrada de dados
-- ✅ Tratar erros adequadamente
-- ✅ Usar logs estruturados
+- ✅ Usar hooks apropriadamente (useState, useEffect, useCallback, useMemo)
+- ✅ Validar entrada de dados com Zod
+- ✅ Tratar erros adequadamente com try/catch
+- ✅ Usar react-hot-toast para notificações
+- ✅ Usar logs estruturados (container.logger)
 - ✅ Seguir princípios SOLID
 - ✅ Implementar Clean Architecture
 - ✅ Usar React.memo quando apropriado
 - ✅ Usar useCallback e useMemo quando necessário
 - ✅ Separar lógica de negócio de UI
 - ✅ Criar custom hooks para lógica reutilizável
+- ✅ Organizar imports: React → Third-party → Internal
+- ✅ Usar sufixo `.page.tsx` para páginas
+- ✅ Usar PascalCase para componentes e interfaces
 
 ## 🔄 Fluxo de Desenvolvimento
 
 1. **Definir Interface** - Como o componente se comunica
 2. **Criar Componente** - Implementação seguindo os padrões
 3. **Adicionar Hooks** - Lógica de estado e efeitos
-4. **Validar Props** - Verificar entrada de dados
+4. **Validar Props** - Verificar entrada de dados com Zod
 5. **Tratar Erros** - Implementar tratamento adequado
-6. **Testar** - Componente funciona corretamente
-7. **Otimizar** - Performance quando necessário
+6. **Notificações** - Usar react-hot-toast ao invés de alert
+7. **Testar** - Componente funciona corretamente
+8. **Otimizar** - Performance quando necessário
+
+## 📚 Bibliotecas e Ferramentas
+
+### Principais
+- **React 18**: Biblioteca UI
+- **TypeScript**: Tipagem estática
+- **Vite**: Build tool
+- **React Router**: Roteamento
+- **Tailwind CSS**: Estilização
+- **Axios**: Cliente HTTP
+- **react-hot-toast**: Sistema de notificações
+- **Zod**: Validação de esquemas
+- **date-fns**: Manipulação de datas
+- **Lucide React**: Ícones
+- **React Hook Form**: Formulários
+
+### Arquitetura
+- Clean Architecture adaptada para frontend
+- SOLID Principles
+- Repository Pattern
+- Dependency Injection
+- Custom Hooks Pattern
 
 ---
 
