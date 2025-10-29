@@ -15,7 +15,7 @@ COPY . .
 # Build arguments for environment variables
 ARG VITE_API_URL=https://api-events.gwan.com.br/api
 ARG VITE_APP_NAME=GWAN Events
-ARG VITE_APP_VERSION=1.0.0
+ARG VITE_APP_VERSION=1.2.0
 
 # Set environment variables for build
 ENV VITE_API_URL=$VITE_API_URL

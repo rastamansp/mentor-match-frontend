@@ -1,5 +1,4 @@
 import { Ticket } from '../entities/Ticket.entity'
-import { TicketCategory } from '../entities/Ticket.entity'
 
 export interface ITicketRepository {
   findAll(filters?: TicketFilters): Promise<Ticket[]>

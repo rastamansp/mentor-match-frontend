@@ -26,7 +26,9 @@ export const useAuth = (): UseAuthResult => {
       const response = await container.loginUseCase.execute(data)
       
       // Armazenar token e usuário
-      localStorage.setItem('token', response.token)
+      if (response.token) {
+        localStorage.setItem('token', response.token)
+      }
       localStorage.setItem('user', JSON.stringify(response.user))
       setUser(response.user)
       
@@ -47,8 +49,10 @@ export const useAuth = (): UseAuthResult => {
       
       const response = await container.registerUseCase.execute(data)
       
-      // Armazenar token e usuário
-      localStorage.setItem('token', response.token)
+      // Armazenar token e usuário (token pode ser undefined no registro)
+      if (response.token) {
+        localStorage.setItem('token', response.token)
+      }
       localStorage.setItem('user', JSON.stringify(response.user))
       setUser(response.user)
       
