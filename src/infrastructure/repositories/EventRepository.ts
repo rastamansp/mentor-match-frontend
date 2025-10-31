@@ -10,7 +10,25 @@ export class EventRepository implements IEventRepository {
   async findAll(filters?: EventFilters): Promise<Event[]> {
     try {
       const response = await this.httpClient.get('/events', { params: filters })
-      return response.data
+      
+      // Garantir que a resposta seja sempre um array
+      const data = response.data
+      if (Array.isArray(data)) {
+        return data
+      }
+      
+      // Se a resposta for um objeto com propriedade data ou events, usar isso
+      if (data && typeof data === 'object') {
+        if (Array.isArray(data.data)) {
+          return data.data
+        }
+        if (Array.isArray(data.events)) {
+          return data.events
+        }
+      }
+      
+      // Se nada funcionar, retornar array vazio
+      return []
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new NetworkError(`Failed to fetch events: ${error.message}`, error)

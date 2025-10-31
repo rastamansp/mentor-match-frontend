@@ -14,11 +14,14 @@ export class ListEventsUseCase {
       
       const events = await this.eventRepository.findAll(filters)
       
+      // Garantir que sempre retorne um array
+      const eventsArray = Array.isArray(events) ? events : []
+      
       this.logger.info('ListEventsUseCase: Events fetched successfully', {
-        count: events.length
+        count: eventsArray.length
       })
       
-      return events
+      return eventsArray
     } catch (error) {
       this.logger.error('ListEventsUseCase: Error fetching events', error as Error, { filters })
       throw error

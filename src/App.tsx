@@ -15,6 +15,10 @@ import { DashboardPage } from './presentation/pages/Dashboard.page'
 import { MyTicketsPage } from './presentation/pages/MyTickets.page'
 import { AdminDashboardPage } from './presentation/pages/AdminDashboard.page'
 import { ManageUsersPage } from './presentation/pages/ManageUsers.page'
+import { ArtistsPage } from './presentation/pages/Artists.page'
+import { CreateArtistPage } from './presentation/pages/CreateArtist.page'
+import { ArtistDetailPage } from './presentation/pages/ArtistDetail.page'
+import { EditArtistPage } from './presentation/pages/EditArtist.page'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -91,6 +95,18 @@ function App() {
               <ManageUsersPage />
             </ProtectedRoute>
           } />
+          <Route path="/artists" element={<ArtistsPage />} />
+          <Route path="/artists/create" element={
+            <ProtectedRoute>
+              <CreateArtistPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/artists/:id/edit" element={
+            <ProtectedRoute>
+              <EditArtistPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/artists/:id" element={<ArtistDetailPage />} />
         </Routes>
       </Layout>
     </AuthProvider>

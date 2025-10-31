@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useEvents } from '../hooks/useEvents'
 import { Calendar, MapPin, Users, Star } from 'lucide-react'
@@ -7,7 +7,13 @@ export const HomePage: React.FC = () => {
   const { events, loading } = useEvents()
   
   // Mostrar apenas os primeiros 6 eventos
-  const featuredEvents = events.slice(0, 6)
+  // Garantir que events seja sempre um array com proteção extra
+  const featuredEvents = useMemo(() => {
+    if (!events || !Array.isArray(events)) {
+      return []
+    }
+    return events.slice(0, 6)
+  }, [events])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
@@ -64,7 +70,8 @@ export const HomePage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredEvents.map((event) => (
+          {Array.isArray(featuredEvents) && featuredEvents.length > 0 ? (
+            featuredEvents.map((event) => (
             <div key={event.id} className="card hover:shadow-lg transition-shadow">
               <img
                 src={event.image}
@@ -103,7 +110,12 @@ export const HomePage: React.FC = () => {
                 </div>
               </div>
             </div>
-          ))}
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-gray-600">Nenhum evento em destaque no momento.</p>
+            </div>
+          )}
         </div>
       </section>
 

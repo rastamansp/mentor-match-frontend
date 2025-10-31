@@ -21,10 +21,13 @@ export const useEvents = (filters?: EventFilters): UseEventsResult => {
       setError(null)
       
       const data = await container.listEventsUseCase.execute(filters)
-      setEvents(data)
+      // Garantir que data seja sempre um array
+      setEvents(Array.isArray(data) ? data : [])
     } catch (err) {
       setError(err as Error)
       container.logger.error('useEvents: Failed to fetch events', err as Error, { filters })
+      // Em caso de erro, manter o array vazio
+      setEvents([])
     } finally {
       setLoading(false)
     }

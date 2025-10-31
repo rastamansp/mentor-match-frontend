@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { Menu, X, User, LogOut, Calendar, Ticket } from 'lucide-react'
+import { Menu, X, User, LogOut, Calendar, Ticket, Music } from 'lucide-react'
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth()
@@ -27,6 +27,9 @@ const Header: React.FC = () => {
           <nav className="hidden md:flex items-center space-x-8">
             <Link to="/events" className="text-gray-600 hover:text-gray-900 transition-colors">
               Eventos
+            </Link>
+            <Link to="/artists" className="text-gray-600 hover:text-gray-900 transition-colors">
+              Artistas
             </Link>
             
             {user ? (
@@ -93,6 +96,9 @@ const Header: React.FC = () => {
             <nav className="flex flex-col space-y-4">
               <Link to="/events" className="text-gray-600 hover:text-gray-900 transition-colors">
                 Eventos
+              </Link>
+              <Link to="/artists" className="text-gray-600 hover:text-gray-900 transition-colors">
+                Artistas
               </Link>
               
               {user ? (
