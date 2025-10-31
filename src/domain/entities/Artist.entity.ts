@@ -24,16 +24,16 @@ export class ArtistEntity {
 
   get id(): string { return this.data.id }
   get artisticName(): string { return this.data.artisticName }
-  get name(): string | undefined { return this.data.name }
-  get birthDate(): string | undefined { return this.data.birthDate }
-  get biography(): string | undefined { return this.data.biography }
-  get instagramUsername(): string | undefined { return this.data.instagramUsername }
-  get youtubeUsername(): string | undefined { return this.data.youtubeUsername }
-  get xUsername(): string | undefined { return this.data.xUsername }
-  get spotifyUsername(): string | undefined { return this.data.spotifyUsername }
-  get tiktokUsername(): string | undefined { return this.data.tiktokUsername }
-  get siteUrl(): string | undefined { return this.data.siteUrl }
-  get image(): string | undefined { return this.data.image }
+  get name(): string | undefined { return this.data.name ?? undefined }
+  get birthDate(): string | undefined { return this.data.birthDate ?? undefined }
+  get biography(): string | undefined { return this.data.biography ?? undefined }
+  get instagramUsername(): string | undefined { return this.data.instagramUsername ?? undefined }
+  get youtubeUsername(): string | undefined { return this.data.youtubeUsername ?? undefined }
+  get xUsername(): string | undefined { return this.data.xUsername ?? undefined }
+  get spotifyUsername(): string | undefined { return this.data.spotifyUsername ?? undefined }
+  get tiktokUsername(): string | undefined { return this.data.tiktokUsername ?? undefined }
+  get siteUrl(): string | undefined { return this.data.siteUrl ?? undefined }
+  get image(): string | undefined { return this.data.image ?? undefined }
   get createdAt(): string { return this.data.createdAt }
   get updatedAt(): string { return this.data.updatedAt }
 

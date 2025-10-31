@@ -16,7 +16,7 @@ export class CreateArtistUseCase {
       const validationResult = CreateArtistDtoSchema.safeParse(data)
       
       if (!validationResult.success) {
-        const errors = validationResult.error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join(', ')
+        const errors = validationResult.error.issues.map((err) => `${err.path.join('.')}: ${err.message}`).join(', ')
         throw new ValidationError(`Dados inválidos: ${errors}`)
       }
 

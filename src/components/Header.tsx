@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { Menu, X, User, LogOut, Calendar, Ticket, Music } from 'lucide-react'
+import { Menu, X, User, LogOut, Calendar, Ticket } from 'lucide-react'
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth()
