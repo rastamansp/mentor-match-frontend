@@ -97,12 +97,12 @@ function App() {
           } />
           <Route path="/artists" element={<ArtistsPage />} />
           <Route path="/artists/create" element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRole="ADMIN">
               <CreateArtistPage />
             </ProtectedRoute>
           } />
           <Route path="/artists/:id/edit" element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRole="ADMIN">
               <EditArtistPage />
             </ProtectedRoute>
           } />

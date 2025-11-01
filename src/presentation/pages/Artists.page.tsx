@@ -1,13 +1,17 @@
 import React, { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useArtists } from '../hooks/useArtists'
+import { useAuth } from '../../contexts/AuthContext'
 import { ArtistFilters } from '../../domain/repositories/IArtistRepository'
 import { Search, Music, Plus, User } from 'lucide-react'
 
 export const ArtistsPage: React.FC = () => {
+  const { user } = useAuth()
   const [filters, setFilters] = useState<ArtistFilters>({})
   const [searchTerm, setSearchTerm] = useState('')
   const { artists, loading, error, refetch } = useArtists(filters)
+  
+  const isAdmin = user?.role === 'ADMIN'
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,13 +58,15 @@ export const ArtistsPage: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Artistas</h1>
             <p className="text-gray-600">Explore nossa galeria de artistas</p>
           </div>
-          <Link
-            to="/artists/create"
-            className="btn-primary flex items-center gap-2"
-          >
-            <Plus className="w-5 h-5" />
-            Cadastrar Artista
-          </Link>
+          {isAdmin && (
+            <Link
+              to="/artists/create"
+              className="btn-primary flex items-center gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              Cadastrar Artista
+            </Link>
+          )}
         </div>
 
         {/* Barra de Busca */}
@@ -141,12 +147,14 @@ export const ArtistsPage: React.FC = () => {
         <div className="text-center py-12">
           <Music className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-500 text-lg">Nenhum artista encontrado.</p>
-          <Link
-            to="/artists/create"
-            className="mt-4 inline-block text-blue-600 hover:text-blue-700 font-medium"
-          >
-            Cadastrar primeiro artista
-          </Link>
+          {isAdmin && (
+            <Link
+              to="/artists/create"
+              className="mt-4 inline-block text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Cadastrar primeiro artista
+            </Link>
+          )}
         </div>
       )}
     </div>

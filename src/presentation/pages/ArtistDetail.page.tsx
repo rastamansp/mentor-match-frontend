@@ -95,7 +95,7 @@ export const ArtistDetailPage: React.FC = () => {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar para Artistas
         </Link>
-        {user && (
+        {user && user.role === 'ADMIN' && (
           <Link
             to={`/artists/${id}/edit`}
             className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
