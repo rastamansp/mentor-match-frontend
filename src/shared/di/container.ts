@@ -90,6 +90,9 @@ const updateArtistUseCase = new UpdateArtistUseCase(artistRepository, logger)
 const deleteArtistUseCase = new DeleteArtistUseCase(artistRepository, logger)
 
 export const container = {
+  // HTTP Client
+  httpClient,
+  
   // Repositories
   eventRepository,
   authRepository,
