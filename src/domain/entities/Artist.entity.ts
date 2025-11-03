@@ -1,5 +1,63 @@
 import { z } from 'zod'
 
+// Schema para imagens do Spotify
+const SpotifyImageSchema = z.object({
+  url: z.string().url(),
+  height: z.number().optional(),
+  width: z.number().optional(),
+})
+
+// Schema para álbuns
+const SpotifyAlbumSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  release_date: z.string(),
+  total_tracks: z.number(),
+  album_type: z.string(),
+  images: z.array(SpotifyImageSchema),
+})
+
+// Schema para top tracks
+const SpotifyTrackSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  duration_ms: z.number(),
+  popularity: z.number(),
+  preview_url: z.string().nullable().optional(),
+  album: z.object({
+    id: z.string(),
+    name: z.string(),
+    images: z.array(SpotifyImageSchema),
+  }),
+})
+
+// Schema para informações do Spotify
+const SpotifyDataSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  genres: z.array(z.string()).optional(),
+  popularity: z.number().optional(),
+  followers: z.object({
+    total: z.number(),
+    href: z.string().nullable().optional(),
+  }).optional(),
+  images: z.array(SpotifyImageSchema).optional(),
+  external_urls: z.object({
+    spotify: z.string().url(),
+  }).optional(),
+  topTracks: z.array(SpotifyTrackSchema).optional(),
+  albums: z.array(SpotifyAlbumSchema).optional(),
+  relatedArtists: z.array(z.any()).optional(),
+})
+
+// Schema para metadata
+const MetadataSchema = z.object({
+  artist: z.any().optional(),
+  events: z.array(z.any()).optional(),
+  spotify: SpotifyDataSchema.optional(),
+  textContent: z.string().optional(),
+}).optional()
+
 export const ArtistSchema = z.object({
   id: z.string().uuid(),
   artisticName: z.string().min(1).max(255),
@@ -13,6 +71,8 @@ export const ArtistSchema = z.object({
   tiktokUsername: z.union([z.string(), z.null()]).optional(),
   siteUrl: z.union([z.string().url(), z.string(), z.null()]).optional(),
   image: z.union([z.string().url(), z.string(), z.null()]).optional(),
+  metadata: MetadataSchema,
+  spotify: SpotifyDataSchema.optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 })

@@ -1,4 +1,4 @@
-import { IArtistRepository, ArtistFilters, CreateArtistData, UpdateArtistData } from '../../domain/repositories/IArtistRepository'
+import { IArtistRepository, ArtistFilters, CreateArtistData, UpdateArtistData, FetchSpotifyDataRequest } from '../../domain/repositories/IArtistRepository'
 import { Artist } from '../../domain/entities/Artist.entity'
 import { NotFoundError, NetworkError } from '../../domain/errors/DomainError'
 import axios, { AxiosInstance } from 'axios'
@@ -87,6 +87,17 @@ export class ArtistRepository implements IArtistRepository {
       }
       if (axios.isAxiosError(error)) {
         throw new NetworkError(`Failed to delete artist: ${error.message}`, error)
+      }
+      throw error
+    }
+  }
+
+  async fetchAndUpdateSpotifyData(data: FetchSpotifyDataRequest): Promise<void> {
+    try {
+      await this.httpClient.post('/artists/spotify/fetch-and-update', data)
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new NetworkError(`Failed to fetch and update Spotify data: ${error.message}`, error)
       }
       throw error
     }

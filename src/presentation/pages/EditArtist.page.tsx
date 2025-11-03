@@ -3,8 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { useUpdateArtist } from '../hooks/useUpdateArtist'
 import { useArtistDetail } from '../hooks/useArtistDetail'
+import { useFetchSpotifyData } from '../hooks/useFetchSpotifyData'
 import { CreateArtistDto } from '../../application/dto/CreateArtistDto'
-import { Globe, Instagram, Youtube, Twitter, Music, Calendar, ArrowLeft, Image } from 'lucide-react'
+import { Globe, Instagram, Youtube, Twitter, Music, Calendar, ArrowLeft, Image, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export const EditArtistPage: React.FC = () => {
@@ -12,6 +13,7 @@ export const EditArtistPage: React.FC = () => {
   const navigate = useNavigate()
   const { artist, loading: loadingArtist, error: errorArtist } = useArtistDetail(id || '')
   const { updateArtist, loading: loadingUpdate } = useUpdateArtist()
+  const { fetchAndUpdate, loading: loadingSpotify } = useFetchSpotifyData()
   
   const [formData, setFormData] = useState<CreateArtistDto>({
     artisticName: '',
@@ -348,10 +350,31 @@ export const EditArtistPage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="spotifyUsername" className="block text-sm font-medium text-gray-700 mb-1">
-                <Music className="w-4 h-4 inline mr-1" />
-                Spotify Username
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label htmlFor="spotifyUsername" className="block text-sm font-medium text-gray-700">
+                  <Music className="w-4 h-4 inline mr-1" />
+                  Spotify Username
+                </label>
+                {formData.spotifyUsername && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await fetchAndUpdate(formData.spotifyUsername || '', id || '')
+                        toast.success('Atualização dos dados do Spotify solicitada com sucesso!')
+                      } catch (err) {
+                        const errorMessage = err instanceof Error ? err.message : 'Erro ao atualizar dados do Spotify'
+                        toast.error(errorMessage)
+                      }
+                    }}
+                    disabled={loadingSpotify || !formData.spotifyUsername}
+                    className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${loadingSpotify ? 'animate-spin' : ''}`} />
+                    Atualizar Dados
+                  </button>
+                )}
+              </div>
               <input
                 type="text"
                 id="spotifyUsername"

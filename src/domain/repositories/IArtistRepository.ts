@@ -6,6 +6,7 @@ export interface IArtistRepository {
   create(data: CreateArtistData): Promise<Artist>
   update(id: string, data: UpdateArtistData): Promise<Artist>
   delete(id: string): Promise<void>
+  fetchAndUpdateSpotifyData(data: FetchSpotifyDataRequest): Promise<void>
 }
 
 export interface ArtistFilters {
@@ -28,4 +29,9 @@ export interface CreateArtistData {
 }
 
 export interface UpdateArtistData extends Partial<CreateArtistData> {}
+
+export interface FetchSpotifyDataRequest {
+  spotifyUrl: string
+  artistId: string
+}
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useArtistDetail } from '../hooks/useArtistDetail'
 import { useAuth } from '../../contexts/AuthContext'
-import { Globe, Instagram, Youtube, Twitter, Music, User, ArrowLeft, Edit, Calendar } from 'lucide-react'
+import { Globe, Instagram, Youtube, Twitter, Music, User, ArrowLeft, Edit, Calendar, Disc, Play, ExternalLink } from 'lucide-react'
 
 export const ArtistDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -82,6 +82,25 @@ export const ArtistDetailPage: React.FC = () => {
     } catch {
       return dateString
     }
+  }
+
+  // Obter dados do Spotify (pode vir de metadata.spotify ou spotify no nível raiz)
+  const spotifyData = (artist as any)?.spotify || (artist as any)?.metadata?.spotify || null
+
+  // Formatar duração da música
+  const formatDuration = (ms: number): string => {
+    const minutes = Math.floor(ms / 60000)
+    const seconds = Math.floor((ms % 60000) / 1000)
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`
+  }
+
+  // Obter imagem do álbum (melhor qualidade disponível)
+  const getAlbumImage = (images: any[]): string => {
+    if (!images || images.length === 0) return ''
+    // Priorizar 300x300, depois 640x640, depois qualquer outra
+    const image300 = images.find(img => img.width === 300 || img.height === 300)
+    const image640 = images.find(img => img.width === 640 || img.height === 640)
+    return image300?.url || image640?.url || images[0]?.url || ''
   }
 
   return (
@@ -233,6 +252,166 @@ export const ArtistDetailPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Seção Spotify */}
+      {spotifyData && (
+        <div className="mt-12 space-y-8">
+          <div className="flex items-center justify-between border-b pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                <Music className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">No Spotify</h2>
+                {spotifyData.external_urls?.spotify && (
+                  <a
+                    href={spotifyData.external_urls.spotify}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-green-600 hover:text-green-700 flex items-center gap-1 mt-1"
+                  >
+                    Ouvir no Spotify
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Informações Gerais do Spotify */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {spotifyData.followers?.total !== undefined && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm text-gray-600 mb-1">Seguidores</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {spotifyData.followers.total.toLocaleString('pt-BR')}
+                </p>
+              </div>
+            )}
+            {spotifyData.popularity !== undefined && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm text-gray-600 mb-1">Popularidade</p>
+                <p className="text-2xl font-bold text-gray-900">{spotifyData.popularity}/100</p>
+              </div>
+            )}
+            {spotifyData.genres && spotifyData.genres.length > 0 && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm text-gray-600 mb-2">Gêneros</p>
+                <div className="flex flex-wrap gap-2">
+                  {spotifyData.genres.slice(0, 3).map((genre: string, index: number) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium"
+                    >
+                      {genre}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Top Tracks */}
+          {spotifyData.topTracks && spotifyData.topTracks.length > 0 && (
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Músicas Populares</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {spotifyData.topTracks.slice(0, 6).map((track: any) => {
+                  const trackUrl = track.external_urls?.spotify || `https://open.spotify.com/track/${track.id}`
+                  return (
+                    <a
+                      key={track.id}
+                      href={trackUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer block"
+                    >
+                      <div className="flex gap-3">
+                        <div className="relative flex-shrink-0">
+                          {getAlbumImage(track.album?.images || []) ? (
+                            <img
+                              src={getAlbumImage(track.album?.images || [])}
+                              alt={track.album?.name || track.name}
+                              className="w-16 h-16 rounded object-cover"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 rounded bg-gray-200 flex items-center justify-center">
+                              <Music className="w-6 h-6 text-gray-400" />
+                            </div>
+                          )}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-30 transition-opacity rounded">
+                            <Play className="w-6 h-6 text-white opacity-0 hover:opacity-100" />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-900 truncate">{track.name}</p>
+                          <p className="text-sm text-gray-600 truncate">{track.album?.name}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-gray-500">{formatDuration(track.duration_ms)}</span>
+                            {track.popularity && (
+                              <span className="text-xs text-gray-500">• Popularidade: {track.popularity}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </a>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Álbuns */}
+          {spotifyData.albums && spotifyData.albums.length > 0 && (
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Discografia</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {spotifyData.albums.map((album: any) => {
+                  const albumImage = getAlbumImage(album.images || [])
+                  const albumUrl = album.external_urls?.spotify || `https://open.spotify.com/album/${album.id}`
+                  return (
+                    <a
+                      key={album.id}
+                      href={albumUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer block"
+                    >
+                      {albumImage ? (
+                        <img
+                          src={albumImage}
+                          alt={album.name}
+                          className="w-full aspect-square object-cover"
+                        />
+                      ) : (
+                        <div className="w-full aspect-square bg-gray-200 flex items-center justify-center">
+                          <Disc className="w-12 h-12 text-gray-400" />
+                        </div>
+                      )}
+                      <div className="p-3">
+                        <p className="font-semibold text-gray-900 text-sm line-clamp-2 mb-1">
+                          {album.name}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                          <span className="capitalize">{album.album_type}</span>
+                          <span>•</span>
+                          <span>{new Date(album.release_date).getFullYear()}</span>
+                          {album.total_tracks && (
+                            <>
+                              <span>•</span>
+                              <span>{album.total_tracks} faixas</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </a>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
