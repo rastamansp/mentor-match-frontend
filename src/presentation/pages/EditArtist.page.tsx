@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
+import { useAuth } from '../../contexts/AuthContext'
 import { useUpdateArtist } from '../hooks/useUpdateArtist'
 import { useArtistDetail } from '../hooks/useArtistDetail'
 import { useFetchSpotifyData } from '../hooks/useFetchSpotifyData'
+import { useDeleteArtist } from '../hooks/useDeleteArtist'
 import { CreateArtistDto } from '../../application/dto/CreateArtistDto'
-import { Globe, Instagram, Youtube, Twitter, Music, Calendar, ArrowLeft, Image, RefreshCw } from 'lucide-react'
+import { Globe, Instagram, Youtube, Twitter, Music, Calendar, ArrowLeft, Image, RefreshCw, Trash2, X, AlertTriangle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export const EditArtistPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { artist, loading: loadingArtist, error: errorArtist } = useArtistDetail(id || '')
   const { updateArtist, loading: loadingUpdate } = useUpdateArtist()
   const { fetchAndUpdate, loading: loadingSpotify } = useFetchSpotifyData()
+  const { deleteArtist, loading: loadingDelete } = useDeleteArtist()
   
   const [formData, setFormData] = useState<CreateArtistDto>({
     artisticName: '',
@@ -30,6 +34,9 @@ export const EditArtistPage: React.FC = () => {
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+
+  const isAdmin = user?.role === 'ADMIN'
 
   // Preencher formulário quando o artista for carregado
   useEffect(() => {
@@ -421,8 +428,96 @@ export const EditArtistPage: React.FC = () => {
           >
             Cancelar
           </button>
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteModal(true)}
+              className="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors flex items-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Apagar
+            </button>
+          )}
         </div>
       </form>
+
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            {/* Header do Modal */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Confirmar Exclusão</h3>
+                  <p className="text-sm text-gray-600">Esta ação não pode ser desfeita</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                disabled={loadingDelete}
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+
+            {/* Conteúdo do Modal */}
+            <div className="p-6">
+              <p className="text-gray-700 mb-4">
+                Tem certeza que deseja apagar o artista <strong>{artist?.artisticName || artist?.name || 'este artista'}</strong>?
+              </p>
+              <p className="text-sm text-gray-600 mb-6">
+                Todos os dados relacionados serão permanentemente removidos.
+              </p>
+
+              {/* Botões do Modal */}
+              <div className="flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={loadingDelete}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await deleteArtist(id || '')
+                      toast.success('Artista apagado com sucesso!')
+                      navigate('/artists')
+                    } catch (err) {
+                      const errorMessage = err instanceof Error ? err.message : 'Erro ao apagar artista'
+                      toast.error(errorMessage)
+                    } finally {
+                      setShowDeleteModal(false)
+                    }
+                  }}
+                  disabled={loadingDelete}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {loadingDelete ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Apagando...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4" />
+                      Apagar Artista
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
