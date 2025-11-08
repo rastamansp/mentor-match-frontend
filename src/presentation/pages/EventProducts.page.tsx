@@ -1,18 +1,16 @@
 import React, { useState, useMemo } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useProducts } from '../hooks/useProducts'
 import { useDeleteProduct } from '../hooks/useDeleteProduct'
 import { useUpdateProduct } from '../hooks/useUpdateProduct'
 import { useEventDetail } from '../hooks/useEventDetail'
 import { useAuth } from '../../contexts/AuthContext'
 import { Product, ProductCategory } from '../../domain/entities/Product.entity'
-import { CreateProductDto } from '../../application/dto/CreateProductDto'
 import { Search, Plus, Edit, Trash2, X, AlertTriangle, Beer, Utensils, ArrowLeft, Power, PowerOff } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
 export const EventProductsPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>()
-  const navigate = useNavigate()
   const { user } = useAuth()
   const { event, loading: loadingEvent } = useEventDetail(eventId || '')
   const [activeOnly, setActiveOnly] = useState(true)

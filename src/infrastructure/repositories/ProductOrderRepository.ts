@@ -47,7 +47,7 @@ interface Order {
 export class ProductOrderRepository implements IProductOrderRepository {
   constructor(private readonly httpClient: AxiosInstance) {}
 
-  async findByUserId(userId: string): Promise<ProductOrder[]> {
+  async findByUserId(_userId: string): Promise<ProductOrder[]> {
     try {
       // Buscar todos os pedidos do usuário através dos eventos
       // Como não há endpoint direto, vamos buscar por eventos conhecidos
@@ -64,7 +64,7 @@ export class ProductOrderRepository implements IProductOrderRepository {
     }
   }
 
-  async findByEventId(eventId: string, userId?: string): Promise<ProductOrder[]> {
+  async findByEventId(eventId: string, _userId?: string): Promise<ProductOrder[]> {
     try {
       const response = await this.httpClient.get(`/orders/event/${eventId}`)
       const orders: Order[] = Array.isArray(response.data) ? response.data : []

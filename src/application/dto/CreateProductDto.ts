@@ -1,11 +1,5 @@
 import { z } from 'zod'
 
-// Transformar strings vazias em undefined
-const emptyStringToUndefined = z.preprocess(
-  (val) => (val === '' ? undefined : val),
-  z.string().optional()
-)
-
 const urlOrEmpty = z.union([
   z.string().url('URL inválida'),
   z.literal(''),
@@ -27,9 +21,10 @@ export const CreateProductDtoSchema = z.object({
       const decimalPlaces = (val.toString().split('.')[1] || '').length
       return decimalPlaces <= 2
     }, 'Preço deve ter no máximo 2 casas decimais'),
-  category: z.enum(['BEBIDA', 'ALIMENTO'], {
-    errorMap: () => ({ message: 'Categoria deve ser BEBIDA ou ALIMENTO' })
-  }),
+  category: z.enum(['BEBIDA', 'ALIMENTO']).refine(
+    (val) => val === 'BEBIDA' || val === 'ALIMENTO',
+    { message: 'Categoria deve ser BEBIDA ou ALIMENTO' }
+  ),
   image: urlOrEmpty,
   isActive: z.boolean().optional().default(true),
 })
