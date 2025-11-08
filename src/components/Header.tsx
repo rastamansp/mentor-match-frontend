@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { Menu, X, User, LogOut, Calendar, Ticket } from 'lucide-react'
+import { Menu, X, User, LogOut, Calendar, Ticket, ShoppingBag } from 'lucide-react'
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth()
@@ -43,6 +43,10 @@ const Header: React.FC = () => {
                 <Link to="/my-tickets" className="flex items-center space-x-1 text-gray-600 hover:text-gray-900 transition-colors">
                   <Ticket className="h-4 w-4" />
                   <span>Meus Ingressos</span>
+                </Link>
+                <Link to="/purchase-history" className="flex items-center space-x-1 text-gray-600 hover:text-gray-900 transition-colors">
+                  <ShoppingBag className="h-4 w-4" />
+                  <span>Histórico de Compras</span>
                 </Link>
                 
                 {user.role === 'ADMIN' && (
@@ -112,6 +116,10 @@ const Header: React.FC = () => {
                   <Link to="/my-tickets" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors">
                     <Ticket className="h-4 w-4" />
                     <span>Meus Ingressos</span>
+                  </Link>
+                  <Link to="/purchase-history" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors">
+                    <ShoppingBag className="h-4 w-4" />
+                    <span>Histórico de Compras</span>
                   </Link>
                   
                   {user.role === 'ADMIN' && (

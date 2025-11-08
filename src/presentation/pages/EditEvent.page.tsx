@@ -8,7 +8,8 @@ import { useTicketCategories } from '../hooks/useTicketCategories'
 import { useTicketCategoryManagement } from '../hooks/useTicketCategoryManagement'
 import { CreateEventDto } from '../../application/dto/CreateEventDto'
 import { CreateTicketCategoryData } from '../../domain/repositories/IEventRepository'
-import { Calendar, MapPin, Image, Tag, Users, Plus, Trash2, Edit as EditIcon } from 'lucide-react'
+import { Calendar, MapPin, Image, Tag, Users, Plus, Trash2, Edit as EditIcon, Utensils } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export const EditEventPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -336,8 +337,12 @@ export const EditEventPage: React.FC = () => {
     return null
   }
 
-  // Verificar se o usuário é o organizador
-  if (event.organizerId !== user?.id) {
+  // Verificar se o usuário é o organizador ou admin
+  const isOrganizer = event.organizerId === user?.id
+  const isAdmin = user?.role === 'ADMIN'
+  const canEdit = isOrganizer || isAdmin
+
+  if (!canEdit) {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Acesso Negado</h2>
@@ -355,7 +360,18 @@ export const EditEventPage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="bg-white rounded-lg shadow-md p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Editar Evento</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">Editar Evento</h1>
+          {(isOrganizer || isAdmin) && (
+            <Link
+              to={`/events/${id}/products`}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+            >
+              <Utensils className="w-5 h-5" />
+              Editar Cardápio
+            </Link>
+          )}
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Título e Categoria */}

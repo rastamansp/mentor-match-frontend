@@ -19,6 +19,10 @@ import { ArtistsPage } from './presentation/pages/Artists.page'
 import { CreateArtistPage } from './presentation/pages/CreateArtist.page'
 import { ArtistDetailPage } from './presentation/pages/ArtistDetail.page'
 import { EditArtistPage } from './presentation/pages/EditArtist.page'
+import { EventProductsPage } from './presentation/pages/EventProducts.page'
+import { CreateProductPage } from './presentation/pages/CreateProduct.page'
+import { EditProductPage } from './presentation/pages/EditProduct.page'
+import { PurchaseHistoryPage } from './presentation/pages/PurchaseHistory.page'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -85,6 +89,11 @@ function App() {
               <MyTicketsPage />
             </ProtectedRoute>
           } />
+          <Route path="/purchase-history" element={
+            <ProtectedRoute>
+              <PurchaseHistoryPage />
+            </ProtectedRoute>
+          } />
           <Route path="/admin" element={
             <ProtectedRoute requiredRole="ADMIN">
               <AdminDashboardPage />
@@ -107,6 +116,17 @@ function App() {
             </ProtectedRoute>
           } />
           <Route path="/artists/:id" element={<ArtistDetailPage />} />
+          <Route path="/events/:eventId/products" element={<EventProductsPage />} />
+          <Route path="/events/:eventId/products/new" element={
+            <ProtectedRoute>
+              <CreateProductPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/events/:eventId/products/:id/edit" element={
+            <ProtectedRoute>
+              <EditProductPage />
+            </ProtectedRoute>
+          } />
         </Routes>
       </Layout>
     </AuthProvider>

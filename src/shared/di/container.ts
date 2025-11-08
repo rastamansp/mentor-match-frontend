@@ -6,6 +6,8 @@ import { PaymentRepository } from '../../infrastructure/repositories/PaymentRepo
 import { AdminRepository } from '../../infrastructure/repositories/AdminRepository'
 import { ChatRepository } from '../../infrastructure/repositories/ChatRepository'
 import { ArtistRepository } from '../../infrastructure/repositories/ArtistRepository'
+import { ProductRepository } from '../../infrastructure/repositories/ProductRepository'
+import { ProductOrderRepository } from '../../infrastructure/repositories/ProductOrderRepository'
 import { SentryLogger } from '../../infrastructure/logging/SentryLogger'
 import { ListEventsUseCase } from '../../application/use-cases/events/ListEvents.usecase'
 import { GetEventByIdUseCase } from '../../application/use-cases/events/GetEventById.usecase'
@@ -19,6 +21,12 @@ import { CreateArtistUseCase } from '../../application/use-cases/artists/CreateA
 import { GetArtistByIdUseCase } from '../../application/use-cases/artists/GetArtistById.usecase'
 import { UpdateArtistUseCase } from '../../application/use-cases/artists/UpdateArtist.usecase'
 import { DeleteArtistUseCase } from '../../application/use-cases/artists/DeleteArtist.usecase'
+import { ListProductsByEventUseCase } from '../../application/use-cases/products/ListProductsByEvent.usecase'
+import { GetProductByIdUseCase } from '../../application/use-cases/products/GetProductById.usecase'
+import { CreateProductUseCase } from '../../application/use-cases/products/CreateProduct.usecase'
+import { UpdateProductUseCase } from '../../application/use-cases/products/UpdateProduct.usecase'
+import { DeleteProductUseCase } from '../../application/use-cases/products/DeleteProduct.usecase'
+import { GetPurchaseHistoryUseCase } from '../../application/use-cases/purchases/GetPurchaseHistory.usecase'
 
 const httpClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
@@ -70,6 +78,8 @@ const paymentRepository = new PaymentRepository(httpClient)
 const adminRepository = new AdminRepository(httpClient)
 const chatRepository = new ChatRepository(httpClient)
 const artistRepository = new ArtistRepository(httpClient)
+const productRepository = new ProductRepository(httpClient)
+const productOrderRepository = new ProductOrderRepository(httpClient)
 
 // Use Cases - Events
 const listEventsUseCase = new ListEventsUseCase(eventRepository, logger)
@@ -89,6 +99,16 @@ const getArtistByIdUseCase = new GetArtistByIdUseCase(artistRepository, logger)
 const updateArtistUseCase = new UpdateArtistUseCase(artistRepository, logger)
 const deleteArtistUseCase = new DeleteArtistUseCase(artistRepository, logger)
 
+// Use Cases - Products
+const listProductsByEventUseCase = new ListProductsByEventUseCase(productRepository, logger)
+const getProductByIdUseCase = new GetProductByIdUseCase(productRepository, logger)
+const createProductUseCase = new CreateProductUseCase(productRepository, logger)
+const updateProductUseCase = new UpdateProductUseCase(productRepository, logger)
+const deleteProductUseCase = new DeleteProductUseCase(productRepository, logger)
+
+// Use Cases - Purchases
+const getPurchaseHistoryUseCase = new GetPurchaseHistoryUseCase(ticketRepository, paymentRepository, productOrderRepository, logger)
+
 export const container = {
   // HTTP Client
   httpClient,
@@ -101,6 +121,8 @@ export const container = {
   adminRepository,
   chatRepository,
   artistRepository,
+  productRepository,
+  productOrderRepository,
   
   // Use Cases - Events
   listEventsUseCase,
@@ -119,6 +141,16 @@ export const container = {
   getArtistByIdUseCase,
   updateArtistUseCase,
   deleteArtistUseCase,
+  
+  // Use Cases - Products
+  listProductsByEventUseCase,
+  getProductByIdUseCase,
+  createProductUseCase,
+  updateProductUseCase,
+  deleteProductUseCase,
+  
+  // Use Cases - Purchases
+  getPurchaseHistoryUseCase,
   
   // Logger
   logger,

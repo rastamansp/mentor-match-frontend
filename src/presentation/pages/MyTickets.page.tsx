@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTickets } from '../hooks/useTickets'
 import { Ticket } from '../../domain/entities/Ticket.entity'
-import { QrCode, Edit, FileText, Eye, X } from 'lucide-react'
+import { QrCode, Edit, Eye, X } from 'lucide-react'
 
 interface TicketGroup {
   orderId: string
@@ -282,12 +282,21 @@ export const MyTicketsPage: React.FC = () => {
                               {getParticipantName(ticket)}
                             </p>
                             <p className="text-sm text-gray-600">{getParticipantEmail(ticket)}</p>
-                            <button className="text-sm text-blue-600 hover:text-blue-800 mt-1 flex items-center gap-1">
-                              <FileText className="h-3 w-3" />
-                              Ver formulário
-                            </button>
                           </div>
                         </div>
+                        {/* QR Code */}
+                        {ticket.qrCode && (
+                          <div className="flex-shrink-0 ml-4">
+                            <div className="bg-white p-2 rounded-lg border border-gray-200">
+                              <img
+                                src={ticket.qrCode.startsWith('data:image') ? ticket.qrCode : `data:image/png;base64,${ticket.qrCode}`}
+                                alt={`QR Code do ingresso ${formatTicketCode(ticket.id)}`}
+                                className="w-32 h-32 object-contain"
+                              />
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1 text-center">QR Code</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -346,3 +355,4 @@ export const MyTicketsPage: React.FC = () => {
     </div>
   )
 }
+
