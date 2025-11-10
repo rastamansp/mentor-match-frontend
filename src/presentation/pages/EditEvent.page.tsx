@@ -217,8 +217,8 @@ export const EditEventPage: React.FC = () => {
       newErrors.description = 'Descrição deve ter no mínimo 10 caracteres'
     }
     
-    if (categoryFormData.price <= 0) {
-      newErrors.price = 'Preço deve ser maior que zero'
+    if (categoryFormData.price < 0) {
+      newErrors.price = 'Preço não pode ser negativo'
     }
     
     if (categoryFormData.maxQuantity <= 0) {
@@ -754,10 +754,14 @@ export const EditEventPage: React.FC = () => {
                     id="categoryPrice"
                     name="categoryPrice"
                     step="0.01"
-                    value={categoryFormData.price || ''}
-                    onChange={(e) => setCategoryFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                    min="0"
+                    value={categoryFormData.price !== undefined ? categoryFormData.price : ''}
+                    onChange={(e) => {
+                      const value = e.target.value === '' ? 0 : parseFloat(e.target.value)
+                      setCategoryFormData(prev => ({ ...prev, price: isNaN(value) ? 0 : value }))
+                    }}
                     autoComplete="off"
-                    placeholder="150.00"
+                    placeholder="0.00"
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
                       categoryErrors.price ? 'border-red-500' : 'border-gray-300 focus:ring-blue-500'
                     }`}
