@@ -1,40 +1,24 @@
-import { IAuthRepository } from '../../../domain/repositories/IAuthRepository'
-import { LoginDto, LoginDtoSchema } from '../../dto/LoginDto'
-import { ValidationError, UnauthorizedError } from '../../../domain/errors/DomainError'
-import { ILogger } from '../../../infrastructure/logging/ILogger'
-import { z } from 'zod'
+import { IAuthRepository } from '@domain/repositories/IAuthRepository';
+import { User } from '@domain/entities/User.entity';
+import { LoginDto } from '../../dto/LoginDto';
+import { validateLogin } from '../../validators/LoginValidator';
+import { ValidationError } from '@domain/errors/ValidationError';
 
 export class LoginUseCase {
-  constructor(
-    private readonly authRepository: IAuthRepository,
-    private readonly logger: ILogger
-  ) {}
+  constructor(private readonly authRepository: IAuthRepository) {}
 
-  async execute(data: LoginDto): Promise<{ user: any; token: string }> {
+  async execute(dto: LoginDto): Promise<User> {
+    // Validate DTO
+    const validated = validateLogin(dto);
+
     try {
-      this.logger.info('LoginUseCase: Validating input', { email: data.email })
-      
-      // Validação com Zod
-      const validatedData = LoginDtoSchema.parse(data)
-      
-      this.logger.info('LoginUseCase: Attempting login')
-      
-      const response = await this.authRepository.login(validatedData.email, validatedData.password)
-      
-      this.logger.info('LoginUseCase: Login successful', {
-        userId: response.user.id,
-        email: response.user.email
-      })
-      
-      return response
+      return await this.authRepository.login(validated);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        this.logger.warn('LoginUseCase: Validation failed', { errors: error.issues })
-        throw new ValidationError('Dados de login inválidos')
+      if (error instanceof ValidationError) {
+        throw error;
       }
-      
-      this.logger.error('LoginUseCase: Login failed', error as Error, { email: data.email })
-      throw new UnauthorizedError('Credenciais inválidas')
+      throw new ValidationError('Erro ao fazer login. Tente novamente.');
     }
   }
 }
+

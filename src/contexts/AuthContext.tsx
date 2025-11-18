@@ -1,107 +1,78 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { User } from '../domain/entities/User.entity'
-import { RegisterDto } from '../application/dto/RegisterDto'
-import { container } from '../shared/di/container'
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User } from '@domain/entities/User.entity';
+import { container } from '@shared/di/container';
+import { LoginDto } from '@application/dto/LoginDto';
 
 interface AuthContextType {
-  user: User | null
-  login: (email: string, password: string) => Promise<void>
-  register: (userData: RegisterDto) => Promise<void>
-  logout: () => void
-  loading: boolean
+  user: User | null;
+  loading: boolean;
+  login: (dto: LoginDto) => Promise<void>;
+  logout: () => Promise<void>;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+  }
+  return context;
+};
 
 interface AuthProviderProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    const savedUser = localStorage.getItem('user')
-    
-    if (token && savedUser) {
+    const loadUser = async () => {
       try {
-        setUser(JSON.parse(savedUser))
-        // Verificar se o token ainda é válido
-        container.authRepository.getProfile().catch(() => {
-          localStorage.removeItem('token')
-          localStorage.removeItem('user')
-          setUser(null)
-        })
+        const currentUser = await container.authRepository.getCurrentUser();
+        setUser(currentUser);
       } catch (error) {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
-        setUser(null)
+        console.error('Error loading user:', error);
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false)
-  }, [])
+    };
 
-  const login = async (email: string, password: string) => {
+    loadUser();
+  }, []);
+
+  const login = async (dto: LoginDto) => {
     try {
-      const response = await container.loginUseCase.execute({ email, password })
-      
-      console.log('🔐 AuthContext.login - Resposta:', response)
-      console.log('🔐 Token:', response.token)
-      console.log('🔐 User:', response.user)
-      
-      localStorage.setItem('token', response.token)
-      localStorage.setItem('user', JSON.stringify(response.user))
-      setUser(response.user)
-      
-      console.log('✅ AuthContext.login - Token salvo no localStorage')
+      const loggedInUser = await container.loginUseCase.execute(dto);
+      setUser(loggedInUser);
     } catch (error) {
-      console.error('❌ AuthContext.login - Erro:', error)
-      throw error
+      throw error;
     }
-  }
+  };
 
-  const register = async (userData: RegisterDto) => {
+  const logout = async () => {
     try {
-      const response = await container.registerUseCase.execute(userData)
-      
-      // Apenas salvar token se existir
-      if (response.token) {
-        localStorage.setItem('token', response.token)
-        localStorage.setItem('user', JSON.stringify(response.user))
-        setUser(response.user)
-      }
+      await container.logoutUseCase.execute();
+      setUser(null);
     } catch (error) {
-      throw error
+      console.error('Error logging out:', error);
+      throw error;
     }
-  }
-
-  const logout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    setUser(null)
-  }
+  };
 
   const value: AuthContextType = {
     user,
-    login,
-    register,
-    logout,
     loading,
-  }
+    login,
+    logout,
+    isAuthenticated: !!user,
+    isAdmin: user?.role === 'ADMIN',
+  };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
 
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider')
-  }
-  return context
-}

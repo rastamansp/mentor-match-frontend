@@ -1,86 +1,65 @@
-import { IAuthRepository, LoginResponse, RegisterResponse, RegisterData } from '../../domain/repositories/IAuthRepository'
-import { NetworkError, UnauthorizedError } from '../../domain/errors/DomainError'
-import axios, { AxiosInstance } from 'axios'
+import { IAuthRepository, LoginCredentials } from '@domain/repositories/IAuthRepository';
+import { User } from '@domain/entities/User.entity';
+import { ValidationError } from '@domain/errors/ValidationError';
+import { ILogger } from '../logging/Logger';
 
 export class AuthRepository implements IAuthRepository {
-  constructor(private readonly httpClient: AxiosInstance) {}
+  constructor(private readonly logger: ILogger) {}
 
-  async login(email: string, password: string): Promise<LoginResponse> {
-    try {
-      const response = await this.httpClient.post('/auth/login', { email, password })
-      
-      console.log('🔐 AuthRepository.login - Resposta do backend:', response.data)
-      
-      // O backend pode retornar access_token ou token
-      const data = response.data
-      if (data.access_token && !data.token) {
-        // Converter access_token para token para manter compatibilidade
-        return {
-          user: data.user,
-          token: data.access_token
-        }
-      }
-      
-      return data
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        throw new UnauthorizedError('Credenciais inválidas')
-      }
-      if (axios.isAxiosError(error)) {
-        throw new NetworkError(`Failed to login: ${error.message}`, error)
-      }
-      throw error
-    }
-  }
+  async login(credentials: LoginCredentials): Promise<User> {
+    this.logger.debug('Attempting login', { email: credentials.email });
 
-  async register(data: RegisterData): Promise<RegisterResponse> {
-    try {
-      const response = await this.httpClient.post('/auth/register', data)
-      
-      console.log('🔐 AuthRepository.register - Resposta do backend:', response.data)
-      
-      // O backend pode retornar access_token ou token
-      const backendData = response.data
-      if (backendData.access_token && !backendData.token) {
-        // Converter access_token para token para manter compatibilidade
-        return {
-          user: backendData.user,
-          token: backendData.access_token
-        }
-      }
-      
-      return backendData
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new NetworkError(`Failed to register: ${error.message}`, error)
-      }
-      throw error
-    }
-  }
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-  async getProfile(): Promise<any> {
-    try {
-      const response = await this.httpClient.get('/auth/profile')
-      return response.data
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        throw new UnauthorizedError('Token inválido ou expirado')
-      }
-      if (axios.isAxiosError(error)) {
-        throw new NetworkError(`Failed to get profile: ${error.message}`, error)
-      }
-      throw error
+    // Simple validation: user = "user" and password = "senha"
+    if (credentials.email === 'user' && credentials.password === 'senha') {
+      const user: User = {
+        id: '1',
+        name: 'Usuário Teste',
+        email: 'user@example.com',
+        role: 'USER',
+      };
+
+      // Store in localStorage
+      localStorage.setItem('user', JSON.stringify(user));
+      this.logger.info('User logged in', { userId: user.id });
+
+      return user;
     }
+
+    throw new ValidationError('Credenciais inválidas. Use email: "user" e senha: "senha"');
   }
 
   async logout(): Promise<void> {
+    this.logger.debug('Logging out');
+    
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    localStorage.removeItem('user');
+    this.logger.info('User logged out');
+  }
+
+  async getCurrentUser(): Promise<User | null> {
+    this.logger.debug('Getting current user');
+
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const userStr = localStorage.getItem('user');
+    
+    if (!userStr) {
+      return null;
+    }
+
     try {
-      await this.httpClient.post('/auth/logout')
+      const user = JSON.parse(userStr) as User;
+      return user;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new NetworkError(`Failed to logout: ${error.message}`, error)
-      }
-      throw error
+      this.logger.error('Error parsing user from localStorage', error);
+      return null;
     }
   }
 }
+

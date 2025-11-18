@@ -1,8 +1,5 @@
-import { z } from 'zod'
+export interface LoginDto {
+  email: string;
+  password: string;
+}
 
-export const LoginDtoSchema = z.object({
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
-})
-
-export type LoginDto = z.infer<typeof LoginDtoSchema>

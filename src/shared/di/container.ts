@@ -1,157 +1,125 @@
-import axios from 'axios'
-import { EventRepository } from '../../infrastructure/repositories/EventRepository'
-import { AuthRepository } from '../../infrastructure/repositories/AuthRepository'
-import { TicketRepository } from '../../infrastructure/repositories/TicketRepository'
-import { PaymentRepository } from '../../infrastructure/repositories/PaymentRepository'
-import { AdminRepository } from '../../infrastructure/repositories/AdminRepository'
-import { ChatRepository } from '../../infrastructure/repositories/ChatRepository'
-import { ArtistRepository } from '../../infrastructure/repositories/ArtistRepository'
-import { ProductRepository } from '../../infrastructure/repositories/ProductRepository'
-import { ProductOrderRepository } from '../../infrastructure/repositories/ProductOrderRepository'
-import { SentryLogger } from '../../infrastructure/logging/SentryLogger'
-import { ListEventsUseCase } from '../../application/use-cases/events/ListEvents.usecase'
-import { GetEventByIdUseCase } from '../../application/use-cases/events/GetEventById.usecase'
-import { CreateEventUseCase } from '../../application/use-cases/events/CreateEvent.usecase'
-import { UpdateEventUseCase } from '../../application/use-cases/events/UpdateEvent.usecase'
-import { DeleteEventUseCase } from '../../application/use-cases/events/DeleteEvent.usecase'
-import { LoginUseCase } from '../../application/use-cases/auth/Login.usecase'
-import { RegisterUseCase } from '../../application/use-cases/auth/Register.usecase'
-import { ListArtistsUseCase } from '../../application/use-cases/artists/ListArtists.usecase'
-import { CreateArtistUseCase } from '../../application/use-cases/artists/CreateArtist.usecase'
-import { GetArtistByIdUseCase } from '../../application/use-cases/artists/GetArtistById.usecase'
-import { UpdateArtistUseCase } from '../../application/use-cases/artists/UpdateArtist.usecase'
-import { DeleteArtistUseCase } from '../../application/use-cases/artists/DeleteArtist.usecase'
-import { ListProductsByEventUseCase } from '../../application/use-cases/products/ListProductsByEvent.usecase'
-import { GetProductByIdUseCase } from '../../application/use-cases/products/GetProductById.usecase'
-import { CreateProductUseCase } from '../../application/use-cases/products/CreateProduct.usecase'
-import { UpdateProductUseCase } from '../../application/use-cases/products/UpdateProduct.usecase'
-import { DeleteProductUseCase } from '../../application/use-cases/products/DeleteProduct.usecase'
-import { GetPurchaseHistoryUseCase } from '../../application/use-cases/purchases/GetPurchaseHistory.usecase'
+// Infrastructure
+import { Logger, ILogger } from '@infrastructure/logging/Logger';
+import { MentorRepository } from '@infrastructure/repositories/MentorRepository';
+import { SessionRepository } from '@infrastructure/repositories/SessionRepository';
+import { AuthRepository } from '@infrastructure/repositories/AuthRepository';
 
-const httpClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+// Application Use Cases
+import { ListMentorsUseCase } from '@application/use-cases/mentors/ListMentors.usecase';
+import { GetMentorByIdUseCase } from '@application/use-cases/mentors/GetMentorById.usecase';
+import { SearchMentorsUseCase } from '@application/use-cases/mentors/SearchMentors.usecase';
+import { CreateSessionUseCase } from '@application/use-cases/sessions/CreateSession.usecase';
+import { ListUserSessionsUseCase } from '@application/use-cases/sessions/ListUserSessions.usecase';
+import { GetSessionByIdUseCase } from '@application/use-cases/sessions/GetSessionById.usecase';
+import { LoginUseCase } from '@application/use-cases/auth/Login.usecase';
+import { LogoutUseCase } from '@application/use-cases/auth/Logout.usecase';
 
-// Interceptor para adicionar token de autenticação
-httpClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    console.log('🔑 Token encontrado, adicionando ao header Authorization')
-    config.headers.Authorization = `Bearer ${token}`
-  } else {
-    console.warn('⚠️ Token não encontrado no localStorage')
-  }
-  return config
-})
+class Container {
+  // Infrastructure
+  private _logger: ILogger | null = null;
+  private _mentorRepository: MentorRepository | null = null;
+  private _sessionRepository: SessionRepository | null = null;
+  private _authRepository: AuthRepository | null = null;
 
-// Interceptor para lidar com respostas de erro
-httpClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      console.error('401 Unauthorized - Token inválido ou expirado')
-      console.error('Error details:', error.response?.data)
-      
-      // Limpar dados de autenticação
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      
-      // Apenas redirecionar se não estiver já na página de login
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login'
-      }
+  // Use Cases
+  private _listMentorsUseCase: ListMentorsUseCase | null = null;
+  private _getMentorByIdUseCase: GetMentorByIdUseCase | null = null;
+  private _searchMentorsUseCase: SearchMentorsUseCase | null = null;
+  private _createSessionUseCase: CreateSessionUseCase | null = null;
+  private _listUserSessionsUseCase: ListUserSessionsUseCase | null = null;
+  private _getSessionByIdUseCase: GetSessionByIdUseCase | null = null;
+  private _loginUseCase: LoginUseCase | null = null;
+  private _logoutUseCase: LogoutUseCase | null = null;
+
+  // Infrastructure Getters
+  get logger(): ILogger {
+    if (!this._logger) {
+      this._logger = new Logger();
     }
-    return Promise.reject(error)
+    return this._logger;
   }
-)
 
-const logger = new SentryLogger(import.meta.env.DEV)
+  get mentorRepository(): MentorRepository {
+    if (!this._mentorRepository) {
+      this._mentorRepository = new MentorRepository(this.logger);
+    }
+    return this._mentorRepository;
+  }
 
-// Repositories
-const eventRepository = new EventRepository(httpClient)
-const authRepository = new AuthRepository(httpClient)
-const ticketRepository = new TicketRepository(httpClient)
-const paymentRepository = new PaymentRepository(httpClient)
-const adminRepository = new AdminRepository(httpClient)
-const chatRepository = new ChatRepository(httpClient)
-const artistRepository = new ArtistRepository(httpClient)
-const productRepository = new ProductRepository(httpClient)
-const productOrderRepository = new ProductOrderRepository(httpClient)
+  get sessionRepository(): SessionRepository {
+    if (!this._sessionRepository) {
+      this._sessionRepository = new SessionRepository(this.logger);
+    }
+    return this._sessionRepository;
+  }
 
-// Use Cases - Events
-const listEventsUseCase = new ListEventsUseCase(eventRepository, logger)
-const getEventByIdUseCase = new GetEventByIdUseCase(eventRepository, logger)
-const createEventUseCase = new CreateEventUseCase(eventRepository, logger)
-const updateEventUseCase = new UpdateEventUseCase(eventRepository, logger)
-const deleteEventUseCase = new DeleteEventUseCase(eventRepository, logger)
+  get authRepository(): AuthRepository {
+    if (!this._authRepository) {
+      this._authRepository = new AuthRepository(this.logger);
+    }
+    return this._authRepository;
+  }
 
-// Use Cases - Auth
-const loginUseCase = new LoginUseCase(authRepository, logger)
-const registerUseCase = new RegisterUseCase(authRepository, logger)
+  // Use Cases Getters
+  get listMentorsUseCase(): ListMentorsUseCase {
+    if (!this._listMentorsUseCase) {
+      this._listMentorsUseCase = new ListMentorsUseCase(this.mentorRepository);
+    }
+    return this._listMentorsUseCase;
+  }
 
-// Use Cases - Artists
-const listArtistsUseCase = new ListArtistsUseCase(artistRepository, logger)
-const createArtistUseCase = new CreateArtistUseCase(artistRepository, logger)
-const getArtistByIdUseCase = new GetArtistByIdUseCase(artistRepository, logger)
-const updateArtistUseCase = new UpdateArtistUseCase(artistRepository, logger)
-const deleteArtistUseCase = new DeleteArtistUseCase(artistRepository, logger)
+  get getMentorByIdUseCase(): GetMentorByIdUseCase {
+    if (!this._getMentorByIdUseCase) {
+      this._getMentorByIdUseCase = new GetMentorByIdUseCase(this.mentorRepository);
+    }
+    return this._getMentorByIdUseCase;
+  }
 
-// Use Cases - Products
-const listProductsByEventUseCase = new ListProductsByEventUseCase(productRepository, logger)
-const getProductByIdUseCase = new GetProductByIdUseCase(productRepository, logger)
-const createProductUseCase = new CreateProductUseCase(productRepository, logger)
-const updateProductUseCase = new UpdateProductUseCase(productRepository, logger)
-const deleteProductUseCase = new DeleteProductUseCase(productRepository, logger)
+  get searchMentorsUseCase(): SearchMentorsUseCase {
+    if (!this._searchMentorsUseCase) {
+      this._searchMentorsUseCase = new SearchMentorsUseCase(this.mentorRepository);
+    }
+    return this._searchMentorsUseCase;
+  }
 
-// Use Cases - Purchases
-const getPurchaseHistoryUseCase = new GetPurchaseHistoryUseCase(ticketRepository, paymentRepository, productOrderRepository, logger)
+  get createSessionUseCase(): CreateSessionUseCase {
+    if (!this._createSessionUseCase) {
+      this._createSessionUseCase = new CreateSessionUseCase(
+        this.sessionRepository,
+        this.mentorRepository
+      );
+    }
+    return this._createSessionUseCase;
+  }
 
-export const container = {
-  // HTTP Client
-  httpClient,
-  
-  // Repositories
-  eventRepository,
-  authRepository,
-  ticketRepository,
-  paymentRepository,
-  adminRepository,
-  chatRepository,
-  artistRepository,
-  productRepository,
-  productOrderRepository,
-  
-  // Use Cases - Events
-  listEventsUseCase,
-  getEventByIdUseCase,
-  createEventUseCase,
-  updateEventUseCase,
-  deleteEventUseCase,
-  
-  // Use Cases - Auth
-  loginUseCase,
-  registerUseCase,
-  
-  // Use Cases - Artists
-  listArtistsUseCase,
-  createArtistUseCase,
-  getArtistByIdUseCase,
-  updateArtistUseCase,
-  deleteArtistUseCase,
-  
-  // Use Cases - Products
-  listProductsByEventUseCase,
-  getProductByIdUseCase,
-  createProductUseCase,
-  updateProductUseCase,
-  deleteProductUseCase,
-  
-  // Use Cases - Purchases
-  getPurchaseHistoryUseCase,
-  
-  // Logger
-  logger,
+  get listUserSessionsUseCase(): ListUserSessionsUseCase {
+    if (!this._listUserSessionsUseCase) {
+      this._listUserSessionsUseCase = new ListUserSessionsUseCase(this.sessionRepository);
+    }
+    return this._listUserSessionsUseCase;
+  }
+
+  get getSessionByIdUseCase(): GetSessionByIdUseCase {
+    if (!this._getSessionByIdUseCase) {
+      this._getSessionByIdUseCase = new GetSessionByIdUseCase(this.sessionRepository);
+    }
+    return this._getSessionByIdUseCase;
+  }
+
+  get loginUseCase(): LoginUseCase {
+    if (!this._loginUseCase) {
+      this._loginUseCase = new LoginUseCase(this.authRepository);
+    }
+    return this._loginUseCase;
+  }
+
+  get logoutUseCase(): LogoutUseCase {
+    if (!this._logoutUseCase) {
+      this._logoutUseCase = new LogoutUseCase(this.authRepository);
+    }
+    return this._logoutUseCase;
+  }
 }
+
+export const container = new Container();
+
