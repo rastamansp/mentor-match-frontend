@@ -36,7 +36,7 @@ services:
       - "traefik.http.middlewares.frontend-headers.headers.customrequestheaders.X-Forwarded-Port=443"
     # Dependências externas (PostgreSQL, Redis e Traefik já em produção)
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
       interval: 30s
       timeout: 10s
       retries: 3
