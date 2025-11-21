@@ -7,9 +7,9 @@ import Navbar from "@/components/Navbar";
 import { useMentorById } from "../hooks/useMentorById";
 
 const MentorProfile = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const mentorId = id ? parseInt(id, 10) : 0;
+  const mentorId = id || '';
   const { data: mentor, isLoading, error } = useMentorById(mentorId);
 
   // Mock data - fallback

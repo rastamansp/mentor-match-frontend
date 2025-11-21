@@ -5,7 +5,7 @@ import { NotFoundError } from '@domain/errors/NotFoundError';
 export class GetMentorByIdUseCase {
   constructor(private readonly mentorRepository: IMentorRepository) {}
 
-  async execute(id: number): Promise<Mentor> {
+  async execute(id: string): Promise<Mentor> {
     const mentor = await this.mentorRepository.findById(id);
     
     if (!mentor) {

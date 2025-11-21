@@ -6,11 +6,13 @@ export interface MentorFilters {
   location?: string;
   minRating?: number;
   maxPrice?: number;
+  area?: string;
+  language?: string;
 }
 
 export interface IMentorRepository {
   findAll(filters?: MentorFilters): Promise<Mentor[]>;
-  findById(id: number): Promise<Mentor | null>;
+  findById(id: string): Promise<Mentor | null>;
   search(query: string): Promise<Mentor[]>;
 }
 

@@ -1,5 +1,5 @@
 export interface CreateSessionDto {
-  mentorId: number;
+  mentorId: string;
   date: string;
   time: string;
   topic: string;

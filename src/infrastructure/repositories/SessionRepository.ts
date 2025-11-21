@@ -60,7 +60,7 @@ export class SessionRepository implements ISessionRepository {
     return MOCK_SESSIONS.filter(s => s.userId === userId);
   }
 
-  async findByMentorId(mentorId: number): Promise<Session[]> {
+  async findByMentorId(mentorId: string): Promise<Session[]> {
     this.logger.debug('Finding sessions by mentor id', { mentorId });
 
     // Simulate network delay

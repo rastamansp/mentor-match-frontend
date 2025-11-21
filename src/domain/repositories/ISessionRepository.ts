@@ -1,7 +1,7 @@
 import { Session } from '../entities/Session.entity';
 
 export interface CreateSessionData {
-  mentorId: number;
+  mentorId: string;
   userId: string;
   date: string;
   time: string;
@@ -14,6 +14,6 @@ export interface ISessionRepository {
   create(data: CreateSessionData): Promise<Session>;
   findById(id: string): Promise<Session | null>;
   findByUserId(userId: string): Promise<Session[]>;
-  findByMentorId(mentorId: number): Promise<Session[]>;
+  findByMentorId(mentorId: string): Promise<Session[]>;
 }
 

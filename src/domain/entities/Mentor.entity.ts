@@ -1,25 +1,35 @@
 import { z } from 'zod';
 
 export const MentorSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   name: z.string(),
-  role: z.string(),
-  company: z.string(),
-  specialty: z.string(),
-  rating: z.number().min(0).max(5),
-  reviews: z.number().int().min(0),
-  price: z.number().positive(),
-  location: z.string(),
-  avatar: z.string().url(),
-  skills: z.array(z.string()),
-  bio: z.string().optional(),
+  email: z.string().email(),
+  role: z.string().nullable().optional(),
+  company: z.string().nullable().optional(),
+  specialty: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  whatsappNumber: z.string().nullable().optional(),
+  bio: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  avatar: z.union([z.string().url(), z.null()]).optional(),
+  areas: z.array(z.string()).nullable().optional(),
+  skills: z.array(z.string()).nullable().optional(),
+  languages: z.array(z.string()),
+  achievements: z.array(z.string()).nullable().optional(),
   experience: z.array(z.object({
     title: z.string(),
     company: z.string(),
     period: z.string(),
     description: z.string(),
-  })).optional(),
-  achievements: z.array(z.string()).optional(),
+  })).nullable().optional(),
+  pricePerHour: z.number().positive(),
+  price: z.number().positive().optional(), // Mantido para compatibilidade
+  status: z.string(),
+  rating: z.number().nullable().optional(),
+  reviews: z.number().int().min(0).optional(),
+  totalSessions: z.number().int().min(0),
+  createdAt: z.string(),
+  updatedAt: z.string(),
 });
 
 export type Mentor = z.infer<typeof MentorSchema>;

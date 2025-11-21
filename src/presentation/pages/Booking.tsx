@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,12 +11,15 @@ import Navbar from "@/components/Navbar";
 import { toast } from "sonner";
 import { useMentorById } from "../hooks/useMentorById";
 import { useCreateSession } from "../hooks/useCreateSession";
+import { useMentorAvailability } from "../hooks/useMentorAvailability";
+import { Availability } from "@domain/entities/Availability.entity";
 
 const Booking = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const mentorId = id ? parseInt(id, 10) : 0;
+  const mentorId = id || '';
   const { data: mentor, isLoading: mentorLoading } = useMentorById(mentorId);
+  const { data: availability, isLoading: availabilityLoading } = useMentorAvailability(mentorId);
   const createSession = useCreateSession();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState("");
@@ -29,14 +32,81 @@ const Booking = () => {
     role: "Senior Product Manager",
     company: "Google",
     price: 200,
+    pricePerHour: 200,
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ana"
   };
 
   const displayMentor = mentor || fallbackMentor;
 
-  const availableTimes = [
-    "09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "18:00", "19:00", "20:00"
-  ];
+  // Converte dayOfWeek da API (1=segunda) para JavaScript (0=domingo, 1=segunda)
+  const convertDayOfWeek = (apiDay: number): number => {
+    // API: 1=segunda, 2=terça, ..., 6=sábado, 7=domingo
+    // JS: 0=domingo, 1=segunda, ..., 6=sábado
+    return apiDay === 7 ? 0 : apiDay;
+  };
+
+  // Gera slots de horários entre startTime e endTime (intervalos de 1 hora)
+  const generateTimeSlots = (startTime: string, endTime: string): string[] => {
+    const slots: string[] = [];
+    const [startHour] = startTime.split(':').map(Number);
+    const [endHour] = endTime.split(':').map(Number);
+    
+    let currentHour = startHour;
+    
+    // Gera slots de hora em hora até o horário final (sem incluir o endTime)
+    while (currentHour < endHour) {
+      const timeString = `${String(currentHour).padStart(2, '0')}:00`;
+      slots.push(timeString);
+      currentHour += 1;
+      
+      if (currentHour >= 24) {
+        break; // Não permite passar da meia-noite
+      }
+    }
+    
+    return slots;
+  };
+
+  // Obtém disponibilidade para o dia selecionado
+  const getAvailabilityForDate = (selectedDate: Date | undefined): Availability | null => {
+    if (!selectedDate || !availability) return null;
+    
+    const dayOfWeek = selectedDate.getDay(); // 0=domingo, 1=segunda, etc.
+    
+    return availability.find(av => convertDayOfWeek(av.dayOfWeek) === dayOfWeek) || null;
+  };
+
+  // Gera horários disponíveis para o dia selecionado
+  const availableTimes = useMemo(() => {
+    if (!date || !availability) return [];
+    
+    const dayAvailability = getAvailabilityForDate(date);
+    if (!dayAvailability) return [];
+    
+    return generateTimeSlots(dayAvailability.startTime, dayAvailability.endTime);
+  }, [date, availability]);
+
+  // Dias da semana disponíveis (para desabilitar no calendário)
+  const availableDaysOfWeek = useMemo(() => {
+    if (!availability) return [];
+    return availability.map(av => convertDayOfWeek(av.dayOfWeek));
+  }, [availability]);
+
+  // Função para desabilitar datas no calendário
+  const isDateDisabled = (dateToCheck: Date): boolean => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Desabilita datas passadas
+    if (dateToCheck < today) return true;
+    
+    // Desabilita domingos (dia 0)
+    if (dateToCheck.getDay() === 0) return true;
+    
+    // Desabilita dias que não estão na disponibilidade
+    const dayOfWeek = dateToCheck.getDay();
+    return !availableDaysOfWeek.includes(dayOfWeek);
+  };
 
   const handleBooking = async () => {
     if (!date || !selectedTime || !topic.trim()) {
@@ -72,7 +142,7 @@ const Booking = () => {
     }
   };
 
-  if (mentorLoading) {
+  if (mentorLoading || availabilityLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -116,11 +186,30 @@ const Booking = () => {
                   <Calendar
                     mode="single"
                     selected={date}
-                    onSelect={setDate}
-                    disabled={(date) => date < new Date() || date.getDay() === 0}
+                    onSelect={(newDate) => {
+                      setDate(newDate);
+                      setSelectedTime(""); // Limpa horário ao mudar data
+                    }}
+                    disabled={isDateDisabled}
                     className="rounded-md border"
                   />
                 </div>
+                {availability && availability.length > 0 && (
+                  <div className="mt-4 text-sm text-muted-foreground">
+                    <p className="font-medium mb-2">Dias disponíveis:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {availability.map((av) => {
+                        const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+                        const dayName = dayNames[convertDayOfWeek(av.dayOfWeek)];
+                        return (
+                          <span key={av.id} className="px-2 py-1 bg-primary/10 rounded text-xs">
+                            {dayName} {av.startTime.substring(0, 5)}-{av.endTime.substring(0, 5)}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </Card>
 
               {/* Time Selection */}
@@ -129,18 +218,28 @@ const Booking = () => {
                   <Clock className="w-5 h-5 text-primary" />
                   <h3 className="text-xl font-bold">Escolha o Horário</h3>
                 </div>
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                  {availableTimes.map((time) => (
-                    <Button
-                      key={time}
-                      variant={selectedTime === time ? "default" : "outline"}
-                      className={selectedTime === time ? "bg-primary" : ""}
-                      onClick={() => setSelectedTime(time)}
-                    >
-                      {time}
-                    </Button>
-                  ))}
-                </div>
+                {!date ? (
+                  <p className="text-sm text-muted-foreground">
+                    Selecione uma data primeiro para ver os horários disponíveis
+                  </p>
+                ) : availableTimes.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Não há horários disponíveis para este dia. Por favor, selecione outro dia.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                    {availableTimes.map((time) => (
+                      <Button
+                        key={time}
+                        variant={selectedTime === time ? "default" : "outline"}
+                        className={selectedTime === time ? "bg-primary" : ""}
+                        onClick={() => setSelectedTime(time)}
+                      >
+                        {time}
+                      </Button>
+                    ))}
+                  </div>
+                )}
                 <p className="text-sm text-muted-foreground mt-4">
                   * Horários em fuso horário de Brasília (BRT)
                 </p>
@@ -197,11 +296,19 @@ const Booking = () => {
                 
                 {/* Mentor Info */}
                 <div className="flex items-center space-x-3 mb-6 pb-6 border-b border-border">
-                  <img
-                    src={displayMentor.avatar}
-                    alt={displayMentor.name}
-                    className="w-12 h-12 rounded-full bg-gradient-hero"
-                  />
+                    {displayMentor.avatar ? (
+                      <img
+                        src={displayMentor.avatar}
+                        alt={displayMentor.name}
+                        className="w-12 h-12 rounded-full bg-gradient-hero"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-gradient-hero flex items-center justify-center">
+                        <span className="text-white font-semibold">
+                          {displayMentor.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                   <div>
                     <h4 className="font-semibold">{displayMentor.name}</h4>
                     <p className="text-sm text-muted-foreground">{displayMentor.role}</p>
@@ -242,7 +349,7 @@ const Booking = () => {
                 <div className="border-t border-border pt-6 mb-6">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-muted-foreground">Valor da sessão:</span>
-                    <span className="font-medium">R$ {displayMentor.price}</span>
+                    <span className="font-medium">R$ {displayMentor.pricePerHour || displayMentor.price}</span>
                   </div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-muted-foreground">Taxa da plataforma:</span>
@@ -252,7 +359,7 @@ const Booking = () => {
                     <span>Total:</span>
                     <div className="flex items-center">
                       <DollarSign className="w-5 h-5 text-accent" />
-                      <span>R$ {displayMentor.price + 20}</span>
+                      <span>R$ {(displayMentor.pricePerHour || displayMentor.price) + 20}</span>
                     </div>
                   </div>
                 </div>

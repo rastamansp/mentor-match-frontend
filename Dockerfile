@@ -14,11 +14,13 @@ COPY . .
 
 # Build arguments for environment variables
 ARG VITE_API_URL=https://api-mentor-match.gwan.com.br/api
+ARG VITE_CHAT_API_URL=https://api-mentor-match.gwan.com.br/api/chat
 ARG VITE_APP_NAME=Gwan Mentor Match
 ARG VITE_APP_VERSION=1.0.0
 
 # Set environment variables for build
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_CHAT_API_URL=$VITE_CHAT_API_URL
 ENV VITE_APP_NAME=$VITE_APP_NAME
 ENV VITE_APP_VERSION=$VITE_APP_VERSION
 

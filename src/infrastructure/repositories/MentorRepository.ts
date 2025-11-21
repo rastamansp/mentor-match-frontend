@@ -1,171 +1,189 @@
 import { IMentorRepository, MentorFilters } from '@domain/repositories/IMentorRepository';
-import { Mentor } from '@domain/entities/Mentor.entity';
+import { Mentor, MentorSchema } from '@domain/entities/Mentor.entity';
 import { NotFoundError } from '@domain/errors/NotFoundError';
 import { ILogger } from '../logging/Logger';
 
-// Mock data - same as in pages
-const MOCK_MENTORS: Mentor[] = [
-  {
-    id: 1,
-    name: "Ana Silva",
-    role: "Senior Product Manager",
-    company: "Google",
-    specialty: "Product Management",
-    rating: 4.9,
-    reviews: 127,
-    price: 200,
-    location: "São Paulo, SP",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ana",
-    skills: ["Product Strategy", "Agile", "User Research"],
-    bio: "Com mais de 10 anos de experiência em Product Management, já liderei o desenvolvimento de produtos que impactaram milhões de usuários. Minha paixão é ajudar profissionais a desenvolverem suas habilidades em gestão de produtos e a avançarem em suas carreiras.",
-    experience: [
-      {
-        title: "Senior Product Manager",
-        company: "Google",
-        period: "2020 - Presente",
-        description: "Liderando o desenvolvimento de features para o Google Search"
-      },
-      {
-        title: "Product Manager",
-        company: "Amazon",
-        period: "2017 - 2020",
-        description: "Gerenciei produtos na área de logística e entrega"
-      },
-      {
-        title: "Associate Product Manager",
-        company: "Nubank",
-        period: "2015 - 2017",
-        description: "Trabalhei no desenvolvimento do app mobile"
-      }
-    ],
-    achievements: [
-      "Lançamento de produto com 5M+ usuários no primeiro ano",
-      "Certificação Product Management pela Product School",
-      "Speaker em conferências de Product",
-      "Mentoria de 100+ profissionais"
-    ]
-  },
-  {
-    id: 2,
-    name: "Carlos Santos",
-    role: "Tech Lead",
-    company: "Meta",
-    specialty: "Software Engineering",
-    rating: 4.8,
-    reviews: 98,
-    price: 180,
-    location: "Rio de Janeiro, RJ",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos",
-    skills: ["React", "Node.js", "System Design"]
-  },
-  {
-    id: 3,
-    name: "Marina Costa",
-    role: "Design Director",
-    company: "Nubank",
-    specialty: "UX/UI Design",
-    rating: 5.0,
-    reviews: 156,
-    price: 220,
-    location: "São Paulo, SP",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marina",
-    skills: ["UI Design", "Design Systems", "Figma"]
-  },
-  {
-    id: 4,
-    name: "Pedro Oliveira",
-    role: "Engineering Manager",
-    company: "Amazon",
-    specialty: "Leadership",
-    rating: 4.7,
-    reviews: 89,
-    price: 250,
-    location: "Belo Horizonte, MG",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Pedro",
-    skills: ["Team Management", "Career Growth", "Technical Leadership"]
-  },
-  {
-    id: 5,
-    name: "Julia Ferreira",
-    role: "Data Science Lead",
-    company: "Microsoft",
-    specialty: "Data Science",
-    rating: 4.9,
-    reviews: 112,
-    price: 210,
-    location: "São Paulo, SP",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Julia",
-    skills: ["Machine Learning", "Python", "Data Analytics"]
-  },
-  {
-    id: 6,
-    name: "Ricardo Almeida",
-    role: "CTO",
-    company: "Startup Tech",
-    specialty: "Startup & Entrepreneurship",
-    rating: 4.8,
-    reviews: 74,
-    price: 300,
-    location: "Florianópolis, SC",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ricardo",
-    skills: ["Startup Strategy", "Fundraising", "Tech Stack"]
-  }
-];
+interface ApiMentorResponse {
+  id: string;
+  name: string;
+  email: string;
+  role: string | null;
+  company: string | null;
+  specialty: string | null;
+  phone: string | null;
+  whatsappNumber: string | null;
+  bio: string | null;
+  location: string | null;
+  avatar: string | null;
+  areas: string[];
+  skills: string[] | null;
+  languages: string[];
+  achievements: string[] | null;
+  experience: Array<{
+    title: string;
+    company: string;
+    period: string;
+    description: string;
+  }> | null;
+  pricePerHour: number;
+  status: string;
+  rating: number | null;
+  reviews: number;
+  totalSessions: number;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export class MentorRepository implements IMentorRepository {
-  constructor(private readonly logger: ILogger) {}
+  private readonly apiUrl: string;
+
+  constructor(private readonly logger: ILogger) {
+    this.apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3005/api';
+  }
+
+  private mapApiMentorToMentor(apiMentor: ApiMentorResponse): Mentor {
+    return {
+      id: apiMentor.id,
+      name: apiMentor.name,
+      email: apiMentor.email,
+      role: apiMentor.role,
+      company: apiMentor.company,
+      specialty: apiMentor.specialty,
+      phone: apiMentor.phone,
+      whatsappNumber: apiMentor.whatsappNumber,
+      bio: apiMentor.bio,
+      location: apiMentor.location,
+      avatar: apiMentor.avatar,
+      areas: apiMentor.areas,
+      skills: apiMentor.skills,
+      languages: apiMentor.languages,
+      achievements: apiMentor.achievements,
+      experience: apiMentor.experience,
+      pricePerHour: apiMentor.pricePerHour,
+      price: apiMentor.pricePerHour, // Compatibilidade
+      status: apiMentor.status,
+      rating: apiMentor.rating,
+      reviews: apiMentor.reviews,
+      totalSessions: apiMentor.totalSessions,
+      createdAt: apiMentor.createdAt,
+      updatedAt: apiMentor.updatedAt,
+    };
+  }
+
+  private buildQueryParams(filters?: MentorFilters): string {
+    if (!filters) return '';
+
+    const params = new URLSearchParams();
+
+    if (filters.area) {
+      params.append('area', filters.area);
+    }
+
+    if (filters.language) {
+      params.append('language', filters.language);
+    }
+
+    if (filters.maxPrice !== undefined) {
+      params.append('maxPrice', filters.maxPrice.toString());
+    }
+
+    if (filters.minRating !== undefined) {
+      params.append('minRating', filters.minRating.toString());
+    }
+
+    if (filters.specialty) {
+      params.append('specialty', filters.specialty);
+    }
+
+    if (filters.location) {
+      params.append('location', filters.location);
+    }
+
+    if (filters.searchTerm) {
+      params.append('search', filters.searchTerm);
+    }
+
+    const queryString = params.toString();
+    return queryString ? `?${queryString}` : '';
+  }
 
   async findAll(filters?: MentorFilters): Promise<Mentor[]> {
     this.logger.debug('Finding all mentors', filters);
-    
-    let mentors = [...MOCK_MENTORS];
 
-    if (filters) {
-      if (filters.searchTerm) {
-        const searchLower = filters.searchTerm.toLowerCase();
-        mentors = mentors.filter(mentor =>
-          mentor.name.toLowerCase().includes(searchLower) ||
-          mentor.specialty.toLowerCase().includes(searchLower) ||
-          mentor.skills.some(skill => skill.toLowerCase().includes(searchLower))
-        );
+    try {
+      const queryParams = this.buildQueryParams(filters);
+      const url = `${this.apiUrl}/mentors${queryParams}`;
+
+      this.logger.debug('Fetching mentors from API', { url });
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.error('Failed to fetch mentors', new Error(`HTTP ${response.status}: ${errorText}`));
+        throw new Error(`Erro ao buscar mentores: ${response.status} ${response.statusText}`);
       }
 
-      if (filters.specialty) {
-        mentors = mentors.filter(mentor => mentor.specialty === filters.specialty);
-      }
+      const apiMentors: ApiMentorResponse[] = await response.json();
 
-      if (filters.location) {
-        mentors = mentors.filter(mentor => mentor.location.includes(filters.location!));
-      }
+      // Mapeia e valida os mentores
+      const mentors = apiMentors.map((apiMentor) => {
+        const mentor = this.mapApiMentorToMentor(apiMentor);
+        // Valida com Zod
+        return MentorSchema.parse(mentor);
+      });
 
-      if (filters.minRating !== undefined) {
-        mentors = mentors.filter(mentor => mentor.rating >= filters.minRating!);
-      }
+      this.logger.info('Mentors fetched successfully', { count: mentors.length });
 
-      if (filters.maxPrice !== undefined) {
-        mentors = mentors.filter(mentor => mentor.price <= filters.maxPrice!);
-      }
+      return mentors;
+    } catch (error) {
+      this.logger.error('Error fetching mentors', error as Error);
+      throw error;
     }
-
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    return mentors;
   }
 
-  async findById(id: number): Promise<Mentor | null> {
+  async findById(id: string): Promise<Mentor | null> {
     this.logger.debug('Finding mentor by id', { id });
-    
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 200));
 
-    const mentor = MOCK_MENTORS.find(m => m.id === id);
-    
-    if (!mentor) {
-      throw new NotFoundError('Mentor', id);
+    try {
+      const url = `${this.apiUrl}/mentors/${id}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 404) {
+        return null;
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.error('Failed to fetch mentor', new Error(`HTTP ${response.status}: ${errorText}`));
+        throw new Error(`Erro ao buscar mentor: ${response.status} ${response.statusText}`);
+      }
+
+      const apiMentor: ApiMentorResponse = await response.json();
+      const mentor = this.mapApiMentorToMentor(apiMentor);
+      const validatedMentor = MentorSchema.parse(mentor);
+
+      this.logger.info('Mentor fetched successfully', { id });
+
+      return validatedMentor;
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('404')) {
+        return null;
+      }
+      this.logger.error('Error fetching mentor', error as Error);
+      throw error;
     }
-
-    return mentor;
   }
 
   async search(query: string): Promise<Mentor[]> {

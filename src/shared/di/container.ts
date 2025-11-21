@@ -3,6 +3,7 @@ import { Logger, ILogger } from '@infrastructure/logging/Logger';
 import { MentorRepository } from '@infrastructure/repositories/MentorRepository';
 import { SessionRepository } from '@infrastructure/repositories/SessionRepository';
 import { AuthRepository } from '@infrastructure/repositories/AuthRepository';
+import { AvailabilityRepository } from '@infrastructure/repositories/AvailabilityRepository';
 
 // Application Use Cases
 import { ListMentorsUseCase } from '@application/use-cases/mentors/ListMentors.usecase';
@@ -13,6 +14,7 @@ import { ListUserSessionsUseCase } from '@application/use-cases/sessions/ListUse
 import { GetSessionByIdUseCase } from '@application/use-cases/sessions/GetSessionById.usecase';
 import { LoginUseCase } from '@application/use-cases/auth/Login.usecase';
 import { LogoutUseCase } from '@application/use-cases/auth/Logout.usecase';
+import { GetMentorAvailabilityUseCase } from '@application/use-cases/availability/GetMentorAvailability.usecase';
 
 class Container {
   // Infrastructure
@@ -20,6 +22,7 @@ class Container {
   private _mentorRepository: MentorRepository | null = null;
   private _sessionRepository: SessionRepository | null = null;
   private _authRepository: AuthRepository | null = null;
+  private _availabilityRepository: AvailabilityRepository | null = null;
 
   // Use Cases
   private _listMentorsUseCase: ListMentorsUseCase | null = null;
@@ -30,6 +33,7 @@ class Container {
   private _getSessionByIdUseCase: GetSessionByIdUseCase | null = null;
   private _loginUseCase: LoginUseCase | null = null;
   private _logoutUseCase: LogoutUseCase | null = null;
+  private _getMentorAvailabilityUseCase: GetMentorAvailabilityUseCase | null = null;
 
   // Infrastructure Getters
   get logger(): ILogger {
@@ -58,6 +62,13 @@ class Container {
       this._authRepository = new AuthRepository(this.logger);
     }
     return this._authRepository;
+  }
+
+  get availabilityRepository(): AvailabilityRepository {
+    if (!this._availabilityRepository) {
+      this._availabilityRepository = new AvailabilityRepository(this.logger);
+    }
+    return this._availabilityRepository;
   }
 
   // Use Cases Getters
@@ -118,6 +129,13 @@ class Container {
       this._logoutUseCase = new LogoutUseCase(this.authRepository);
     }
     return this._logoutUseCase;
+  }
+
+  get getMentorAvailabilityUseCase(): GetMentorAvailabilityUseCase {
+    if (!this._getMentorAvailabilityUseCase) {
+      this._getMentorAvailabilityUseCase = new GetMentorAvailabilityUseCase(this.availabilityRepository);
+    }
+    return this._getMentorAvailabilityUseCase;
   }
 }
 

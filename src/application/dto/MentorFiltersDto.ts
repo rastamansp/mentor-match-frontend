@@ -4,5 +4,7 @@ export interface MentorFiltersDto {
   location?: string;
   minRating?: number;
   maxPrice?: number;
+  area?: string;
+  language?: string;
 }
 

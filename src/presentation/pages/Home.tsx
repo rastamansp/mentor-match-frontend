@@ -4,6 +4,7 @@ import { Search, Calendar, Video, MessageSquare, TrendingUp, Users } from "lucid
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import heroImage from "@/assets/hero-mentorship.jpg";
+import { Chatbot } from "../components/Chatbot";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -168,6 +169,9 @@ const Home = () => {
           <p>&copy; 2025 Mentor Match. Todos os direitos reservados.</p>
         </div>
       </footer>
+
+      {/* Chatbot */}
+      <Chatbot />
     </div>
   );
 };

@@ -2,9 +2,9 @@ import { z } from 'zod';
 
 export const SessionSchema = z.object({
   id: z.string(),
-  mentorId: z.number(),
+  mentorId: z.string(),
   mentorName: z.string(),
-  mentorAvatar: z.string().url(),
+  mentorAvatar: z.string().url().nullable().optional(),
   userId: z.string(),
   date: z.string().datetime(),
   time: z.string(),
