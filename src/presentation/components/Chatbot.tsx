@@ -79,13 +79,39 @@ export const Chatbot = () => {
         ? response.formattedResponse.data.rawData
         : undefined;
       
-      // Adiciona resposta do bot ao chat
+      // Se houver mentores, usa mensagens personalizadas
+      let botText: string;
+      if (mentors && mentors.length > 0) {
+        // Primeira mensagem: introdução
+        const introMsg: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          text: 'Aqui estão os mentores disponíveis na plataforma:',
+          isBot: true,
+        };
+        setMessages((prev) => [...prev, introMsg]);
+        
+        // Segunda mensagem: cards dos mentores
+        const mentorsMsg: ChatMessage = {
+          id: (Date.now() + 2).toString(),
+          text: '', // Texto vazio, os cards serão exibidos
+          isBot: true,
+          mentors,
+        };
+        setMessages((prev) => [...prev, mentorsMsg]);
+        
+        // Terceira mensagem: mensagem final
+        botText = 'Se você estiver interessado em saber mais sobre algum mentor específico ou agendar uma sessão, é só me avisar!';
+      } else {
+        // Sem mentores, usa a resposta normal
+        botText = response.answer || response.formattedResponse?.answer || 'Resposta recebida';
+      }
+      
+      // Adiciona resposta final do bot ao chat
       const botMsg: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        text: response.answer || response.formattedResponse?.answer || 'Resposta recebida',
+        id: (Date.now() + 3).toString(),
+        text: botText,
         isBot: true,
         suggestions: response.formattedResponse?.data?.suggestions,
-        mentors,
       };
       setMessages((prev) => [...prev, botMsg]);
     } catch (error) {
@@ -162,15 +188,18 @@ export const Chatbot = () => {
                     )}
                   </div>
                   <div className="flex-1 space-y-2">
-                    <div
-                      className={`rounded-lg p-4 ${
-                        msg.isBot
-                          ? 'bg-muted text-foreground'
-                          : 'bg-gradient-hero text-white'
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                    </div>
+                    {/* Texto da mensagem - só mostra se houver texto */}
+                    {msg.text && (
+                      <div
+                        className={`rounded-lg p-4 ${
+                          msg.isBot
+                            ? 'bg-muted text-foreground'
+                            : 'bg-gradient-hero text-white'
+                        }`}
+                      >
+                        <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                      </div>
+                    )}
                     
                     {/* Cards de Mentores */}
                     {msg.mentors && msg.mentors.length > 0 && (
@@ -181,16 +210,58 @@ export const Chatbot = () => {
                             className="p-4 hover:shadow-md transition-shadow cursor-pointer border-2 hover:border-primary"
                           >
                             <div className="flex items-start gap-3">
-                              <div className="w-12 h-12 rounded-full bg-gradient-hero flex items-center justify-center flex-shrink-0">
+                              {mentor.avatar ? (
+                                <img
+                                  src={mentor.avatar}
+                                  alt={mentor.name}
+                                  className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                                  onError={(e) => {
+                                    // Fallback para inicial se a imagem falhar
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    const fallback = target.nextElementSibling as HTMLElement;
+                                    if (fallback) fallback.style.display = 'flex';
+                                  }}
+                                />
+                              ) : null}
+                              <div
+                                className={`w-12 h-12 rounded-full bg-gradient-hero flex items-center justify-center flex-shrink-0 ${
+                                  mentor.avatar ? 'hidden' : ''
+                                }`}
+                              >
                                 <span className="text-white font-semibold text-lg">
                                   {mentor.name.charAt(0).toUpperCase()}
                                 </span>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-sm mb-1">{mentor.name}</h4>
-                                <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
-                                  {mentor.bio}
-                                </p>
+                                <div className="flex items-start justify-between gap-2 mb-1">
+                                  <div>
+                                    <h4 className="font-semibold text-sm">{mentor.name}</h4>
+                                    {(mentor.role || mentor.company) && (
+                                      <p className="text-xs text-muted-foreground">
+                                        {mentor.role}
+                                        {mentor.role && mentor.company && ' na '}
+                                        {mentor.company}
+                                      </p>
+                                    )}
+                                  </div>
+                                  {mentor.rating && (
+                                    <div className="flex items-center gap-1 text-xs">
+                                      <span className="text-yellow-500">★</span>
+                                      <span className="font-semibold">{mentor.rating}</span>
+                                      {mentor.reviews && (
+                                        <span className="text-muted-foreground">
+                                          ({mentor.reviews})
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                                {mentor.bio && (
+                                  <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                                    {mentor.bio}
+                                  </p>
+                                )}
                                 {mentor.areas && mentor.areas.length > 0 && (
                                   <div className="flex flex-wrap gap-1 mb-2">
                                     {mentor.areas.slice(0, 3).map((area, idx) => (

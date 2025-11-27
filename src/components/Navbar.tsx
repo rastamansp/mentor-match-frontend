@@ -2,9 +2,11 @@ import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
@@ -27,13 +29,15 @@ const Navbar = () => {
             >
               Encontrar Mentores
             </NavLink>
-            <NavLink
-              to="/minhas-sessoes"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              activeClassName="text-primary font-medium"
-            >
-              Minhas Sessões
-            </NavLink>
+            {isAuthenticated && (
+              <NavLink
+                to="/minhas-sessoes"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                activeClassName="text-primary font-medium"
+              >
+                Minhas Sessões
+              </NavLink>
+            )}
             <NavLink
               to="/dashboard-mentor"
               className="text-muted-foreground hover:text-foreground transition-colors"
@@ -72,14 +76,16 @@ const Navbar = () => {
               >
                 Encontrar Mentores
               </NavLink>
-              <NavLink
-                to="/minhas-sessoes"
-                className="text-muted-foreground hover:text-foreground transition-colors py-2"
-                activeClassName="text-primary font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Minhas Sessões
-              </NavLink>
+              {isAuthenticated && (
+                <NavLink
+                  to="/minhas-sessoes"
+                  className="text-muted-foreground hover:text-foreground transition-colors py-2"
+                  activeClassName="text-primary font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Minhas Sessões
+                </NavLink>
+              )}
               <NavLink
                 to="/dashboard-mentor"
                 className="text-muted-foreground hover:text-foreground transition-colors py-2"
