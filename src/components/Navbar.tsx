@@ -45,6 +45,13 @@ const Navbar = () => {
             >
               Dashboard Mentor
             </NavLink>
+            <NavLink
+              to="/testar-chatbot"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              activeClassName="text-primary font-medium"
+            >
+              Testar Chatbot
+            </NavLink>
           </div>
 
           {/* Desktop Actions */}
@@ -93,6 +100,14 @@ const Navbar = () => {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Dashboard Mentor
+              </NavLink>
+              <NavLink
+                to="/testar-chatbot"
+                className="text-muted-foreground hover:text-foreground transition-colors py-2"
+                activeClassName="text-primary font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Testar Chatbot
               </NavLink>
               <div className="flex flex-col space-y-2 pt-4">
                 <Button variant="ghost" size="sm" className="w-full">Entrar</Button>

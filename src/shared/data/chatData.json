@@ -1,0 +1,93 @@
+{
+  "conversation": {
+    "participants": {
+      "mentor": {
+        "name": "Ana Paula",
+        "avatar": "👩‍🏫",
+        "role": "Mentora"
+      },
+      "mentee": {
+        "name": "Carlos Silva",
+        "avatar": "👨‍💼",
+        "role": "Mentorado"
+      }
+    },
+    "messages": [
+      {
+        "id": 1,
+        "sender": "mentor",
+        "type": "text",
+        "content": "Olá Carlos! Tudo bem? Pronto para nossa sessão de mentoria hoje?",
+        "timestamp": "10:30"
+      },
+      {
+        "id": 2,
+        "sender": "mentee",
+        "type": "text",
+        "content": "Oi Ana! Sim, estou empolgado! Preparei algumas dúvidas sobre gestão de projetos.",
+        "timestamp": "10:32"
+      },
+      {
+        "id": 3,
+        "sender": "mentor",
+        "type": "text",
+        "content": "Perfeito! Vou te enviar um material que pode ajudar com suas dúvidas.",
+        "timestamp": "10:33"
+      },
+      {
+        "id": 4,
+        "sender": "mentor",
+        "type": "image",
+        "content": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400",
+        "caption": "Framework de gestão ágil",
+        "timestamp": "10:34"
+      },
+      {
+        "id": 5,
+        "sender": "mentee",
+        "type": "text",
+        "content": "Excelente! Esse framework parece bem completo. Você pode explicar mais sobre a aplicação prática?",
+        "timestamp": "10:36"
+      },
+      {
+        "id": 6,
+        "sender": "mentor",
+        "type": "audio",
+        "content": "",
+        "duration": "0:45",
+        "timestamp": "10:38"
+      },
+      {
+        "id": 7,
+        "sender": "mentee",
+        "type": "audio",
+        "content": "",
+        "duration": "0:32",
+        "timestamp": "10:40"
+      },
+      {
+        "id": 8,
+        "sender": "mentee",
+        "type": "text",
+        "content": "Entendi perfeitamente! Vou aplicar essas técnicas no projeto da semana que vem.",
+        "timestamp": "10:42"
+      },
+      {
+        "id": 9,
+        "sender": "mentor",
+        "type": "text",
+        "content": "Ótimo! Qualquer dúvida durante a implementação, me chama. Estou aqui para ajudar! 💪",
+        "timestamp": "10:43"
+      },
+      {
+        "id": 10,
+        "sender": "mentee",
+        "type": "image",
+        "content": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400",
+        "caption": "Minha equipe aplicando as metodologias!",
+        "timestamp": "10:45"
+      }
+    ]
+  }
+}
+

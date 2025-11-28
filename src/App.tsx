@@ -13,6 +13,7 @@ import MySessions from "./presentation/pages/MySessions";
 import MentorDashboard from "./presentation/pages/MentorDashboard";
 import NotFound from "./presentation/pages/NotFound";
 import Login from "./presentation/pages/Login";
+import TestChatbot from "./presentation/pages/TestChatbot";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
                 <MentorDashboard />
               </ProtectedRoute>
             } />
+            <Route path="/testar-chatbot" element={<TestChatbot />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

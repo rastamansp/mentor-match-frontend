@@ -66,6 +66,13 @@ All colors MUST be HSL.
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --whatsapp-green: 142 76% 36%;
+    --whatsapp-dark: 217 33% 17%;
+    --whatsapp-darker: 222 47% 11%;
+    --whatsapp-light: 215 20% 65%;
+    --chat-bubble-sent: 90 50% 88%;
+    --chat-bubble-received: 0 0% 100%;
   }
 
   .dark {

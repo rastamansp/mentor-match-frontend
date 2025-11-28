@@ -8,5 +8,6 @@ export const ROUTES = {
   MY_SESSIONS: '/minhas-sessoes',
   MENTOR_DASHBOARD: '/dashboard-mentor',
   LOGIN: '/login',
+  TEST_CHATBOT: '/testar-chatbot',
 } as const;
 
