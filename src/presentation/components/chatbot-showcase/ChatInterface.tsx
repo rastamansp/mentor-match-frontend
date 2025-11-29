@@ -1,23 +1,85 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { ChatBubble } from "./ChatBubble";
 import { WhatsAppHeader } from "./WhatsAppHeader";
 import chatData from "@shared/data/chatData.json";
 
-export const ChatInterface = () => {
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-  const { conversation } = chatData;
+interface JourneyMessage {
+  id: number;
+  sender: "mentor" | "mentee";
+  type: "text" | "image" | "audio";
+  content: string;
+  timestamp: string;
+  caption?: string;
+  duration?: string;
+}
 
+interface ChatInterfaceProps {
+  journeyMessages?: JourneyMessage[];
+  headerName?: string;
+  headerAvatar?: string;
+}
+
+export const ChatInterface = ({ 
+  journeyMessages, 
+  headerName, 
+  headerAvatar 
+}: ChatInterfaceProps = {}) => {
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<JourneyMessage[]>([]);
+  const { conversation } = chatData;
+  const [visibleMessagesCount, setVisibleMessagesCount] = useState(0);
+  const messagesKeyRef = useRef<string>("");
+
+  const allMessages = journeyMessages || conversation.messages;
+  const mentorName = headerName || conversation.participants.mentor.name;
+  const mentorAvatar = headerAvatar || conversation.participants.mentor.avatar;
+
+  // Create a unique key for the current messages set
+  const messagesKey = useMemo(() => {
+    return allMessages.map(m => `${m.id}-${m.content.substring(0, 20)}`).join("|");
+  }, [allMessages]);
+
+  // Update messages ref when messages change
+  useEffect(() => {
+    messagesRef.current = allMessages as JourneyMessage[];
+  }, [allMessages]);
+
+  // Reset visible messages when messages change
+  useEffect(() => {
+    if (messagesKeyRef.current !== messagesKey) {
+      messagesKeyRef.current = messagesKey;
+      setVisibleMessagesCount(0);
+    }
+  }, [messagesKey]);
+
+  // Animate messages appearing one by one
+  useEffect(() => {
+    const currentMessages = messagesRef.current;
+    if (visibleMessagesCount < currentMessages.length) {
+      const nextMessage = currentMessages[visibleMessagesCount];
+      // Mentor messages take longer to "type", user messages are faster
+      const delay = nextMessage.sender === "mentor" ? 1500 : 800;
+      const timer = setTimeout(() => {
+        setVisibleMessagesCount(prev => prev + 1);
+      }, delay);
+      return () => clearTimeout(timer);
+    }
+  }, [visibleMessagesCount]);
+
+  // Auto-scroll when new message appears
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, []);
+  }, [visibleMessagesCount]);
+
+  const visibleMessages = allMessages.slice(0, visibleMessagesCount);
 
   return (
     <div className="flex flex-col h-full min-h-0">
       <WhatsAppHeader 
-        name={conversation.participants.mentor.name}
-        avatar={conversation.participants.mentor.avatar}
+        name={mentorName}
+        avatar={mentorAvatar}
         status="online"
       />
       
@@ -32,7 +94,7 @@ export const ChatInterface = () => {
           backgroundColor: '#e5ddd5'
         }}
       >
-        {conversation.messages.map((message) => (
+        {visibleMessages.map((message) => (
           <ChatBubble
             key={message.id}
             type={message.type as "text" | "image" | "audio"}

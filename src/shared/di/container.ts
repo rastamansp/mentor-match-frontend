@@ -13,6 +13,7 @@ import { CreateSessionUseCase } from '@application/use-cases/sessions/CreateSess
 import { ListUserSessionsUseCase } from '@application/use-cases/sessions/ListUserSessions.usecase';
 import { GetSessionByIdUseCase } from '@application/use-cases/sessions/GetSessionById.usecase';
 import { LoginUseCase } from '@application/use-cases/auth/Login.usecase';
+import { RegisterUseCase } from '@application/use-cases/auth/Register.usecase';
 import { LogoutUseCase } from '@application/use-cases/auth/Logout.usecase';
 import { GetMentorAvailabilityUseCase } from '@application/use-cases/availability/GetMentorAvailability.usecase';
 
@@ -32,6 +33,7 @@ class Container {
   private _listUserSessionsUseCase: ListUserSessionsUseCase | null = null;
   private _getSessionByIdUseCase: GetSessionByIdUseCase | null = null;
   private _loginUseCase: LoginUseCase | null = null;
+  private _registerUseCase: RegisterUseCase | null = null;
   private _logoutUseCase: LogoutUseCase | null = null;
   private _getMentorAvailabilityUseCase: GetMentorAvailabilityUseCase | null = null;
 
@@ -122,6 +124,13 @@ class Container {
       this._loginUseCase = new LoginUseCase(this.authRepository);
     }
     return this._loginUseCase;
+  }
+
+  get registerUseCase(): RegisterUseCase {
+    if (!this._registerUseCase) {
+      this._registerUseCase = new RegisterUseCase(this.authRepository);
+    }
+    return this._registerUseCase;
   }
 
   get logoutUseCase(): LogoutUseCase {
