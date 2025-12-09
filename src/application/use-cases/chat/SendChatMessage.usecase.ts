@@ -46,16 +46,23 @@ export class SendChatMessageUseCase {
     this.apiUrl = import.meta.env.VITE_CHAT_API_URL || 'http://localhost:3005/api/chat';
   }
 
-  async execute(dto: ChatMessageDto): Promise<ChatResponse> {
-    this.logger.debug('Sending chat message', { message: dto.message, userId: dto.userCtx.userId });
+  async execute(dto: ChatMessageDto | { message: string }): Promise<ChatResponse> {
+    const message = dto.message;
+    const userId = 'userCtx' in dto ? dto.userCtx?.userId : 'anonymous';
+    
+    this.logger.debug('Sending chat message', { message, userId });
 
     try {
+      // Se for apenas uma mensagem simples, envia apenas o message
+      const requestBody = 'userCtx' in dto ? dto : { message: dto.message };
+      
       const response = await fetch(this.apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'accept': 'application/json',
         },
-        body: JSON.stringify(dto),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -65,7 +72,7 @@ export class SendChatMessageUseCase {
       }
 
       const data = await response.json();
-      this.logger.info('Chat message sent successfully', { userId: dto.userCtx.userId });
+      this.logger.info('Chat message sent successfully', { userId });
 
       return data;
     } catch (error) {

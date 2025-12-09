@@ -18,12 +18,28 @@ export const ChatBubble = ({ type, content, sender, timestamp, caption, duration
     ? "bg-chat-sent ml-auto rounded-tl-lg rounded-tr-lg rounded-bl-lg rounded-br-sm" 
     : "bg-chat-received mr-auto rounded-tl-lg rounded-tr-lg rounded-br-lg rounded-bl-sm";
 
+  // Formata o timestamp para exibir apenas o horário (HH:mm)
+  const formatTime = (timestamp: string): string => {
+    try {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString('pt-BR', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: false 
+      });
+    } catch {
+      return timestamp; // Retorna o timestamp original se houver erro
+    }
+  };
+
+  const formattedTime = formatTime(timestamp);
+
   if (type === "text") {
     return (
       <div className={`max-w-[75%] ${isSent ? "ml-auto" : "mr-auto"} mb-2 animate-fade-in`}>
         <div className={`${bubbleClass} px-4 py-2 shadow-sm`}>
           <p className="text-gray-900 text-sm leading-relaxed">{content}</p>
-          <span className="text-xs text-gray-600 mt-1 block text-right">{timestamp}</span>
+          <span className="text-xs text-gray-600 mt-1 block text-right">{formattedTime}</span>
         </div>
       </div>
     );
@@ -42,7 +58,7 @@ export const ChatBubble = ({ type, content, sender, timestamp, caption, duration
           {caption && (
             <div className="px-4 py-2">
               <p className="text-gray-900 text-sm">{caption}</p>
-              <span className="text-xs text-gray-600 mt-1 block text-right">{timestamp}</span>
+              <span className="text-xs text-gray-600 mt-1 block text-right">{formattedTime}</span>
             </div>
           )}
         </div>
@@ -80,7 +96,7 @@ export const ChatBubble = ({ type, content, sender, timestamp, caption, duration
           </div>
           <div className="flex-shrink-0 flex flex-col items-end">
             <span className="text-xs text-gray-600">{duration}</span>
-            <span className="text-xs text-gray-600">{timestamp}</span>
+            <span className="text-xs text-gray-600">{formattedTime}</span>
           </div>
         </div>
       </div>

@@ -7,8 +7,8 @@ import { toast } from 'sonner';
 const sendChatMessageUseCase = new SendChatMessageUseCase(container.logger);
 
 export const useChat = () => {
-  const mutation = useMutation<ChatResponse, Error, ChatMessageDto>({
-    mutationFn: async (dto: ChatMessageDto) => {
+  const mutation = useMutation<ChatResponse, Error, ChatMessageDto | { message: string }>({
+    mutationFn: async (dto: ChatMessageDto | { message: string }) => {
       return await sendChatMessageUseCase.execute(dto);
     },
     onError: (error) => {
