@@ -36,7 +36,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const currentUser = await container.authRepository.getCurrentUser();
         setUser(currentUser);
       } catch (error) {
-        console.error('Error loading user:', error);
+        // Silenciosamente falha se não houver usuário autenticado
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -60,7 +61,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
     } catch (error) {
       console.error('Error logging out:', error);
-      throw error;
+      // Mesmo se houver erro, limpa o estado local
+      setUser(null);
     }
   };
 

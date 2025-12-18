@@ -20,8 +20,17 @@ export const ChatBubble = ({ type, content, sender, timestamp, caption, duration
 
   // Formata o timestamp para exibir apenas o horário (HH:mm)
   const formatTime = (timestamp: string): string => {
+    // Se o timestamp já está no formato HH:mm, retorna diretamente
+    if (/^\d{2}:\d{2}$/.test(timestamp)) {
+      return timestamp;
+    }
+    
     try {
       const date = new Date(timestamp);
+      // Verifica se a data é válida
+      if (isNaN(date.getTime())) {
+        return timestamp; // Retorna o timestamp original se for inválido
+      }
       return date.toLocaleTimeString('pt-BR', { 
         hour: '2-digit', 
         minute: '2-digit',
@@ -38,7 +47,7 @@ export const ChatBubble = ({ type, content, sender, timestamp, caption, duration
     return (
       <div className={`max-w-[75%] ${isSent ? "ml-auto" : "mr-auto"} mb-2 animate-fade-in`}>
         <div className={`${bubbleClass} px-4 py-2 shadow-sm`}>
-          <p className="text-gray-900 text-sm leading-relaxed">{content}</p>
+          <p className="text-gray-900 text-sm leading-relaxed whitespace-pre-wrap">{content}</p>
           <span className="text-xs text-gray-600 mt-1 block text-right">{formattedTime}</span>
         </div>
       </div>

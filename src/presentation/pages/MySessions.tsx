@@ -108,14 +108,28 @@ const MySessions = () => {
   }
 
   if (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar sessões';
+    const isAuthError = errorMessage.includes('não autenticado') || errorMessage.includes('Token não encontrado');
+    
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="pt-24 pb-16 px-4">
           <div className="container mx-auto">
             <div className="text-center py-16">
-              <p className="text-lg text-destructive mb-4">Erro ao carregar sessões</p>
-              <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
+              <p className="text-lg text-destructive mb-4">
+                {isAuthError ? 'Sessão expirada ou token não encontrado' : 'Erro ao carregar sessões'}
+              </p>
+              <p className="text-sm text-muted-foreground mb-6">
+                {isAuthError ? 'Por favor, faça login novamente para continuar.' : errorMessage}
+              </p>
+              {isAuthError ? (
+                <Button onClick={() => window.location.href = '/login'}>
+                  Ir para Login
+                </Button>
+              ) : (
+                <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
+              )}
             </div>
           </div>
         </div>
@@ -257,3 +271,4 @@ const MySessions = () => {
 };
 
 export default MySessions;
+export { MySessions };

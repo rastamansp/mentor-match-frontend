@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PhoneMockup } from "@/presentation/components/chatbot-showcase/PhoneMockup";
 import { ChatInterface } from "@/presentation/components/chatbot-showcase/ChatInterface";
 import { InteractionsSelector } from "@/presentation/components/chatbot-showcase/InteractionsSelector";
@@ -13,7 +13,15 @@ interface Journey {
 
 const TestChatbot = () => {
   const [isInteractionsOpen, setIsInteractionsOpen] = useState(false);
-  const { selectedJourney, selectJourney, convertJourneyToMessages } = useInteractions();
+  const { selectedJourney, selectJourney, convertJourneyToMessages, journeys } = useInteractions();
+
+  // Exibir automaticamente a jornada de confirmação de cadastro ao carregar a página
+  useEffect(() => {
+    const welcomeJourney = journeys.find(j => j.name === "0 - Confirmação de Cadastro");
+    if (welcomeJourney && !selectedJourney) {
+      selectJourney(welcomeJourney);
+    }
+  }, [journeys, selectJourney, selectedJourney]);
 
   const handleSelectJourney = (journey: Journey) => {
     selectJourney(journey);
@@ -69,7 +77,7 @@ const TestChatbot = () => {
             
             <div className="grid grid-cols-3 gap-6 pt-8">
               <div className="space-y-2">
-                <div className="text-3xl font-bold text-primary">6</div>
+                <div className="text-3xl font-bold text-primary">{journeys.length}</div>
                 <div className="text-sm text-muted-foreground">Jornadas Disponíveis</div>
               </div>
               <div className="space-y-2">

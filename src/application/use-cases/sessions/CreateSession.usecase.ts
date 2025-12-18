@@ -29,7 +29,7 @@ export class CreateSessionUseCase {
       time: validated.time,
       topic: validated.topic,
       notes: validated.notes,
-      price: mentor.price,
+      price: mentor.price || mentor.pricePerHour,
     });
 
     // Update session with mentor info

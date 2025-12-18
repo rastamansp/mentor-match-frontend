@@ -13,9 +13,9 @@ import MySessions from "./presentation/pages/MySessions";
 import MentorDashboard from "./presentation/pages/MentorDashboard";
 import NotFound from "./presentation/pages/NotFound";
 import Login from "./presentation/pages/Login";
-import Register from "./presentation/pages/Register";
 import TestChatbot from "./presentation/pages/TestChatbot";
 import Profile from "./presentation/pages/Profile";
+import AdminRegisterUser from "./presentation/pages/AdminRegisterUser";
 
 const queryClient = new QueryClient();
 
@@ -29,8 +29,6 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/cadastro" element={<Register />} />
-            <Route path="/register" element={<Register />} />
             <Route path="/mentors" element={<Mentors />} />
             <Route path="/mentor/:id" element={<MentorProfile />} />
             <Route path="/agendar/:id" element={<Booking />} />
@@ -48,6 +46,11 @@ const App = () => (
             <Route path="/perfil" element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/cadastrar-usuario" element={
+              <ProtectedRoute requireAdmin={true}>
+                <AdminRegisterUser />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -11,6 +11,7 @@ interface ApiLoginResponse {
     role: 'USER' | 'ADMIN' | 'MENTOR';
   };
   token?: string;
+  access_token?: string; // API pode retornar access_token
 }
 
 interface DirectUserResponse {
@@ -19,6 +20,7 @@ interface DirectUserResponse {
   email: string;
   role: 'USER' | 'ADMIN' | 'MENTOR';
   token?: string;
+  access_token?: string; // API pode retornar access_token
 }
 
 export class AuthRepository implements IAuthRepository {
@@ -81,7 +83,9 @@ export class AuthRepository implements IAuthRepository {
             });
             
             if (response.status === 401 || response.status === 403) {
-              throw new ValidationError('Credenciais inválidas');
+              // Se for 401/403, não tenta outros endpoints - credenciais inválidas
+              lastError = new ValidationError('Credenciais inválidas');
+              break; // Para o loop, não tenta mais endpoints
             }
             
             // Se não for 401/403, tenta o próximo endpoint
@@ -91,10 +95,34 @@ export class AuthRepository implements IAuthRepository {
 
           const data: ApiLoginResponse | DirectUserResponse = await response.json();
           
+          // Verifica se o token está no header Authorization
+          const authHeader = response.headers.get('Authorization');
+          let token: string | undefined = undefined;
+          
+          if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.substring(7);
+            this.logger.debug('Token found in Authorization header');
+          } else {
+            // Tenta obter do body da resposta - verifica tanto 'token' quanto 'access_token'
+            // A API pode retornar { access_token: "...", user: {...} } ou { token: "...", user: {...} }
+            if ('access_token' in data && data.access_token) {
+              token = data.access_token;
+              this.logger.debug('Token found as access_token in response body');
+            } else if ('token' in data && data.token) {
+              token = data.token;
+              this.logger.debug('Token found as token in response body');
+            } else {
+              this.logger.warn('No token found in response body', { 
+                dataKeys: Object.keys(data),
+                hasAccessToken: 'access_token' in data,
+                hasTokenField: 'token' in data 
+              });
+            }
+          }
+          
           // Mapeia a resposta da API para o formato User
           // A API pode retornar { user: {...}, token: "..." } ou diretamente { id, name, email, role, token: "..." }
           const userData = 'user' in data ? data.user : data;
-          const token = 'token' in data ? data.token : undefined;
           
           const user: User = {
             id: userData.id,
@@ -108,13 +136,16 @@ export class AuthRepository implements IAuthRepository {
 
           // Armazena token se fornecido
           if (token) {
-            localStorage.setItem('token', token);
+            localStorage.setItem('token', token.trim()); // Remove espaços extras
+            this.logger.info('Token saved to localStorage', { tokenLength: token.length });
+          } else {
+            this.logger.warn('No token received from login response');
           }
 
           // Armazena usuário no localStorage
           localStorage.setItem('user', JSON.stringify(validatedUser));
           
-          this.logger.info('User logged in successfully', { userId: validatedUser.id });
+          this.logger.info('User logged in successfully', { userId: validatedUser.id, hasToken: !!token });
 
           return validatedUser;
         } catch (error) {
@@ -377,8 +408,9 @@ export class AuthRepository implements IAuthRepository {
         }
       }
 
-      // Fallback: usa dados do localStorage se o backend não responder
-      if (userStr) {
+      // Fallback: usa dados do localStorage APENAS se houver token
+      // Se não houver token, não retorna usuário (mesmo que exista no localStorage)
+      if (token && userStr) {
         try {
           const user = JSON.parse(userStr) as User;
           const validatedUser = UserSchema.parse(user);
@@ -389,6 +421,12 @@ export class AuthRepository implements IAuthRepository {
           localStorage.removeItem('user');
           return null;
         }
+      }
+
+      // Se não houver token mas houver usuário no localStorage, limpa o usuário
+      if (!token && userStr) {
+        this.logger.warn('User found in localStorage but no token - clearing user data');
+        localStorage.removeItem('user');
       }
 
       return null;

@@ -1,6 +1,17 @@
 {
   "journey": [
     {
+      "name": "0 - Confirmação de Cadastro",
+      "description": "Mensagem automática de confirmação de cadastro enviada via WhatsApp para novos usuários cadastrados",
+      "messages": [
+        { "from": "concierge", "text": "Olá! 👋\n\nSeja muito bem-vindo ao MentorMatch!" },
+        { "from": "concierge", "text": "Você acaba de ser cadastrado na nossa plataforma e estamos muito felizes em tê-lo conosco." },
+        { "from": "concierge", "text": "O MentorMatch é uma plataforma que conecta profissionais em busca de mentoria com mentores experientes de diversas áreas." },
+        { "from": "concierge", "text": "Como posso ajudá-lo hoje?\n\nVocê pode:\n\n1️⃣ Buscar mentores disponíveis\n2️⃣ Agendar uma sessão de mentoria\n3️⃣ Explorar diferentes áreas de conhecimento\n4️⃣ Receber recomendações personalizadas" },
+        { "from": "concierge", "text": "Estou aqui para ajudar você em cada etapa da sua jornada de desenvolvimento profissional. 😊\n\nPode me fazer qualquer pergunta!" }
+      ]
+    },
+    {
       "name": "1 - Descoberta",
       "description": "Primeiro contato e entendimento dos objetivos do usuário",
       "messages": [

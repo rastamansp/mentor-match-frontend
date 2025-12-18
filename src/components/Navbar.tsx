@@ -16,7 +16,7 @@ import { toast } from "sonner";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -159,6 +159,21 @@ const Navbar = () => {
                     <span>Testar Chatbot</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          navigate("/admin/cadastrar-usuario");
+                          setMobileMenuOpen(false);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Cadastrar Usuário</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuItem
                     onClick={() => {
                       navigate("/perfil");
@@ -179,14 +194,9 @@ const Navbar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <>
-                <Button variant="ghost" size="sm" asChild>
-                  <NavLink to="/login">Entrar</NavLink>
-                </Button>
-                <Button size="sm" className="bg-gradient-hero border-0 hover:opacity-90" asChild>
-                  <NavLink to="/cadastro">Cadastrar</NavLink>
-                </Button>
-              </>
+              <Button variant="ghost" size="sm" asChild>
+                <NavLink to="/login">Entrar</NavLink>
+              </Button>
             )}
           </div>
 
@@ -269,9 +279,6 @@ const Navbar = () => {
                 <div className="flex flex-col space-y-2 pt-4">
                   <Button variant="ghost" size="sm" className="w-full" asChild>
                     <NavLink to="/login">Entrar</NavLink>
-                  </Button>
-                  <Button size="sm" className="w-full bg-gradient-hero border-0 hover:opacity-90" asChild>
-                    <NavLink to="/cadastro">Cadastrar</NavLink>
                   </Button>
                 </div>
               )}

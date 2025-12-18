@@ -30,8 +30,11 @@ O **Mentor Match** é uma plataforma web moderna e escalável que conecta profis
 
 ### 2.1 Autenticação e Autorização
 - **Login/Logout:** Sistema de autenticação simples com validação frontend (usuário: "user", senha: "senha")
-- **Rotas Protegidas:** Páginas que requerem autenticação (Minhas Sessões, Dashboard do Mentor)
+- **Registro/Cadastro:** Sistema completo de registro de novos usuários com validação
+- **Rotas Protegidas:** Páginas que requerem autenticação (Minhas Sessões, Dashboard do Mentor, Perfil)
 - **Context API:** Gerenciamento de estado de autenticação global
+- **Roles de Usuário:** Suporte a múltiplos perfis (USER, ADMIN, MENTOR)
+- **Verificação de Permissões:** Propriedade `isAdmin` para controle de acesso
 
 ### 2.2 Busca e Listagem de Mentores
 - **Listagem de Mentores:** Exibição de todos os mentores disponíveis com informações detalhadas
@@ -111,6 +114,67 @@ O **Mentor Match** é uma plataforma web moderna e escalável que conecta profis
   - Timezone (America/Sao_Paulo)
   - Status ativo/inativo
 
+### 2.9 Sistema de Registro/Cadastro
+- **Página de Registro:** Rotas `/cadastro` e `/register` (rotas duplas)
+- **Formulário de Cadastro:**
+  - Nome completo (obrigatório, mínimo 3 caracteres)
+  - Email (obrigatório, validação de formato)
+  - Telefone (obrigatório, com máscara brasileira)
+  - Senha (obrigatório, mínimo 6 caracteres)
+- **Validação:**
+  - Validação frontend com Zod
+  - Máscara automática de telefone brasileiro
+  - Feedback visual de erros
+- **Integração:**
+  - Use Case: `RegisterUseCase`
+  - DTO: `RegisterDto` (name, email, password, phone)
+  - Validador: `RegisterValidator`
+- **Fluxo:**
+  - Usuário preenche formulário
+  - Sistema valida dados
+  - Sistema cria conta
+  - Redirecionamento automático para login
+
+### 2.10 Página de Perfil do Usuário
+- **Rota:** `/perfil` (protegida, requer autenticação)
+- **Funcionalidades:**
+  - Exibição de informações do usuário logado
+  - Nome completo com avatar (iniciais)
+  - Email do usuário
+  - Tipo de conta (role: USER, ADMIN, MENTOR)
+  - Interface preparada para edição (botão disponível)
+- **Informações Exibidas:**
+  - Avatar com iniciais do nome
+  - Nome completo
+  - Email
+  - Tipo de conta (traduzido para português)
+- **Ações Disponíveis:**
+  - Visualizar perfil completo
+  - Editar perfil (UI preparada, funcionalidade futura)
+
+### 2.11 Página de Teste de Chatbot
+- **Rota:** `/testar-chatbot`
+- **Funcionalidades:**
+  - Interface de teste do chatbot com mockup de celular
+  - Seleção de jornadas de conversação pré-definidas
+  - 6 jornadas disponíveis para demonstração
+  - Interface WhatsApp-like para visualização
+  - Componentes especializados:
+    - `PhoneMockup` - Mockup de celular para demonstração
+    - `ChatInterface` - Interface de chat estilo WhatsApp
+    - `InteractionsSelector` - Seletor de jornadas de conversação
+    - `MentorsList` - Lista de mentores exibida no chat
+    - `ChatBubble` - Bolha de mensagem estilizada
+    - `WhatsAppHeader` - Cabeçalho estilo WhatsApp
+- **Jornadas de Conversação:**
+  - 6 jornadas pré-configuradas
+  - Demonstração de diferentes fluxos de interação
+  - Reset de conversa para voltar ao estado inicial
+- **Uso:**
+  - Ferramenta de demonstração e teste
+  - Visualização de diferentes cenários de uso do chatbot
+  - Validação de fluxos de conversação
+
 ---
 
 ## 3. Arquitetura Técnica
@@ -132,7 +196,12 @@ O **Mentor Match** é uma plataforma web moderna e escalável que conecta profis
   - shadcn/ui (componentes baseados em Radix UI)
 - **Ícones:** Lucide React 0.462.0
 - **Datas:** date-fns 3.6.0, react-day-picker 8.10.1
-- **Notificações:** react-hot-toast, sonner 1.7.4
+- **Notificações:** sonner 1.7.4
+- **Temas:** next-themes 0.3.0 (suporte a dark mode)
+- **Gráficos:** recharts 2.15.4 (preparado para analytics)
+- **Componentes UI:**
+  - vaul 0.9.9 (drawer component)
+  - cmdk 1.1.1 (command menu)
 
 #### Infraestrutura
 - **Containerização:** Docker + Docker Compose
@@ -156,10 +225,10 @@ O **Mentor Match** é uma plataforma web moderna e escalável que conecta profis
 - **Use Cases:**
   - Mentors: ListMentors, GetMentorById, SearchMentors
   - Sessions: CreateSession, ListUserSessions, GetSessionById
-  - Auth: Login, Logout
+  - Auth: Login, Logout, Register
   - Availability: GetMentorAvailability
   - Chat: SendChatMessage
-- **DTOs:** MentorFiltersDto, CreateSessionDto, LoginDto, ChatMessageDto
+- **DTOs:** MentorFiltersDto, CreateSessionDto, LoginDto, RegisterDto, ChatMessageDto
 - **Validators:** Validação com Zod para todos os DTOs
 - **Responsabilidade:** Orquestração de casos de uso, validação de entrada
 
@@ -175,10 +244,12 @@ O **Mentor Match** é uma plataforma web moderna e escalável que conecta profis
 
 **4. Presentation (Apresentação)**
 - **Pages:**
-  - Home, Login, Mentors, MentorProfile, Booking, MySessions, MentorDashboard, NotFound
-- **Components:** MentorCard, SessionCard, Chatbot
+  - Home, Login, Register, Mentors, MentorProfile, Booking, MySessions, MentorDashboard, Profile, TestChatbot, NotFound
+- **Components:** 
+  - MentorCard, SessionCard, Chatbot
+  - Chatbot Showcase: PhoneMockup, ChatInterface, InteractionsSelector, MentorsList, ChatBubble, WhatsAppHeader
 - **Hooks (React Query):**
-  - useMentors, useMentorById, useCreateSession, useUserSessions, useLogin, useChat, useMentorAvailability
+  - useMentors, useMentorById, useCreateSession, useUserSessions, useLogin, useChat, useMentorAvailability, useInteractions
 - **Responsabilidade:** Interface do usuário, interação com usuário
 
 **5. Shared (Compartilhado)**
@@ -256,6 +327,37 @@ O **Mentor Match** é uma plataforma web moderna e escalável que conecta profis
   }
   ```
 
+### 4.5 API de Registro/Cadastro
+- **Endpoint:** `POST /api/auth/register` (ou endpoint equivalente)
+- **Payload:**
+  ```json
+  {
+    "name": "string",
+    "email": "string",
+    "password": "string",
+    "phone": "string"
+  }
+  ```
+- **Resposta:** Objeto User com informações do usuário criado
+- **Validação:** 
+  - Nome: mínimo 3 caracteres
+  - Email: formato válido
+  - Senha: mínimo 6 caracteres
+  - Telefone: formato brasileiro (10 ou 11 dígitos)
+
+### 4.6 API de Perfil do Usuário
+- **Endpoint:** `GET /api/auth/me` (ou endpoint equivalente)
+- **Headers:** Requer autenticação (token/sessão)
+- **Resposta:** Objeto User com informações do usuário logado:
+  ```json
+  {
+    "id": "string (UUID)",
+    "name": "string",
+    "email": "string",
+    "role": "USER" | "ADMIN" | "MENTOR"
+  }
+  ```
+
 ---
 
 ## 5. Requisitos Funcionais
@@ -296,6 +398,28 @@ O **Mentor Match** é uma plataforma web moderna e escalável que conecta profis
 ### RF07 - Responsividade
 - O sistema deve ser responsivo para desktop, tablet e mobile
 - O sistema deve adaptar layout para diferentes tamanhos de tela
+
+### RF08 - Sistema de Registro
+- O sistema deve permitir cadastro de novos usuários
+- O sistema deve validar dados de cadastro (nome, email, telefone, senha)
+- O sistema deve aplicar máscara automática para telefone brasileiro
+- O sistema deve redirecionar para login após cadastro bem-sucedido
+- O sistema deve exibir mensagens de erro claras em caso de falha
+
+### RF09 - Gerenciamento de Perfil
+- O sistema deve exibir perfil do usuário logado
+- O sistema deve mostrar informações: nome, email, tipo de conta (role)
+- O sistema deve exibir avatar com iniciais do nome
+- O sistema deve traduzir roles para português (USER, ADMIN, MENTOR)
+- O sistema deve preparar interface para edição de perfil (funcionalidade futura)
+
+### RF10 - Teste de Chatbot
+- O sistema deve fornecer página dedicada para teste do chatbot
+- O sistema deve exibir interface de chat com mockup de celular
+- O sistema deve permitir seleção de jornadas de conversação pré-definidas
+- O sistema deve exibir 6 jornadas diferentes para demonstração
+- O sistema deve permitir reset da conversa para voltar ao estado inicial
+- O sistema deve exibir interface estilo WhatsApp para melhor visualização
 
 ---
 
@@ -405,6 +529,26 @@ O **Mentor Match** é uma plataforma web moderna e escalável que conecta profis
 }
 ```
 
+### 7.4 Entidade User
+```typescript
+{
+  id: string (UUID)
+  name: string
+  email: string
+  role: 'USER' | 'ADMIN' | 'MENTOR'
+}
+```
+
+### 7.5 DTO RegisterDto
+```typescript
+{
+  name: string (mínimo 3 caracteres)
+  email: string (formato de email válido)
+  password: string (mínimo 6 caracteres)
+  phone: string (formato brasileiro: 10 ou 11 dígitos)
+}
+```
+
 ---
 
 ## 8. Fluxos Principais
@@ -438,6 +582,32 @@ O **Mentor Match** é uma plataforma web moderna e escalável que conecta profis
 5. Sistema armazena sessão no localStorage
 6. Sistema redireciona para página original
 
+### 8.4 Fluxo de Registro/Cadastro
+1. Usuário acessa página de registro (/cadastro ou /register)
+2. Usuário preenche formulário:
+   - Nome completo (mínimo 3 caracteres)
+   - Email (formato válido)
+   - Telefone (máscara automática aplicada)
+   - Senha (mínimo 6 caracteres)
+3. Sistema valida dados em tempo real
+4. Usuário submete formulário
+5. Sistema valida todos os campos com Zod
+6. Sistema envia dados para API de registro
+7. Sistema exibe mensagem de sucesso
+8. Sistema redireciona automaticamente para /login
+
+### 8.5 Fluxo de Visualização de Perfil
+1. Usuário logado acessa rota /perfil
+2. Sistema verifica autenticação (rota protegida)
+3. Sistema busca informações do usuário atual
+4. Sistema exibe:
+   - Avatar com iniciais do nome
+   - Nome completo
+   - Email
+   - Tipo de conta (role traduzido para português)
+5. Usuário pode visualizar todas as informações
+6. Botão "Editar Perfil" disponível (funcionalidade futura)
+
 ---
 
 ## 9. Estimativa de Esforço
@@ -468,19 +638,23 @@ O **Mentor Match** é uma plataforma web moderna e escalável que conecta profis
 
 #### Fase 4: Application Layer (40 horas)
 - Implementação de use cases
-- Criação de DTOs
-- Validadores Zod
+- Criação de DTOs (incluindo RegisterDto)
+- Validadores Zod (incluindo RegisterValidator)
 - Orquestração de fluxos
+- Use Case de Registro (RegisterUseCase)
 
 #### Fase 5: Presentation Layer - Core (80 horas)
 - Página Home
 - Página de Login
+- Página de Registro/Cadastro
 - Página de Listagem de Mentores
 - Página de Perfil do Mentor
 - Página de Agendamento
+- Página de Perfil do Usuário
 - Componentes base (MentorCard, SessionCard)
 - Sistema de autenticação (Context API)
 - Rotas protegidas
+- Suporte a múltiplos roles (USER, ADMIN, MENTOR)
 
 #### Fase 6: Presentation Layer - Features Avançadas (48 horas)
 - Chatbot completo
@@ -488,6 +662,8 @@ O **Mentor Match** é uma plataforma web moderna e escalável que conecta profis
 - Exibição de mentores no chat
 - Página Minhas Sessões
 - Dashboard do Mentor
+- Página de Teste de Chatbot
+- Componentes de Chatbot Showcase (PhoneMockup, ChatInterface, InteractionsSelector, etc.)
 - Filtros avançados de busca
 
 #### Fase 7: UI/UX e Componentes (56 horas)
@@ -507,13 +683,15 @@ O **Mentor Match** é uma plataforma web moderna e escalável que conecta profis
 - Validação de fluxos completos
 
 #### Fase 9: Deploy e DevOps (24 horas)
-- Configuração de Docker
+- Configuração de Docker (Dockerfile multi-stage)
+- Docker Compose para desenvolvimento
 - Docker Compose para produção
 - Configuração de Nginx
-- Health checks
+- Health checks configurados
 - Integração com Traefik
 - Deploy no Portainer
 - Configuração de variáveis de ambiente
+- Suporte a diferentes ambientes (dev, prod)
 
 #### Fase 10: Documentação e Refinamento (16 horas)
 - Documentação do código
@@ -537,6 +715,8 @@ O **Mentor Match** é uma plataforma web moderna e escalável que conecta profis
 | 9 | Deploy e DevOps | 24 |
 | 10 | Documentação e Refinamento | 16 |
 | **TOTAL** | | **400 horas** |
+
+**Nota:** As funcionalidades de Registro, Perfil do Usuário e Teste de Chatbot foram implementadas dentro das fases existentes, não alterando o total de horas estimadas.
 
 ### 9.3 Estimativa em Dias (Considerando 8h/dia)
 - **Total:** 50 dias úteis
@@ -704,6 +884,6 @@ O **Mentor Match** é uma plataforma robusta e escalável desenvolvida com as me
 ---
 
 **Documento criado por:** Equipe de Desenvolvimento  
-**Última atualização:** 2025-01-19  
-**Versão do Documento:** 1.0.0
+**Última atualização:** 2025-01-27  
+**Versão do Documento:** 1.1.0
 
