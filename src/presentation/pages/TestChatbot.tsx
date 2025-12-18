@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PhoneMockup } from "@/presentation/components/chatbot-showcase/PhoneMockup";
 import { ChatInterface } from "@/presentation/components/chatbot-showcase/ChatInterface";
 import { InteractionsSelector } from "@/presentation/components/chatbot-showcase/InteractionsSelector";
@@ -14,33 +14,65 @@ interface Journey {
 const TestChatbot = () => {
   const [isInteractionsOpen, setIsInteractionsOpen] = useState(false);
   const { selectedJourney, selectJourney, convertJourneyToMessages, journeys } = useInteractions();
+  const phoneMockupRef = useRef<HTMLDivElement>(null);
+  const journeySelectionCounterRef = useRef(0); // Contador para forçar atualização quando jornada é selecionada
 
-  // Exibir automaticamente a jornada de confirmação de cadastro ao carregar a página
+  // Exibir automaticamente a jornada "Descoberta" ao carregar a página
   useEffect(() => {
-    const welcomeJourney = journeys.find(j => j.name === "0 - Confirmação de Cadastro");
-    if (welcomeJourney && !selectedJourney) {
-      selectJourney(welcomeJourney);
+    const discoveryJourney = journeys.find(j => j.name === "1 - Descoberta");
+    if (discoveryJourney && !selectedJourney) {
+      journeySelectionCounterRef.current += 1; // Incrementa contador para a jornada inicial
+      selectJourney(discoveryJourney);
     }
   }, [journeys, selectJourney, selectedJourney]);
 
+  // Scroll automático para o iPhone quando uma jornada é selecionada (especialmente no mobile)
+  useEffect(() => {
+    if (selectedJourney && phoneMockupRef.current) {
+      // Delay para garantir que o DOM foi atualizado e as mensagens começaram a aparecer
+      const timeoutId = setTimeout(() => {
+        if (phoneMockupRef.current) {
+          // No mobile, usa 'start' para garantir que o topo do iPhone fique visível
+          // No desktop, usa 'center' para centralizar
+          const isMobile = window.innerWidth < 1024;
+          phoneMockupRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: isMobile ? 'start' : 'center',
+            inline: 'nearest'
+          });
+        }
+      }, 300); // Delay maior para garantir que a animação das mensagens começou
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [selectedJourney]);
+
   const handleSelectJourney = (journey: Journey) => {
+    // Incrementa o contador para forçar atualização no ChatInterface
+    journeySelectionCounterRef.current += 1;
+    // Sempre seleciona a jornada (as mensagens serão adicionadas ao histórico no ChatInterface)
     selectJourney(journey);
+    setIsInteractionsOpen(false); // Fecha o seletor após selecionar
   };
 
   const handleResetChat = () => {
+    // Limpa a jornada selecionada, mas mantém o histórico de mensagens
+    // O usuário pode continuar conversando normalmente
     selectJourney(null);
   };
 
   const journeyMessages = selectedJourney ? convertJourneyToMessages(selectedJourney) : undefined;
   const headerName = selectedJourney ? "John — Concierge MentorMatch" : undefined;
   const headerAvatar = selectedJourney ? "🤖" : undefined;
+  // Passa o contador como prop para forçar atualização no ChatInterface
+  const journeySelectionKey = selectedJourney ? `${selectedJourney.name}-${journeySelectionCounterRef.current}` : undefined;
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       
       <div className="container mx-auto px-4 py-8 pt-24">
-        <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20 min-h-[calc(100vh-6rem)]">
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20 min-h-[calc(100vh-6rem)]" id="test-chatbot-content">
           <div className="flex-1 max-w-2xl text-center lg:text-left space-y-6 animate-fade-in">
             <div className="inline-block">
               <span className="bg-primary/20 text-primary px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm">
@@ -91,10 +123,12 @@ const TestChatbot = () => {
             </div>
           </div>
           
-          <div className="flex-shrink-0 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+          <div ref={phoneMockupRef} className="flex-shrink-0 animate-fade-in" style={{ animationDelay: "0.2s" }}>
             <PhoneMockup>
               <ChatInterface 
                 journeyMessages={journeyMessages}
+                journeyName={selectedJourney?.name}
+                journeySelectionKey={journeySelectionKey}
                 headerName={headerName}
                 headerAvatar={headerAvatar}
               />
