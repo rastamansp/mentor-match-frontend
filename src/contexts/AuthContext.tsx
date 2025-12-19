@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean;
   login: (dto: LoginDto) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<User | null>;
   isAuthenticated: boolean;
   isAdmin: boolean;
 }
@@ -29,6 +30,17 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const refreshUser = async () => {
+    try {
+      const currentUser = await container.authRepository.getCurrentUser();
+      setUser(currentUser);
+      return currentUser;
+    } catch (error) {
+      setUser(null);
+      return null;
+    }
+  };
 
   useEffect(() => {
     const loadUser = async () => {
@@ -71,6 +83,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading,
     login,
     logout,
+    refreshUser,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'ADMIN',
   };

@@ -162,6 +162,252 @@ export class SessionRepository implements ISessionRepository {
     }
   }
 
+  async createForUserByAdmin(userId: string, data: { mentorId: string; planId: string | null; scheduledAt: string; duration: number; notes?: string }): Promise<Session> {
+    this.logger.debug('Creating session for user by admin', { userId, ...data });
+
+    try {
+      const url = `${this.apiUrl}/admin/user/sessions`;
+
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        this.logger.error('No token found in localStorage');
+        throw new Error('Usuário não autenticado. Por favor, faça login novamente.');
+      }
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token.trim()}`,
+      };
+
+      // Monta o body conforme o formato esperado pelo endpoint admin
+      const requestBody = {
+        userId,
+        mentorId: data.mentorId,
+        planId: data.planId ?? null,
+        scheduledAt: data.scheduledAt,
+        duration: data.duration,
+        notes: data.notes,
+      };
+
+      this.logger.debug('Creating session for user by admin', { url, userId, mentorId: data.mentorId });
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(requestBody),
+      });
+
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        this.logger.error('Unauthorized - token invalid or expired');
+        throw new Error('Sessão expirada. Por favor, faça login novamente.');
+      }
+
+      if (response.status === 403) {
+        this.logger.error('Forbidden - user does not have permission');
+        throw new Error('Você não tem permissão para acessar esta funcionalidade.');
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.error('Failed to create session for user by admin', new Error(`HTTP ${response.status}: ${errorText}`));
+        throw new Error(`Erro ao criar sessão: ${response.status} ${response.statusText}`);
+      }
+
+      const apiSession: ApiSessionResponse = await response.json();
+      
+      // Converte para formato Session
+      const scheduledDate = new Date(apiSession.scheduledAt);
+      const dateStr = scheduledDate.toISOString().split('T')[0];
+      const timeStr = `${String(scheduledDate.getHours()).padStart(2, '0')}:${String(scheduledDate.getMinutes()).padStart(2, '0')}`;
+
+      // Extrai topic das notes se existir
+      let topic = '';
+      let notes = apiSession.notes || undefined;
+      if (notes && notes.startsWith('Tópico: ')) {
+        const lines = notes.split('\n');
+        topic = lines[0].replace('Tópico: ', '');
+        notes = lines.slice(1).join('\n') || undefined;
+      }
+
+      // Busca informações do mentor para preencher mentorName e mentorAvatar
+      let mentorName = 'Mentor Name';
+      let mentorAvatar: string | null = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mentor';
+      
+      try {
+        const mentorUrl = `${this.apiUrl}/mentors/${data.mentorId}`;
+        const mentorResponse = await fetch(mentorUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token.trim()}`,
+          },
+        });
+
+        if (mentorResponse.ok) {
+          const mentorData: any = await mentorResponse.json();
+          mentorName = mentorData.name || 'Mentor Name';
+          mentorAvatar = mentorData.avatar || null;
+        }
+      } catch (mentorError) {
+        this.logger.warn('Could not fetch mentor data', mentorError as Error);
+        // Continua com valores padrão
+      }
+
+      const session: Session = {
+        id: apiSession.id,
+        mentorId: apiSession.mentorId,
+        mentorName,
+        mentorAvatar,
+        userId: apiSession.menteeId,
+        date: dateStr,
+        time: timeStr,
+        topic: topic,
+        notes: notes,
+        status: this.normalizeStatus(apiSession.status),
+        price: undefined,
+        createdAt: apiSession.createdAt,
+      };
+
+      const validatedSession = SessionSchema.parse(session);
+      this.logger.info('Session created for user by admin successfully', { sessionId: validatedSession.id, userId });
+      return validatedSession;
+    } catch (error) {
+      this.logger.error('Error creating session for user by admin', error as Error);
+      throw error;
+    }
+  }
+
+  async update(id: string, data: { scheduledAt: string; duration?: number; notes?: string }): Promise<Session> {
+    this.logger.debug('Updating session', { id, ...data });
+
+    try {
+      const url = `${this.apiUrl}/sessions/${id}`;
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        this.logger.error('No token found in localStorage');
+        throw new Error('Usuário não autenticado. Por favor, faça login novamente.');
+      }
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token.trim()}`,
+      };
+
+      const requestBody: {
+        scheduledAt: string;
+        duration?: number;
+        notes?: string;
+      } = {
+        scheduledAt: data.scheduledAt,
+      };
+
+      if (data.duration !== undefined) {
+        requestBody.duration = data.duration;
+      }
+
+      if (data.notes !== undefined) {
+        requestBody.notes = data.notes;
+      }
+
+      this.logger.debug('Updating session', { url, id, scheduledAt: data.scheduledAt });
+
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(requestBody),
+      });
+
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        this.logger.error('Unauthorized - token invalid or expired');
+        throw new Error('Sessão expirada. Por favor, faça login novamente.');
+      }
+
+      if (response.status === 403) {
+        this.logger.error('Forbidden - user does not have permission');
+        throw new Error('Você não tem permissão para editar esta sessão.');
+      }
+
+      if (response.status === 404) {
+        this.logger.error('Session not found', { id });
+        throw new Error('Sessão não encontrada.');
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.error('Failed to update session', new Error(`HTTP ${response.status}: ${errorText}`));
+        throw new Error(`Erro ao atualizar sessão: ${response.status} ${response.statusText}`);
+      }
+
+      const apiSession: ApiSessionResponse = await response.json();
+      
+      // Converte para formato Session
+      const scheduledDate = new Date(apiSession.scheduledAt);
+      const dateStr = scheduledDate.toISOString().split('T')[0];
+      const timeStr = `${String(scheduledDate.getHours()).padStart(2, '0')}:${String(scheduledDate.getMinutes()).padStart(2, '0')}`;
+
+      // Extrai topic das notes se existir
+      let topic = '';
+      let notes = apiSession.notes || undefined;
+      if (notes && notes.startsWith('Tópico: ')) {
+        const lines = notes.split('\n');
+        topic = lines[0].replace('Tópico: ', '');
+        notes = lines.slice(1).join('\n') || undefined;
+      }
+
+      // Busca informações do mentor para preencher mentorName e mentorAvatar
+      let mentorName = 'Mentor Name';
+      let mentorAvatar: string | null = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mentor';
+      
+      try {
+        const mentorUrl = `${this.apiUrl}/mentors/${apiSession.mentorId}`;
+        const mentorResponse = await fetch(mentorUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token.trim()}`,
+          },
+        });
+
+        if (mentorResponse.ok) {
+          const mentorData: any = await mentorResponse.json();
+          mentorName = mentorData.name || 'Mentor Name';
+          mentorAvatar = mentorData.avatar || null;
+        }
+      } catch (mentorError) {
+        this.logger.warn('Could not fetch mentor data', mentorError as Error);
+        // Continua com valores padrão
+      }
+
+      const session: Session = {
+        id: apiSession.id,
+        mentorId: apiSession.mentorId,
+        mentorName,
+        mentorAvatar,
+        userId: apiSession.menteeId,
+        date: dateStr,
+        time: timeStr,
+        topic: topic,
+        notes: notes,
+        status: this.normalizeStatus(apiSession.status),
+        price: undefined,
+        createdAt: apiSession.createdAt,
+      };
+
+      const validatedSession = SessionSchema.parse(session);
+      this.logger.info('Session updated successfully', { sessionId: validatedSession.id });
+      return validatedSession;
+    } catch (error) {
+      this.logger.error('Error updating session', error as Error);
+      throw error;
+    }
+  }
+
   async findById(id: string): Promise<Session | null> {
     this.logger.debug('Finding session by id', { id });
 
@@ -198,6 +444,15 @@ export class SessionRepository implements ISessionRepository {
       const dateStr = scheduledDate.toISOString().split('T')[0];
       const timeStr = `${String(scheduledDate.getHours()).padStart(2, '0')}:${String(scheduledDate.getMinutes()).padStart(2, '0')}`;
 
+      // Extrai topic das notes se existir
+      let topic = '';
+      let notes = apiSession.notes || undefined;
+      if (notes && notes.startsWith('Tópico: ')) {
+        const lines = notes.split('\n');
+        topic = lines[0].replace('Tópico: ', '');
+        notes = lines.slice(1).join('\n') || undefined;
+      }
+
       const session: Session = {
         id: apiSession.id,
         mentorId: apiSession.mentorId,
@@ -206,10 +461,10 @@ export class SessionRepository implements ISessionRepository {
         userId: apiSession.menteeId,
         date: dateStr,
         time: timeStr,
-        topic: '',
-        notes: apiSession.notes || undefined,
+        topic: topic,
+        notes: notes,
         status: this.normalizeStatus(apiSession.status),
-        price: 0, // A API não retorna price
+        price: undefined, // A API não retorna price
         createdAt: apiSession.createdAt,
       };
 
@@ -268,6 +523,15 @@ export class SessionRepository implements ISessionRepository {
           const dateStr = scheduledDate.toISOString().split('T')[0];
           const timeStr = `${String(scheduledDate.getHours()).padStart(2, '0')}:${String(scheduledDate.getMinutes()).padStart(2, '0')}`;
 
+          // Extrai topic das notes se existir
+          let topic = '';
+          let notes = apiSession.notes || undefined;
+          if (notes && notes.startsWith('Tópico: ')) {
+            const lines = notes.split('\n');
+            topic = lines[0].replace('Tópico: ', '');
+            notes = lines.slice(1).join('\n') || undefined;
+          }
+
           return SessionSchema.parse({
             id: apiSession.id,
             mentorId: apiSession.mentorId,
@@ -276,15 +540,124 @@ export class SessionRepository implements ISessionRepository {
             userId: apiSession.menteeId,
             date: dateStr,
             time: timeStr,
-            topic: '',
-            notes: apiSession.notes || undefined,
+            topic: topic,
+            notes: notes,
             status: this.normalizeStatus(apiSession.status),
-            price: 0,
+            price: undefined, // A API não retorna price
             createdAt: apiSession.createdAt,
           });
         });
     } catch (error) {
       this.logger.error('Error fetching sessions', error as Error);
+      throw error;
+    }
+  }
+
+  async findByUserIdAdmin(userId: string): Promise<Session[]> {
+    this.logger.debug('Finding sessions by user id (admin)', { userId });
+
+    try {
+      const url = `${this.apiUrl}/admin/user/${userId}/sessions`;
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        this.logger.error('No token found in localStorage');
+        throw new Error('Usuário não autenticado. Por favor, faça login novamente.');
+      }
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token.trim()}`,
+      };
+
+      this.logger.debug('Fetching sessions by admin', { url, userId });
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+      });
+
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        this.logger.error('Unauthorized - token invalid or expired');
+        throw new Error('Sessão expirada. Por favor, faça login novamente.');
+      }
+
+      if (response.status === 403) {
+        this.logger.error('Forbidden - user does not have permission');
+        throw new Error('Você não tem permissão para acessar esta funcionalidade.');
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.error('Failed to fetch sessions by admin', new Error(`HTTP ${response.status}: ${errorText}`));
+        throw new Error(`Erro ao buscar sessões: ${response.status} ${response.statusText}`);
+      }
+
+      const apiSessions: ApiSessionResponse[] = await response.json();
+      
+      // Converte para formato Session
+      const sessions = await Promise.all(
+        apiSessions.map(async (apiSession) => {
+          const scheduledDate = new Date(apiSession.scheduledAt);
+          const dateStr = scheduledDate.toISOString().split('T')[0];
+          const timeStr = `${String(scheduledDate.getHours()).padStart(2, '0')}:${String(scheduledDate.getMinutes()).padStart(2, '0')}`;
+
+          // Extrai topic das notes se existir
+          let topic = '';
+          let notes = apiSession.notes || undefined;
+          if (notes && notes.startsWith('Tópico: ')) {
+            const lines = notes.split('\n');
+            topic = lines[0].replace('Tópico: ', '');
+            notes = lines.slice(1).join('\n') || undefined;
+          }
+
+          // Busca informações do mentor para preencher mentorName e mentorAvatar
+          let mentorName = 'Mentor Name';
+          let mentorAvatar: string | null = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mentor';
+          
+          try {
+            const mentorUrl = `${this.apiUrl}/mentors/${apiSession.mentorId}`;
+            const mentorResponse = await fetch(mentorUrl, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token.trim()}`,
+              },
+            });
+
+            if (mentorResponse.ok) {
+              const mentorData: any = await mentorResponse.json();
+              mentorName = mentorData.name || 'Mentor Name';
+              mentorAvatar = mentorData.avatar || null;
+            }
+          } catch (mentorError) {
+            this.logger.warn('Could not fetch mentor data', mentorError as Error);
+            // Continua com valores padrão
+          }
+
+          return SessionSchema.parse({
+            id: apiSession.id,
+            mentorId: apiSession.mentorId,
+            mentorName,
+            mentorAvatar,
+            userId: apiSession.menteeId,
+            date: dateStr,
+            time: timeStr,
+            topic: topic,
+            notes: notes,
+            status: this.normalizeStatus(apiSession.status),
+            price: undefined,
+            createdAt: apiSession.createdAt,
+          });
+        })
+      );
+
+      this.logger.info('Sessions fetched by admin successfully', { userId, count: sessions.length });
+      return sessions;
+    } catch (error) {
+      this.logger.error('Error fetching sessions by admin', error as Error);
       throw error;
     }
   }
@@ -324,6 +697,15 @@ export class SessionRepository implements ISessionRepository {
           const dateStr = scheduledDate.toISOString().split('T')[0];
           const timeStr = `${String(scheduledDate.getHours()).padStart(2, '0')}:${String(scheduledDate.getMinutes()).padStart(2, '0')}`;
 
+          // Extrai topic das notes se existir
+          let topic = '';
+          let notes = apiSession.notes || undefined;
+          if (notes && notes.startsWith('Tópico: ')) {
+            const lines = notes.split('\n');
+            topic = lines[0].replace('Tópico: ', '');
+            notes = lines.slice(1).join('\n') || undefined;
+          }
+
           return SessionSchema.parse({
             id: apiSession.id,
             mentorId: apiSession.mentorId,
@@ -332,10 +714,10 @@ export class SessionRepository implements ISessionRepository {
             userId: apiSession.menteeId,
             date: dateStr,
             time: timeStr,
-            topic: '',
-            notes: apiSession.notes || undefined,
+            topic: topic,
+            notes: notes,
             status: this.normalizeStatus(apiSession.status),
-            price: 0,
+            price: undefined, // A API não retorna price
             createdAt: apiSession.createdAt,
           });
         });

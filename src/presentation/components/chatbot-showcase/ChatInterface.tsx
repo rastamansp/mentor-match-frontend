@@ -141,9 +141,9 @@ export const ChatInterface = ({
     if (chatContainerRef.current) {
       // Pequeno delay para garantir que o DOM foi atualizado
       setTimeout(() => {
-        if (chatContainerRef.current) {
-          chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-        }
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
       }, 50);
     }
   }, [visibleMessagesCount, chatMessages.length, allMessages.length]);

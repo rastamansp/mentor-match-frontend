@@ -10,12 +10,16 @@ import Mentors from "./presentation/pages/Mentors";
 import MentorProfile from "./presentation/pages/MentorProfile";
 import Booking from "./presentation/pages/Booking";
 import MySessions from "./presentation/pages/MySessions";
+import SessionDetails from "./presentation/pages/SessionDetails";
 import MentorDashboard from "./presentation/pages/MentorDashboard";
 import NotFound from "./presentation/pages/NotFound";
 import Login from "./presentation/pages/Login";
 import TestChatbot from "./presentation/pages/TestChatbot";
 import Profile from "./presentation/pages/Profile";
+import MyArea from "./presentation/pages/MyArea";
 import AdminRegisterUser from "./presentation/pages/AdminRegisterUser";
+import AdminUsers from "./presentation/pages/AdminUsers";
+import AdminEditUser from "./presentation/pages/AdminEditUser";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +41,11 @@ const App = () => (
                 <MySessions />
               </ProtectedRoute>
             } />
+            <Route path="/sessao/:id" element={
+              <ProtectedRoute>
+                <SessionDetails />
+              </ProtectedRoute>
+            } />
             <Route path="/dashboard-mentor" element={
               <ProtectedRoute>
                 <MentorDashboard />
@@ -48,9 +57,24 @@ const App = () => (
                 <Profile />
               </ProtectedRoute>
             } />
-            <Route path="/admin/cadastrar-usuario" element={
+            <Route path="/minha-area" element={
+              <ProtectedRoute>
+                <MyArea />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/register-user" element={
               <ProtectedRoute requireAdmin={true}>
                 <AdminRegisterUser />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/users" element={
+              <ProtectedRoute requireAdmin={true}>
+                <AdminUsers />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/users/:id/edit" element={
+              <ProtectedRoute requireAdmin={true}>
+                <AdminEditUser />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -14,6 +14,7 @@ const AdminRegisterUser = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
   const [loading, setLoading] = useState(false);
 
   // Função para aplicar máscara de telefone brasileiro
@@ -43,9 +44,18 @@ const AdminRegisterUser = () => {
     setPhone(masked);
   };
 
+  const handleWhatsappChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const masked = applyPhoneMask(e.target.value);
+    setWhatsappNumber(masked);
+  };
+
   // Remove máscara antes de enviar
   const getCleanPhone = (): string => {
     return phone.replace(/\D/g, '');
+  };
+
+  const getCleanWhatsapp = (): string => {
+    return whatsappNumber.replace(/\D/g, '');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,18 +63,20 @@ const AdminRegisterUser = () => {
     setLoading(true);
 
     try {
-      await container.registerUseCase.execute({
+      await container.registerWithRoleUseCase.execute({
         name,
         email,
         password,
         phone: getCleanPhone(),
+        whatsappNumber: getCleanWhatsapp(),
       });
-      toast.success('Usuário cadastrado com sucesso! O backend enviará uma mensagem de boas-vindas via WhatsApp.');
+      toast.success('Usuário cadastrado com sucesso! O usuário receberá 5 mensagens de boas-vindas via WhatsApp.');
       // Limpar formulário após sucesso
       setName('');
       setEmail('');
       setPassword('');
       setPhone('');
+      setWhatsappNumber('');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao cadastrar usuário';
       toast.error(message);
@@ -125,6 +137,25 @@ const AdminRegisterUser = () => {
                   placeholder="(11) 98722-1050"
                   value={phone}
                   onChange={handlePhoneChange}
+                  className="mt-2"
+                  required
+                  disabled={loading}
+                  minLength={14}
+                  maxLength={15}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Digite apenas números (10 ou 11 dígitos)
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="whatsappNumber">WhatsApp</Label>
+                <Input
+                  id="whatsappNumber"
+                  type="tel"
+                  placeholder="(11) 98722-1050"
+                  value={whatsappNumber}
+                  onChange={handleWhatsappChange}
                   className="mt-2"
                   required
                   disabled={loading}

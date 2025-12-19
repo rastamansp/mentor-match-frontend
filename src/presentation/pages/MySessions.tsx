@@ -207,7 +207,11 @@ const MySessions = () => {
 
                       {/* Right Section - Actions */}
                       <div className="flex flex-col space-y-2">
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate(`/sessao/${session.id}`)}
+                        >
                           Detalhes
                         </Button>
                       </div>
@@ -250,7 +254,11 @@ const MySessions = () => {
 
                       {/* Right Section - Resources & Actions */}
                       <div className="flex flex-col space-y-2 min-w-[200px]">
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate(`/sessao/${session.id}`)}
+                        >
                           <MessageSquare className="w-4 h-4 mr-2" />
                           Ver Detalhes
                         </Button>

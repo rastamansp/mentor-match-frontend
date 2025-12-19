@@ -1,4 +1,4 @@
-import { IAuthRepository, LoginCredentials, RegisterCredentials } from '@domain/repositories/IAuthRepository';
+import { IAuthRepository, LoginCredentials, RegisterCredentials, RegisterWithRoleCredentials } from '@domain/repositories/IAuthRepository';
 import { User, UserSchema } from '@domain/entities/User.entity';
 import { ValidationError } from '@domain/errors/ValidationError';
 import { ILogger } from '../logging/Logger';
@@ -312,6 +312,134 @@ export class AuthRepository implements IAuthRepository {
     }
   }
 
+  async registerWithRole(credentials: RegisterWithRoleCredentials): Promise<User> {
+    this.logger.debug('Attempting register with role', { email: credentials.email });
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        this.logger.error('No token found in localStorage');
+        throw new ValidationError('Usuário não autenticado. Por favor, faça login novamente.');
+      }
+
+      // Endpoint específico para registro com role (apenas ADMIN)
+      const endpoints = [
+        `${this.apiUrl}/api/auth/register-with-role`,
+        `${this.apiUrl}/api/register-with-role`,
+        `${this.apiUrl}/auth/register-with-role`,
+        `${this.apiUrl}/register-with-role`,
+      ];
+
+      let lastError: Error | null = null;
+
+      for (const url of endpoints) {
+        try {
+          this.logger.debug('Trying register-with-role endpoint', { url });
+
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token.trim()}`,
+            },
+            body: JSON.stringify({
+              name: credentials.name,
+              email: credentials.email,
+              password: credentials.password,
+              phone: credentials.phone,
+              whatsappNumber: credentials.whatsappNumber,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            this.logger.debug('Register-with-role endpoint failed', { 
+              url, 
+              status: response.status, 
+              error: errorText 
+            });
+            
+            // Tratamento específico para erros comuns
+            if (response.status === 400) {
+              try {
+                const errorData = JSON.parse(errorText);
+                const errorMessage = errorData.message || errorData.error || 'Dados inválidos';
+                throw new ValidationError(errorMessage);
+              } catch {
+                throw new ValidationError('Dados inválidos. Verifique os campos preenchidos.');
+              }
+            }
+            
+            if (response.status === 409) {
+              throw new ValidationError('Este email já está cadastrado');
+            }
+            
+            if (response.status === 401 || response.status === 403) {
+              // Token inválido ou expirado - limpa o localStorage
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              this.logger.error('Unauthorized - token invalid or expired');
+              throw new ValidationError('Sessão expirada ou não autorizado. Por favor, faça login novamente.');
+            }
+            
+            // Se não for um erro conhecido, tenta o próximo endpoint
+            lastError = new Error(`HTTP ${response.status}: ${errorText}`);
+            continue;
+          }
+
+          const data: ApiLoginResponse | DirectUserResponse = await response.json();
+          
+          // Mapeia a resposta da API para o formato User
+          const userData = 'user' in data ? data.user : data;
+          
+          const user: User = {
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            role: userData.role,
+          };
+
+          // Valida com Zod
+          const validatedUser = UserSchema.parse(user);
+          
+          this.logger.info('User registered with role successfully', { userId: validatedUser.id });
+
+          return validatedUser;
+        } catch (error) {
+          // Se for ValidationError, propaga imediatamente
+          if (error instanceof ValidationError) {
+            throw error;
+          }
+          
+          // Caso contrário, salva o erro e tenta próximo endpoint
+          lastError = error as Error;
+          continue;
+        }
+      }
+
+      // Se todos os endpoints falharam, lança o último erro
+      if (lastError) {
+        throw lastError;
+      }
+
+      throw new ValidationError('Erro ao conectar com o servidor. Tente novamente.');
+    } catch (error) {
+      this.logger.error('Register with role failed', error as Error);
+      
+      if (error instanceof ValidationError) {
+        throw error;
+      }
+
+      // Se for erro de rede, fornece mensagem mais amigável
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new ValidationError('Erro ao conectar com o servidor. Verifique sua conexão.');
+      }
+
+      throw new ValidationError('Erro ao cadastrar usuário. Tente novamente.');
+    }
+  }
+
   async logout(): Promise<void> {
     this.logger.debug('Logging out');
 
@@ -368,43 +496,41 @@ export class AuthRepository implements IAuthRepository {
 
       // Se houver token, tenta buscar usuário atual do backend
       if (token) {
-        const endpoints = [
-          `${this.apiUrl}/api/auth/me`,
-          `${this.apiUrl}/api/user/me`,
-          `${this.apiUrl}/auth/me`,
-          `${this.apiUrl}/user/me`,
-        ];
+        try {
+          const url = `${this.apiUrl}/api/auth/profile`;
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token.trim()}`,
+            },
+          });
 
-        for (const url of endpoints) {
-          try {
-            const response = await fetch(url, {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-              },
-            });
+          if (response.ok) {
+            const data = await response.json();
+            const userData = data.user || data;
+            const user: User = {
+              id: userData.id,
+              name: userData.name,
+              email: userData.email,
+              role: userData.role,
+            };
 
-            if (response.ok) {
-              const data = await response.json();
-              const userData = data.user || data;
-              const user: User = {
-                id: userData.id,
-                name: userData.name,
-                email: userData.email,
-                role: userData.role,
-              };
-
-              const validatedUser = UserSchema.parse(user);
-              localStorage.setItem('user', JSON.stringify(validatedUser));
-              
-              this.logger.info('Current user fetched from API', { userId: validatedUser.id });
-              return validatedUser;
-            }
-          } catch (error) {
-            // Continua tentando outros endpoints
-            this.logger.debug('Get current user endpoint failed', { url, error });
+            const validatedUser = UserSchema.parse(user);
+            localStorage.setItem('user', JSON.stringify(validatedUser));
+            
+            this.logger.info('Current user fetched from API', { userId: validatedUser.id });
+            return validatedUser;
+          } else if (response.status === 401 || response.status === 403) {
+            // Token inválido ou expirado - limpa o localStorage
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            this.logger.warn('Token invalid or expired - cleared localStorage');
+            return null;
           }
+        } catch (error) {
+          // Se falhar, usa fallback do localStorage
+          this.logger.debug('Get current user endpoint failed, using localStorage fallback', { error });
         }
       }
 
@@ -433,6 +559,64 @@ export class AuthRepository implements IAuthRepository {
     } catch (error) {
       this.logger.error('Error getting current user', error as Error);
       return null;
+    }
+  }
+
+  async getProfile(): Promise<User> {
+    this.logger.debug('Getting user profile');
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        this.logger.error('No token found in localStorage');
+        throw new Error('Usuário não autenticado. Por favor, faça login novamente.');
+      }
+
+      const url = `${this.apiUrl}/api/auth/profile`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token.trim()}`,
+        },
+      });
+
+      if (response.status === 401 || response.status === 403) {
+        // Token inválido ou expirado - limpa o localStorage
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        this.logger.error('Unauthorized - token invalid or expired');
+        throw new Error('Sessão expirada. Por favor, faça login novamente.');
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.error('Failed to fetch profile', new Error(`HTTP ${response.status}: ${errorText}`));
+        throw new Error(`Erro ao buscar perfil: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const userData = data.user || data;
+      
+      const user: User = {
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        role: userData.role,
+        phone: userData.phone,
+        createdAt: userData.createdAt,
+        updatedAt: userData.updatedAt,
+      };
+
+      const validatedUser = UserSchema.parse(user);
+      localStorage.setItem('user', JSON.stringify(validatedUser));
+      
+      this.logger.info('User profile fetched successfully', { userId: validatedUser.id });
+      return validatedUser;
+    } catch (error) {
+      this.logger.error('Error getting user profile', error as Error);
+      throw error;
     }
   }
 }

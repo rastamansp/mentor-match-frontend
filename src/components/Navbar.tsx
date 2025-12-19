@@ -8,11 +8,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, X, User, LogOut, Settings, Search, Calendar, MessageSquare, LayoutDashboard } from "lucide-react";
+import { Menu, X, User, Users, LogOut, Settings, Search, Calendar, MessageSquare, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -140,6 +141,16 @@ const Navbar = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
+                      navigate("/minha-area");
+                      setMobileMenuOpen(false);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Minha Área</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
                       navigate("/dashboard-mentor");
                       setMobileMenuOpen(false);
                     }}
@@ -163,13 +174,23 @@ const Navbar = () => {
                     <>
                       <DropdownMenuItem
                         onClick={() => {
-                          navigate("/admin/cadastrar-usuario");
+                          navigate("/admin/register-user");
                           setMobileMenuOpen(false);
                         }}
                         className="cursor-pointer"
                       >
                         <User className="mr-2 h-4 w-4" />
                         <span>Cadastrar Usuário</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          navigate("/admin/users");
+                          setMobileMenuOpen(false);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <Users className="mr-2 h-4 w-4" />
+                        <span>Gerenciar Usuários</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                     </>
@@ -194,9 +215,9 @@ const Navbar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button variant="ghost" size="sm" asChild>
-                <NavLink to="/login">Entrar</NavLink>
-              </Button>
+                <Button variant="ghost" size="sm" asChild>
+                  <NavLink to="/login">Entrar</NavLink>
+                </Button>
             )}
           </div>
 
@@ -254,7 +275,14 @@ const Navbar = () => {
                       {getUserInitials()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{user?.name || "Usuário"}</p>
+                      <div className="flex items-center space-x-2">
+                        <p className="text-sm font-medium text-foreground truncate">{user?.name || "Usuário"}</p>
+                        {isAdmin && (
+                          <Badge variant="secondary" className="text-xs">
+                            Admin
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                     </div>
                   </div>

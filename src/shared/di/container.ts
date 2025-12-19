@@ -4,18 +4,30 @@ import { MentorRepository } from '@infrastructure/repositories/MentorRepository'
 import { SessionRepository } from '@infrastructure/repositories/SessionRepository';
 import { AuthRepository } from '@infrastructure/repositories/AuthRepository';
 import { AvailabilityRepository } from '@infrastructure/repositories/AvailabilityRepository';
+import { UserRepository } from '@infrastructure/repositories/UserRepository';
 
 // Application Use Cases
 import { ListMentorsUseCase } from '@application/use-cases/mentors/ListMentors.usecase';
 import { GetMentorByIdUseCase } from '@application/use-cases/mentors/GetMentorById.usecase';
 import { SearchMentorsUseCase } from '@application/use-cases/mentors/SearchMentors.usecase';
 import { CreateSessionUseCase } from '@application/use-cases/sessions/CreateSession.usecase';
+import { CreateSessionAdminUseCase } from '@application/use-cases/sessions/CreateSessionAdmin.usecase';
+import { UpdateSessionUseCase } from '@application/use-cases/sessions/UpdateSession.usecase';
 import { ListUserSessionsUseCase } from '@application/use-cases/sessions/ListUserSessions.usecase';
+import { ListUserSessionsAdminUseCase } from '@application/use-cases/sessions/ListUserSessionsAdmin.usecase';
 import { GetSessionByIdUseCase } from '@application/use-cases/sessions/GetSessionById.usecase';
 import { LoginUseCase } from '@application/use-cases/auth/Login.usecase';
 import { RegisterUseCase } from '@application/use-cases/auth/Register.usecase';
+import { RegisterWithRoleUseCase } from '@application/use-cases/auth/RegisterWithRole.usecase';
 import { LogoutUseCase } from '@application/use-cases/auth/Logout.usecase';
 import { GetMentorAvailabilityUseCase } from '@application/use-cases/availability/GetMentorAvailability.usecase';
+import { ListUsersUseCase } from '@application/use-cases/users/ListUsers.usecase';
+import { UpdateUserUseCase } from '@application/use-cases/users/UpdateUser.usecase';
+import { DeleteUserUseCase } from '@application/use-cases/users/DeleteUser.usecase';
+import { ListUserMentorsUseCase } from '@application/use-cases/users/ListUserMentors.usecase';
+import { AssociateMentorUseCase } from '@application/use-cases/users/AssociateMentor.usecase';
+import { RemoveMentorUseCase } from '@application/use-cases/users/RemoveMentor.usecase';
+import { GetProfileUseCase } from '@application/use-cases/auth/GetProfile.usecase';
 
 class Container {
   // Infrastructure
@@ -24,18 +36,30 @@ class Container {
   private _sessionRepository: SessionRepository | null = null;
   private _authRepository: AuthRepository | null = null;
   private _availabilityRepository: AvailabilityRepository | null = null;
+  private _userRepository: UserRepository | null = null;
 
   // Use Cases
   private _listMentorsUseCase: ListMentorsUseCase | null = null;
   private _getMentorByIdUseCase: GetMentorByIdUseCase | null = null;
   private _searchMentorsUseCase: SearchMentorsUseCase | null = null;
   private _createSessionUseCase: CreateSessionUseCase | null = null;
+  private _createSessionAdminUseCase: CreateSessionAdminUseCase | null = null;
+  private _updateSessionUseCase: UpdateSessionUseCase | null = null;
   private _listUserSessionsUseCase: ListUserSessionsUseCase | null = null;
+  private _listUserSessionsAdminUseCase: ListUserSessionsAdminUseCase | null = null;
   private _getSessionByIdUseCase: GetSessionByIdUseCase | null = null;
   private _loginUseCase: LoginUseCase | null = null;
   private _registerUseCase: RegisterUseCase | null = null;
+  private _registerWithRoleUseCase: RegisterWithRoleUseCase | null = null;
   private _logoutUseCase: LogoutUseCase | null = null;
   private _getMentorAvailabilityUseCase: GetMentorAvailabilityUseCase | null = null;
+  private _listUsersUseCase: ListUsersUseCase | null = null;
+  private _updateUserUseCase: UpdateUserUseCase | null = null;
+  private _deleteUserUseCase: DeleteUserUseCase | null = null;
+  private _listUserMentorsUseCase: ListUserMentorsUseCase | null = null;
+  private _associateMentorUseCase: AssociateMentorUseCase | null = null;
+  private _removeMentorUseCase: RemoveMentorUseCase | null = null;
+  private _getProfileUseCase: GetProfileUseCase | null = null;
 
   // Infrastructure Getters
   get logger(): ILogger {
@@ -73,6 +97,13 @@ class Container {
     return this._availabilityRepository;
   }
 
+  get userRepository(): UserRepository {
+    if (!this._userRepository) {
+      this._userRepository = new UserRepository(this.logger);
+    }
+    return this._userRepository;
+  }
+
   // Use Cases Getters
   get listMentorsUseCase(): ListMentorsUseCase {
     if (!this._listMentorsUseCase) {
@@ -105,11 +136,35 @@ class Container {
     return this._createSessionUseCase;
   }
 
+  get createSessionAdminUseCase(): CreateSessionAdminUseCase {
+    if (!this._createSessionAdminUseCase) {
+      this._createSessionAdminUseCase = new CreateSessionAdminUseCase(
+        this.sessionRepository,
+        this.mentorRepository
+      );
+    }
+    return this._createSessionAdminUseCase;
+  }
+
+  get updateSessionUseCase(): UpdateSessionUseCase {
+    if (!this._updateSessionUseCase) {
+      this._updateSessionUseCase = new UpdateSessionUseCase(this.sessionRepository);
+    }
+    return this._updateSessionUseCase;
+  }
+
   get listUserSessionsUseCase(): ListUserSessionsUseCase {
     if (!this._listUserSessionsUseCase) {
       this._listUserSessionsUseCase = new ListUserSessionsUseCase(this.sessionRepository);
     }
     return this._listUserSessionsUseCase;
+  }
+
+  get listUserSessionsAdminUseCase(): ListUserSessionsAdminUseCase {
+    if (!this._listUserSessionsAdminUseCase) {
+      this._listUserSessionsAdminUseCase = new ListUserSessionsAdminUseCase(this.sessionRepository);
+    }
+    return this._listUserSessionsAdminUseCase;
   }
 
   get getSessionByIdUseCase(): GetSessionByIdUseCase {
@@ -133,6 +188,13 @@ class Container {
     return this._registerUseCase;
   }
 
+  get registerWithRoleUseCase(): RegisterWithRoleUseCase {
+    if (!this._registerWithRoleUseCase) {
+      this._registerWithRoleUseCase = new RegisterWithRoleUseCase(this.authRepository);
+    }
+    return this._registerWithRoleUseCase;
+  }
+
   get logoutUseCase(): LogoutUseCase {
     if (!this._logoutUseCase) {
       this._logoutUseCase = new LogoutUseCase(this.authRepository);
@@ -145,6 +207,55 @@ class Container {
       this._getMentorAvailabilityUseCase = new GetMentorAvailabilityUseCase(this.availabilityRepository);
     }
     return this._getMentorAvailabilityUseCase;
+  }
+
+  get listUsersUseCase(): ListUsersUseCase {
+    if (!this._listUsersUseCase) {
+      this._listUsersUseCase = new ListUsersUseCase(this.userRepository);
+    }
+    return this._listUsersUseCase;
+  }
+
+  get updateUserUseCase(): UpdateUserUseCase {
+    if (!this._updateUserUseCase) {
+      this._updateUserUseCase = new UpdateUserUseCase(this.userRepository);
+    }
+    return this._updateUserUseCase;
+  }
+
+  get deleteUserUseCase(): DeleteUserUseCase {
+    if (!this._deleteUserUseCase) {
+      this._deleteUserUseCase = new DeleteUserUseCase(this.userRepository);
+    }
+    return this._deleteUserUseCase;
+  }
+
+  get listUserMentorsUseCase(): ListUserMentorsUseCase {
+    if (!this._listUserMentorsUseCase) {
+      this._listUserMentorsUseCase = new ListUserMentorsUseCase(this.userRepository);
+    }
+    return this._listUserMentorsUseCase;
+  }
+
+  get associateMentorUseCase(): AssociateMentorUseCase {
+    if (!this._associateMentorUseCase) {
+      this._associateMentorUseCase = new AssociateMentorUseCase(this.userRepository);
+    }
+    return this._associateMentorUseCase;
+  }
+
+  get removeMentorUseCase(): RemoveMentorUseCase {
+    if (!this._removeMentorUseCase) {
+      this._removeMentorUseCase = new RemoveMentorUseCase(this.userRepository);
+    }
+    return this._removeMentorUseCase;
+  }
+
+  get getProfileUseCase(): GetProfileUseCase {
+    if (!this._getProfileUseCase) {
+      this._getProfileUseCase = new GetProfileUseCase(this.authRepository);
+    }
+    return this._getProfileUseCase;
   }
 }
 

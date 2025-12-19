@@ -18,7 +18,7 @@ export const SessionSchema = z.object({
   topic: z.string(),
   notes: z.string().optional(),
   status: z.enum(['scheduled', 'completed', 'cancelled']),
-  price: z.number().positive(),
+  price: z.number().positive().optional(),
   createdAt: z.string().datetime(),
 });
 
