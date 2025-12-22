@@ -4,4 +4,5 @@ export interface CreateSessionAdminDto {
   scheduledAt: string;
   duration: number;
   notes?: string;
+  timezone?: string; // Opcional, padrão "America/Sao_Paulo"
 }

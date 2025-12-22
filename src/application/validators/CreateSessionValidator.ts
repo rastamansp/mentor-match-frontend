@@ -15,6 +15,7 @@ export const CreateSessionSchema = z.object({
   time: z.string().regex(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/, 'Formato de horário inválido (HH:MM)'),
   topic: z.string().min(3, 'Tópico deve ter no mínimo 3 caracteres'),
   notes: z.string().optional(),
+  timezone: z.string().optional(), // Opcional, padrão "America/Sao_Paulo"
 });
 
 export function validateCreateSession(data: unknown): CreateSessionDto {

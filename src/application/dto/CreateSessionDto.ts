@@ -4,5 +4,6 @@ export interface CreateSessionDto {
   time: string;
   topic: string;
   notes?: string;
+  timezone?: string; // Opcional, padrão "America/Sao_Paulo"
 }
 

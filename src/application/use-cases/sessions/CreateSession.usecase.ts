@@ -21,7 +21,10 @@ export class CreateSessionUseCase {
       throw new NotFoundError('Mentor', validated.mentorId);
     }
 
-    // Create session
+    // Obtém timezone (padrão America/Sao_Paulo)
+    const timezone = validated.timezone || 'America/Sao_Paulo';
+
+    // Create session (timezone será usado no repositório para converter para UTC)
     const session = await this.sessionRepository.create({
       mentorId: validated.mentorId,
       userId,
@@ -30,14 +33,19 @@ export class CreateSessionUseCase {
       topic: validated.topic,
       notes: validated.notes,
       price: mentor.price || mentor.pricePerHour,
-    });
+      timezone, // Passa timezone para o repositório
+    } as any);
 
-    // Update session with mentor info
-    return {
-      ...session,
-      mentorName: mentor.name,
-      mentorAvatar: mentor.avatar,
-    };
+    // Update session with mentor info (se não já estiver preenchido)
+    if (session.mentorName === 'Mentor Name' || !session.mentorAvatar) {
+      return {
+        ...session,
+        mentorName: mentor.name,
+        mentorAvatar: mentor.avatar,
+      };
+    }
+
+    return session;
   }
 }
 

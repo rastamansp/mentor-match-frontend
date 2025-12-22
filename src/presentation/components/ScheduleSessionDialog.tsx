@@ -20,6 +20,7 @@ import { useMentorAvailability } from '../hooks/useMentorAvailability';
 import { useCreateSessionForUser } from '../hooks/useCreateSessionForUser';
 import { useCreateSessionForUserAdmin } from '../hooks/useCreateSessionForUserAdmin';
 import { Availability } from '@domain/entities/Availability.entity';
+import { convertLocalToUtc } from '@shared/utils/timezone';
 import { toast } from 'sonner';
 
 interface ScheduleSessionDialogProps {
@@ -137,9 +138,9 @@ const ScheduleSessionDialog: React.FC<ScheduleSessionDialogProps> = ({
     }
 
     try {
-      const dateTime = new Date(date);
-      const [hours, minutes] = selectedTime.split(':');
-      dateTime.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+      // Converte data/hora local + timezone para UTC
+      const dateStr = date.toISOString().split('T')[0];
+      const scheduledAtUtc = convertLocalToUtc(dateStr, selectedTime, timezone);
 
       // Prepara as notes no formato esperado
       let notesFormatted = `Tópico: ${topic.trim()}`;
@@ -152,18 +153,20 @@ const ScheduleSessionDialog: React.FC<ScheduleSessionDialogProps> = ({
         await createSessionAdmin.mutateAsync({
           mentorId: selectedMentorId,
           planId: null,
-          scheduledAt: dateTime.toISOString(),
+          scheduledAt: scheduledAtUtc, // Já em UTC
           duration: 60,
           notes: notesFormatted,
+          timezone, // Passa timezone para o DTO
         });
       } else {
         // Usa endpoint normal
         await createSession.mutateAsync({
           mentorId: selectedMentorId,
-          date: dateTime.toISOString(),
-          time: selectedTime,
+          date: dateStr, // Data local YYYY-MM-DD
+          time: selectedTime, // Horário local HH:MM
           topic: topic.trim(),
           notes: notes.trim() || undefined,
+          timezone, // Passa timezone para o DTO
         });
       }
 

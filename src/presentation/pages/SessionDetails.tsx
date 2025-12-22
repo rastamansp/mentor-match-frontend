@@ -3,11 +3,24 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Clock, User, MessageSquare, Video, Loader2, Edit } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, User, MessageSquare, Video, Loader2, Edit, ExternalLink, History, CheckCircle2, XCircle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { useSessionById } from '../hooks/useSessionById';
 import EditSessionDialog from '../components/EditSessionDialog';
 import { useQueryClient } from '@tanstack/react-query';
+import { useConfirmSession } from '../hooks/useConfirmSession';
+import { useCancelSession } from '../hooks/useCancelSession';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 
 const SessionDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +28,9 @@ const SessionDetails = () => {
   const queryClient = useQueryClient();
   const { data: session, isLoading, error } = useSessionById(id);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const confirmSession = useConfirmSession(id || '');
+  const cancelSession = useCancelSession(id || '');
 
   if (isLoading) {
     return (
@@ -80,6 +96,65 @@ const SessionDetails = () => {
     }
   };
 
+  const getSlotStatusLabel = (status: string) => {
+    switch (status) {
+      case 'CONFIRMED':
+        return 'Confirmado';
+      case 'HELD':
+        return 'Reservado';
+      case 'RESCHEDULED':
+        return 'Remarcado';
+      case 'COMPLETED':
+        return 'Concluído';
+      case 'CANCELED':
+        return 'Cancelado';
+      default:
+        return status;
+    }
+  };
+
+  // Verifica se pode confirmar: sessão agendada, tem activeSlot e não tem zoomLink ainda
+  const canConfirm = session && 
+    session.status === 'scheduled' &&
+    session.activeSlot &&
+    !session.zoomLink;
+
+  // Verifica se pode cancelar: sessão agendada
+  const canCancel = session && 
+    session.status === 'scheduled';
+
+  // Verifica se pode remarcar: sessão agendada
+  const canReschedule = session && session.status === 'scheduled';
+
+  const handleConfirm = async () => {
+    if (!session) return;
+
+    try {
+      await confirmSession.mutateAsync(undefined); // Backend cria Zoom automaticamente
+      toast.success('Sessão confirmada com sucesso! Link da reunião gerado.');
+      queryClient.invalidateQueries({ queryKey: ['session', id] });
+      queryClient.invalidateQueries({ queryKey: ['sessions'] });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao confirmar sessão';
+      toast.error(message);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!session) return;
+
+    try {
+      await cancelSession.mutateAsync();
+      toast.success('Sessão cancelada com sucesso.');
+      setIsCancelDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['session', id] });
+      queryClient.invalidateQueries({ queryKey: ['sessions'] });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao cancelar sessão';
+      toast.error(message);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -96,10 +171,56 @@ const SessionDetails = () => {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar para Minhas Sessões
             </Button>
-            <h1 className="text-4xl font-bold mb-2">Detalhes da Sessão</h1>
-            <p className="text-lg text-muted-foreground">
-              Informações completas sobre sua sessão de mentoria
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl font-bold mb-2">Detalhes da Sessão</h1>
+                <p className="text-lg text-muted-foreground">
+                  Informações completas sobre sua sessão de mentoria
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {canConfirm && (
+                  <Button
+                    onClick={handleConfirm}
+                    disabled={confirmSession.isPending}
+                    className="flex items-center gap-2"
+                  >
+                    {confirmSession.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Confirmando...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        Confirmar Sessão
+                      </>
+                    )}
+                  </Button>
+                )}
+                {canReschedule && (
+                  <Button
+                    onClick={() => setIsEditDialogOpen(true)}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <Edit className="w-4 h-4" />
+                    Remarcar Sessão
+                  </Button>
+                )}
+                {canCancel && (
+                  <Button
+                    onClick={() => setIsCancelDialogOpen(true)}
+                    variant="destructive"
+                    disabled={cancelSession.isPending}
+                    className="flex items-center gap-2"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    Cancelar Sessão
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="grid gap-6">
@@ -167,6 +288,24 @@ const SessionDetails = () => {
                       </div>
                     </div>
                   )}
+
+                  {session.zoomLink && (
+                    <div className="flex items-start gap-3">
+                      <Video className="w-5 h-5 text-primary mt-0.5" />
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Link da Reunião</p>
+                        <a
+                          href={session.zoomLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-primary hover:underline flex items-center gap-1"
+                        >
+                          Entrar na reunião
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </Card>
@@ -179,6 +318,68 @@ const SessionDetails = () => {
                   <h3 className="text-xl font-semibold">Observações</h3>
                 </div>
                 <p className="text-muted-foreground whitespace-pre-wrap">{session.notes}</p>
+              </Card>
+            )}
+
+            {/* Card de Histórico de Slots (Remarcações) */}
+            {session.slots && session.slots.length > 1 && (
+              <Card className="p-6">
+                <div className="flex items-start gap-3 mb-4">
+                  <History className="w-5 h-5 text-primary mt-0.5" />
+                  <h3 className="text-xl font-semibold">Histórico de Remarcações</h3>
+                </div>
+                <div className="space-y-3">
+                  {session.slots
+                    .filter(slot => slot.status !== 'CANCELED')
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    .map((slot) => {
+                      const slotDate = new Date(slot.startAtUtc);
+                      const isActive = slot.id === session.activeSlot?.id;
+                      
+                      return (
+                        <div
+                          key={slot.id}
+                          className={`p-4 rounded-lg border ${
+                            isActive ? 'border-primary bg-primary/5' : 'border-border bg-muted/30'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Badge variant={isActive ? 'default' : 'secondary'}>
+                                  {isActive ? 'Atual' : getSlotStatusLabel(slot.status)}
+                                </Badge>
+                                {slot.rescheduleFromSlotId && (
+                                  <span className="text-xs text-muted-foreground">
+                                    Remarcado de slot anterior
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm font-medium mb-1">
+                                {slotDate.toLocaleDateString('pt-BR', {
+                                  weekday: 'long',
+                                  day: 'numeric',
+                                  month: 'long',
+                                  year: 'numeric',
+                                })}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {slotDate.toLocaleTimeString('pt-BR', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })} ({slot.timezone})
+                              </p>
+                              {slot.createdBy === 'CONCIERGE' && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Criado pelo admin
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
               </Card>
             )}
 
@@ -204,6 +405,20 @@ const SessionDetails = () => {
                     </p>
                   </div>
                 )}
+                {session.activeSlot && (
+                  <>
+                    <div>
+                      <p className="text-muted-foreground mb-1">Timezone</p>
+                      <p className="font-medium">{session.activeSlot.timezone}</p>
+                    </div>
+                    {session.activeSlot.providerMeetingId && (
+                      <div>
+                        <p className="text-muted-foreground mb-1">ID da Reunião</p>
+                        <p className="font-mono text-xs">{session.activeSlot.providerMeetingId}</p>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </Card>
           </div>
@@ -222,6 +437,37 @@ const SessionDetails = () => {
           }}
         />
       )}
+
+      {/* Dialog de Confirmação de Cancelamento */}
+      <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar Sessão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja cancelar esta sessão? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelSession.isPending}>
+              Não, manter sessão
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancel}
+              disabled={cancelSession.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelSession.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Cancelando...
+                </>
+              ) : (
+                'Sim, cancelar sessão'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

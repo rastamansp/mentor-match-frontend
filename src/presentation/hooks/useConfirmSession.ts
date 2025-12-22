@@ -1,14 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { container } from '@shared/di/container';
 import { Session } from '@domain/entities/Session.entity';
-import { RescheduleSessionDto } from '@application/dto/RescheduleSessionDto';
+import { ConfirmSessionDto } from '@application/dto/ConfirmSessionDto';
 
-export const useRescheduleSession = (sessionId: string) => {
+export const useConfirmSession = (sessionId: string) => {
   const queryClient = useQueryClient();
 
-  return useMutation<Session, Error, RescheduleSessionDto>({
+  return useMutation<Session, Error, ConfirmSessionDto | undefined>({
     mutationFn: async (dto) => {
-      return container.rescheduleSessionUseCase.execute(sessionId, dto);
+      return container.confirmSessionUseCase.execute(sessionId, dto);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['session', sessionId] });

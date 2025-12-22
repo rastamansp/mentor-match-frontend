@@ -14,7 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar as CalendarIcon, Clock, Loader2 } from 'lucide-react';
 import { useMentorById } from '../hooks/useMentorById';
 import { useMentorAvailability } from '../hooks/useMentorAvailability';
-import { useUpdateSession } from '../hooks/useUpdateSession';
+import { useRescheduleSession } from '../hooks/useUpdateSession';
+import { convertLocalToUtc, calculateEndAtUtc } from '@shared/utils/timezone';
 import { Availability } from '@domain/entities/Availability.entity';
 import { Session } from '@domain/entities/Session.entity';
 import { toast } from 'sonner';
@@ -37,7 +38,10 @@ const EditSessionDialog: React.FC<EditSessionDialogProps> = ({
 
   const { data: mentor, isLoading: mentorLoading } = useMentorById(session?.mentorId || '');
   const { data: availability, isLoading: availabilityLoading } = useMentorAvailability(session?.mentorId || '');
-  const updateSession = useUpdateSession(session?.id || '');
+  const rescheduleSession = useRescheduleSession(session?.id || '');
+  
+  // Timezone fixo
+  const timezone = 'America/Sao_Paulo';
 
   // Inicializa valores quando a sessão é carregada
   useEffect(() => {
@@ -142,7 +146,7 @@ const EditSessionDialog: React.FC<EditSessionDialogProps> = ({
     return !availableDaysOfWeek.includes(dayOfWeek);
   };
 
-  const handleUpdate = async () => {
+  const handleReschedule = async () => {
     if (!date || !selectedTime) {
       toast.error('Por favor, selecione uma data e horário');
       return;
@@ -154,18 +158,23 @@ const EditSessionDialog: React.FC<EditSessionDialogProps> = ({
     }
 
     try {
-      const dateTime = new Date(date);
-      const [hours, minutes] = selectedTime.split(':');
-      dateTime.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+      // Converte data/hora local + timezone para UTC
+      const dateStr = date.toISOString().split('T')[0];
+      const newStartAtUtc = convertLocalToUtc(dateStr, selectedTime, timezone);
+      
+      // Calcula endAtUtc (durações padrão de 60 minutos)
+      const duration = 60;
+      const newEndAtUtc = calculateEndAtUtc(newStartAtUtc, duration);
 
-      // Mantém as notes originais da sessão
-      await updateSession.mutateAsync({
-        scheduledAt: dateTime.toISOString(),
-        duration: 60, // Mantém duração padrão
-        notes: session.notes, // Mantém as notes originais
+      // Chama endpoint de reschedule
+      await rescheduleSession.mutateAsync({
+        newStartAtUtc,
+        newEndAtUtc,
+        timezone,
+        reason: 'Remarcação solicitada pelo usuário',
       });
 
-      toast.success('Agendamento atualizado com sucesso!');
+      toast.success('Sessão remarcada com sucesso!');
       
       // Fecha o dialog
       onOpenChange(false);
@@ -175,7 +184,7 @@ const EditSessionDialog: React.FC<EditSessionDialogProps> = ({
         onSuccess();
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao atualizar agendamento';
+      const message = error instanceof Error ? error.message : 'Erro ao remarcar sessão';
       toast.error(message);
     }
   };
@@ -188,9 +197,9 @@ const EditSessionDialog: React.FC<EditSessionDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Editar Agendamento</DialogTitle>
+          <DialogTitle>Remarcar Sessão</DialogTitle>
           <DialogDescription>
-            Altere a data e horário da sua sessão de mentoria
+            Escolha uma nova data e horário para sua sessão de mentoria
           </DialogDescription>
         </DialogHeader>
 
@@ -288,22 +297,22 @@ const EditSessionDialog: React.FC<EditSessionDialogProps> = ({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={updateSession.isPending}
+              disabled={rescheduleSession.isPending}
             >
               Cancelar
             </Button>
             <Button
               type="button"
-              onClick={handleUpdate}
-              disabled={updateSession.isPending || !date || !selectedTime}
+              onClick={handleReschedule}
+              disabled={rescheduleSession.isPending || !date || !selectedTime}
             >
-              {updateSession.isPending ? (
+              {rescheduleSession.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Atualizando...
+                  Remarcando...
                 </>
               ) : (
-                'Salvar Alterações'
+                'Remarcar Sessão'
               )}
             </Button>
           </div>

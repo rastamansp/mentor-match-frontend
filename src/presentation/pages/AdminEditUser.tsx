@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -29,6 +29,9 @@ import MentorSearchDialog from '../components/MentorSearchDialog';
 import ScheduleSessionDialog from '../components/ScheduleSessionDialog';
 import { Mentor } from '@domain/entities/Mentor.entity';
 import { Session } from '@domain/entities/Session.entity';
+import { useConfirmSession } from '../hooks/useConfirmSession';
+import { useCancelSession } from '../hooks/useCancelSession';
+import { CheckCircle2, XCircle, ExternalLink } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +42,210 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+
+// Componente para card de sessão na área admin
+const SessionCardAdmin: React.FC<{
+  session: Session;
+  userId: string;
+  onUpdate: () => void;
+}> = ({ session, userId, onUpdate }) => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  // Verifica se pode confirmar: sessão agendada, tem activeSlot e não tem zoomLink ainda
+  const canConfirm = session.status === 'scheduled' &&
+    session.activeSlot &&
+    !session.zoomLink;
+  // Verifica se pode cancelar: sessão agendada
+  const canCancel = session.status === 'scheduled';
+  const confirmSession = useConfirmSession(session.id);
+  const cancelSession = useCancelSession(session.id);
+
+  const handleConfirm = async () => {
+    try {
+      await confirmSession.mutateAsync(undefined);
+      toast.success('Sessão confirmada com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['sessions', 'admin', userId] });
+      onUpdate();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao confirmar sessão';
+      toast.error(message);
+    }
+  };
+
+  const handleCancel = async () => {
+    try {
+      await cancelSession.mutateAsync();
+      toast.success('Sessão cancelada com sucesso.');
+      setIsCancelDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['sessions', 'admin', userId] });
+      onUpdate();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao cancelar sessão';
+      toast.error(message);
+    }
+  };
+
+  return (
+    <Card className="p-4">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4 flex-1">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="font-semibold">{session.topic}</h3>
+              <Badge
+                variant={
+                  session.status === 'scheduled'
+                    ? 'default'
+                    : session.status === 'completed'
+                    ? 'secondary'
+                    : 'destructive'
+                }
+                className="text-xs"
+              >
+                {session.status === 'scheduled'
+                  ? 'Agendada'
+                  : session.status === 'completed'
+                  ? 'Concluída'
+                  : 'Cancelada'}
+              </Badge>
+            </div>
+            
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                <span>
+                  {(() => {
+                    try {
+                      // Tenta parsear a data (pode ser YYYY-MM-DD ou ISO datetime)
+                      const date = session.date.includes('T') 
+                        ? new Date(session.date) 
+                        : new Date(session.date + 'T00:00:00');
+                      return date.toLocaleDateString('pt-BR', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      });
+                    } catch {
+                      return session.date;
+                    }
+                  })()}
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                <span>{session.time}</span>
+              </div>
+              
+              {session.mentorName && session.mentorName !== 'Mentor Name' && (
+                <div className="flex items-center gap-2">
+                  <UserIcon className="w-4 h-4" />
+                  <span>{session.mentorName}</span>
+                </div>
+              )}
+              
+              {session.zoomLink && (
+                <div className="flex items-center gap-2">
+                  <Video className="w-4 h-4" />
+                  <a
+                    href={session.zoomLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline flex items-center gap-1"
+                  >
+                    Link da reunião
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              )}
+              
+              {session.notes && (
+                <div className="flex items-start gap-2">
+                  <MessageSquare className="w-4 h-4 mt-0.5" />
+                  <span className="line-clamp-2">{session.notes}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(`/sessao/${session.id}`)}
+            className="text-xs"
+          >
+            <ExternalLink className="w-3 h-3 mr-1" />
+            Detalhes
+          </Button>
+          {canConfirm && (
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleConfirm}
+              disabled={confirmSession.isPending}
+              className="text-xs"
+            >
+              {confirmSession.isPending ? (
+                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+              ) : (
+                <CheckCircle2 className="w-3 h-3 mr-1" />
+              )}
+              Confirmar
+            </Button>
+          )}
+          {canCancel && (
+            <>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => setIsCancelDialogOpen(true)}
+                disabled={cancelSession.isPending}
+                className="text-xs"
+              >
+                <XCircle className="w-3 h-3 mr-1" />
+                Cancelar
+              </Button>
+              <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Cancelar Sessão</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza que deseja cancelar esta sessão? Esta ação não pode ser desfeita.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={cancelSession.isPending}>
+                      Não, manter sessão
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleCancel}
+                      disabled={cancelSession.isPending}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {cancelSession.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Cancelando...
+                        </>
+                      ) : (
+                        'Sim, cancelar sessão'
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+};
 
 const AdminEditUser = () => {
   const navigate = useNavigate();
@@ -678,76 +885,14 @@ const AdminEditUser = () => {
                 ) : (
                   <div className="space-y-3">
                     {userSessions.map((session) => (
-                      <Card key={session.id} className="p-4">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex items-start gap-4 flex-1">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-2">
-                                <h3 className="font-semibold">{session.topic}</h3>
-                                <Badge
-                                  variant={
-                                    session.status === 'scheduled'
-                                      ? 'default'
-                                      : session.status === 'completed'
-                                      ? 'secondary'
-                                      : 'destructive'
-                                  }
-                                  className="text-xs"
-                                >
-                                  {session.status === 'scheduled'
-                                    ? 'Agendada'
-                                    : session.status === 'completed'
-                                    ? 'Concluída'
-                                    : 'Cancelada'}
-                                </Badge>
-                              </div>
-                              
-                              <div className="space-y-2 text-sm text-muted-foreground">
-                                <div className="flex items-center gap-2">
-                                  <Calendar className="w-4 h-4" />
-                                  <span>
-                                    {(() => {
-                                      try {
-                                        // Tenta parsear a data (pode ser YYYY-MM-DD ou ISO datetime)
-                                        const date = session.date.includes('T') 
-                                          ? new Date(session.date) 
-                                          : new Date(session.date + 'T00:00:00');
-                                        return date.toLocaleDateString('pt-BR', {
-                                          weekday: 'long',
-                                          year: 'numeric',
-                                          month: 'long',
-                                          day: 'numeric',
-                                        });
-                                      } catch {
-                                        return session.date;
-                                      }
-                                    })()}
-                                  </span>
-                                </div>
-                                
-                                <div className="flex items-center gap-2">
-                                  <Clock className="w-4 h-4" />
-                                  <span>{session.time}</span>
-                                </div>
-                                
-                                {session.mentorName && session.mentorName !== 'Mentor Name' && (
-                                  <div className="flex items-center gap-2">
-                                    <UserIcon className="w-4 h-4" />
-                                    <span>{session.mentorName}</span>
-                                  </div>
-                                )}
-                                
-                                {session.notes && (
-                                  <div className="flex items-start gap-2">
-                                    <MessageSquare className="w-4 h-4 mt-0.5" />
-                                    <span className="line-clamp-2">{session.notes}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </Card>
+                      <SessionCardAdmin
+                        key={session.id}
+                        session={session}
+                        userId={id || ''}
+                        onUpdate={() => {
+                          queryClient.invalidateQueries({ queryKey: ['sessions', 'admin', id] });
+                        }}
+                      />
                     ))}
                   </div>
                 )}

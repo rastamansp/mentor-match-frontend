@@ -55,7 +55,12 @@ const AdminRegisterUser = () => {
   };
 
   const getCleanWhatsapp = (): string => {
-    return whatsappNumber.replace(/\D/g, '');
+    const cleaned = whatsappNumber.replace(/\D/g, '');
+    // Adiciona prefixo 55 se não começar com 55
+    if (cleaned && !cleaned.startsWith('55')) {
+      return `55${cleaned}`;
+    }
+    return cleaned;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,12 +76,8 @@ const AdminRegisterUser = () => {
         whatsappNumber: getCleanWhatsapp(),
       });
       toast.success('Usuário cadastrado com sucesso! O usuário receberá 5 mensagens de boas-vindas via WhatsApp.');
-      // Limpar formulário após sucesso
-      setName('');
-      setEmail('');
-      setPassword('');
-      setPhone('');
-      setWhatsappNumber('');
+      // Redirecionar para a lista de usuários após sucesso
+      navigate('/admin/users');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao cadastrar usuário';
       toast.error(message);

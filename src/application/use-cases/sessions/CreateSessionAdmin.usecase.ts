@@ -21,13 +21,17 @@ export class CreateSessionAdminUseCase {
       throw new NotFoundError('Mentor', validated.mentorId);
     }
 
+    // Obtém timezone (padrão America/Sao_Paulo)
+    const timezone = validated.timezone || 'America/Sao_Paulo';
+
     // Create session using admin endpoint
     const session = await this.sessionRepository.createForUserByAdmin(userId, {
       mentorId: validated.mentorId,
       planId: validated.planId ?? null,
-      scheduledAt: validated.scheduledAt,
+      scheduledAt: validated.scheduledAt, // Já deve estar em UTC
       duration: validated.duration,
       notes: validated.notes,
+      timezone,
     });
 
     // Update session with mentor info if not already set

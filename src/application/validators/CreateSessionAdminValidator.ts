@@ -7,6 +7,7 @@ export const CreateSessionAdminSchema = z.object({
   scheduledAt: z.string().datetime('Data/hora agendada deve ser um datetime ISO válido'),
   duration: z.number().int().positive('Duração deve ser um número positivo'),
   notes: z.string().optional(),
+  timezone: z.string().optional(), // Opcional, padrão "America/Sao_Paulo"
 });
 
 export function validateCreateSessionAdmin(data: unknown): CreateSessionAdminDto {

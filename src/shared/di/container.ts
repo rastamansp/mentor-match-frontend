@@ -12,7 +12,9 @@ import { GetMentorByIdUseCase } from '@application/use-cases/mentors/GetMentorBy
 import { SearchMentorsUseCase } from '@application/use-cases/mentors/SearchMentors.usecase';
 import { CreateSessionUseCase } from '@application/use-cases/sessions/CreateSession.usecase';
 import { CreateSessionAdminUseCase } from '@application/use-cases/sessions/CreateSessionAdmin.usecase';
-import { UpdateSessionUseCase } from '@application/use-cases/sessions/UpdateSession.usecase';
+import { RescheduleSessionUseCase } from '@application/use-cases/sessions/RescheduleSession.usecase';
+import { ConfirmSessionUseCase } from '@application/use-cases/sessions/ConfirmSession.usecase';
+import { CancelSessionUseCase } from '@application/use-cases/sessions/CancelSession.usecase';
 import { ListUserSessionsUseCase } from '@application/use-cases/sessions/ListUserSessions.usecase';
 import { ListUserSessionsAdminUseCase } from '@application/use-cases/sessions/ListUserSessionsAdmin.usecase';
 import { GetSessionByIdUseCase } from '@application/use-cases/sessions/GetSessionById.usecase';
@@ -44,7 +46,9 @@ class Container {
   private _searchMentorsUseCase: SearchMentorsUseCase | null = null;
   private _createSessionUseCase: CreateSessionUseCase | null = null;
   private _createSessionAdminUseCase: CreateSessionAdminUseCase | null = null;
-  private _updateSessionUseCase: UpdateSessionUseCase | null = null;
+  private _rescheduleSessionUseCase: RescheduleSessionUseCase | null = null;
+  private _confirmSessionUseCase: ConfirmSessionUseCase | null = null;
+  private _cancelSessionUseCase: CancelSessionUseCase | null = null;
   private _listUserSessionsUseCase: ListUserSessionsUseCase | null = null;
   private _listUserSessionsAdminUseCase: ListUserSessionsAdminUseCase | null = null;
   private _getSessionByIdUseCase: GetSessionByIdUseCase | null = null;
@@ -146,11 +150,25 @@ class Container {
     return this._createSessionAdminUseCase;
   }
 
-  get updateSessionUseCase(): UpdateSessionUseCase {
-    if (!this._updateSessionUseCase) {
-      this._updateSessionUseCase = new UpdateSessionUseCase(this.sessionRepository);
+  get rescheduleSessionUseCase(): RescheduleSessionUseCase {
+    if (!this._rescheduleSessionUseCase) {
+      this._rescheduleSessionUseCase = new RescheduleSessionUseCase(this.sessionRepository);
     }
-    return this._updateSessionUseCase;
+    return this._rescheduleSessionUseCase;
+  }
+
+  get confirmSessionUseCase(): ConfirmSessionUseCase {
+    if (!this._confirmSessionUseCase) {
+      this._confirmSessionUseCase = new ConfirmSessionUseCase(this.sessionRepository);
+    }
+    return this._confirmSessionUseCase;
+  }
+
+  get cancelSessionUseCase(): CancelSessionUseCase {
+    if (!this._cancelSessionUseCase) {
+      this._cancelSessionUseCase = new CancelSessionUseCase(this.sessionRepository);
+    }
+    return this._cancelSessionUseCase;
   }
 
   get listUserSessionsUseCase(): ListUserSessionsUseCase {
