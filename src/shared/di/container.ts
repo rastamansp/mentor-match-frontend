@@ -10,6 +10,7 @@ import { UserRepository } from '@infrastructure/repositories/UserRepository';
 import { ListMentorsUseCase } from '@application/use-cases/mentors/ListMentors.usecase';
 import { GetMentorByIdUseCase } from '@application/use-cases/mentors/GetMentorById.usecase';
 import { SearchMentorsUseCase } from '@application/use-cases/mentors/SearchMentors.usecase';
+import { UpdateMentorUseCase } from '@application/use-cases/mentors/UpdateMentor.usecase';
 import { CreateSessionUseCase } from '@application/use-cases/sessions/CreateSession.usecase';
 import { CreateSessionAdminUseCase } from '@application/use-cases/sessions/CreateSessionAdmin.usecase';
 import { RescheduleSessionUseCase } from '@application/use-cases/sessions/RescheduleSession.usecase';
@@ -23,6 +24,9 @@ import { RegisterUseCase } from '@application/use-cases/auth/Register.usecase';
 import { RegisterWithRoleUseCase } from '@application/use-cases/auth/RegisterWithRole.usecase';
 import { LogoutUseCase } from '@application/use-cases/auth/Logout.usecase';
 import { GetMentorAvailabilityUseCase } from '@application/use-cases/availability/GetMentorAvailability.usecase';
+import { CreateAvailabilityUseCase } from '@application/use-cases/availability/CreateAvailability.usecase';
+import { UpdateAvailabilityUseCase } from '@application/use-cases/availability/UpdateAvailability.usecase';
+import { DeleteAvailabilityUseCase } from '@application/use-cases/availability/DeleteAvailability.usecase';
 import { ListUsersUseCase } from '@application/use-cases/users/ListUsers.usecase';
 import { UpdateUserUseCase } from '@application/use-cases/users/UpdateUser.usecase';
 import { DeleteUserUseCase } from '@application/use-cases/users/DeleteUser.usecase';
@@ -130,6 +134,13 @@ class Container {
     return this._searchMentorsUseCase;
   }
 
+  get updateMentorUseCase(): UpdateMentorUseCase {
+    if (!this._updateMentorUseCase) {
+      this._updateMentorUseCase = new UpdateMentorUseCase(this.mentorRepository);
+    }
+    return this._updateMentorUseCase;
+  }
+
   get createSessionUseCase(): CreateSessionUseCase {
     if (!this._createSessionUseCase) {
       this._createSessionUseCase = new CreateSessionUseCase(
@@ -225,6 +236,27 @@ class Container {
       this._getMentorAvailabilityUseCase = new GetMentorAvailabilityUseCase(this.availabilityRepository);
     }
     return this._getMentorAvailabilityUseCase;
+  }
+
+  get createAvailabilityUseCase(): CreateAvailabilityUseCase {
+    if (!this._createAvailabilityUseCase) {
+      this._createAvailabilityUseCase = new CreateAvailabilityUseCase(this.availabilityRepository);
+    }
+    return this._createAvailabilityUseCase;
+  }
+
+  get updateAvailabilityUseCase(): UpdateAvailabilityUseCase {
+    if (!this._updateAvailabilityUseCase) {
+      this._updateAvailabilityUseCase = new UpdateAvailabilityUseCase(this.availabilityRepository);
+    }
+    return this._updateAvailabilityUseCase;
+  }
+
+  get deleteAvailabilityUseCase(): DeleteAvailabilityUseCase {
+    if (!this._deleteAvailabilityUseCase) {
+      this._deleteAvailabilityUseCase = new DeleteAvailabilityUseCase(this.availabilityRepository);
+    }
+    return this._deleteAvailabilityUseCase;
   }
 
   get listUsersUseCase(): ListUsersUseCase {

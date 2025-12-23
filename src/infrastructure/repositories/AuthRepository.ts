@@ -9,6 +9,10 @@ interface ApiLoginResponse {
     name: string;
     email: string;
     role: 'USER' | 'ADMIN' | 'MENTOR';
+    phone?: string | null;
+    whatsappNumber?: string | null;
+    createdAt?: string;
+    updatedAt?: string;
   };
   token?: string;
   access_token?: string; // API pode retornar access_token
@@ -19,6 +23,10 @@ interface DirectUserResponse {
   name: string;
   email: string;
   role: 'USER' | 'ADMIN' | 'MENTOR';
+  phone?: string | null;
+  whatsappNumber?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
   token?: string;
   access_token?: string; // API pode retornar access_token
 }
@@ -129,6 +137,10 @@ export class AuthRepository implements IAuthRepository {
             name: userData.name,
             email: userData.email,
             role: userData.role,
+            phone: (userData as any).phone,
+            whatsappNumber: (userData as any).whatsappNumber,
+            createdAt: (userData as any).createdAt,
+            updatedAt: (userData as any).updatedAt,
           };
 
           // Valida com Zod
@@ -398,6 +410,10 @@ export class AuthRepository implements IAuthRepository {
             name: userData.name,
             email: userData.email,
             role: userData.role,
+            phone: (userData as any).phone,
+            whatsappNumber: (userData as any).whatsappNumber,
+            createdAt: (userData as any).createdAt,
+            updatedAt: (userData as any).updatedAt,
           };
 
           // Valida com Zod
@@ -514,6 +530,10 @@ export class AuthRepository implements IAuthRepository {
               name: userData.name,
               email: userData.email,
               role: userData.role,
+              phone: userData.phone,
+              whatsappNumber: userData.whatsappNumber,
+              createdAt: userData.createdAt,
+              updatedAt: userData.updatedAt,
             };
 
             const validatedUser = UserSchema.parse(user);
@@ -605,6 +625,7 @@ export class AuthRepository implements IAuthRepository {
         email: userData.email,
         role: userData.role,
         phone: userData.phone,
+        whatsappNumber: userData.whatsappNumber,
         createdAt: userData.createdAt,
         updatedAt: userData.updatedAt,
       };

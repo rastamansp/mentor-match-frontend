@@ -18,6 +18,12 @@ const TestChatbot = () => {
   const journeySelectionCounterRef = useRef(0); // Contador para forçar atualização quando jornada é selecionada
   const hasLoadedInitialJourney = useRef(false); // Flag para garantir que carregue apenas uma vez
 
+  // Zera o sessionId ao carregar a página para simular nova interação
+  useEffect(() => {
+    // Remove sessionId do localStorage para começar uma nova conversa
+    localStorage.removeItem('chatSessionId');
+  }, []); // Executa apenas uma vez ao montar o componente
+
   // Exibir automaticamente a jornada "Descoberta" ao carregar a página
   useEffect(() => {
     // Carrega apenas uma vez quando as jornadas estiverem disponíveis

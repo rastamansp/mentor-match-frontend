@@ -421,6 +421,137 @@ export const ChatInterface = ({
         timestamp: `${finalHours.toString().padStart(2, "0")}:${finalMinutes.toString().padStart(2, "0")}`,
       };
       setChatMessages(prev => [...prev, finalMessage]);
+    } else if (messageType === 'appointment_created' && rawData) {
+      // Formatação especial para confirmação de agendamento
+      const sessionData = rawData;
+      const activeSlot = sessionData.activeSlot || sessionData;
+      // Tenta encontrar mentor no rawData ou usa o mentor do contexto anterior
+      let sessionMentor = sessionData.mentor || mentor;
+      
+      // Se não encontrou mentor, tenta extrair do answer (pode conter nome do mentor)
+      if (!sessionMentor && response.formattedResponse?.answer) {
+        const answer = response.formattedResponse.answer;
+        const mentorMatch = answer.match(/\*\*([^*]+)\*\*/);
+        if (mentorMatch) {
+          sessionMentor = { name: mentorMatch[1] } as ChatMentor;
+        }
+      }
+      
+      // Converte UTC para horário local
+      const formatDateFromUtc = (utcDate: string, timezone: string = 'America/Sao_Paulo'): { date: string; time: string; dayName: string } => {
+        try {
+          const date = new Date(utcDate);
+          const formatter = new Intl.DateTimeFormat('pt-BR', {
+            timeZone: timezone,
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          });
+          const parts = formatter.formatToParts(date);
+          
+          const dayName = parts.find(p => p.type === 'weekday')?.value || '';
+          const day = parts.find(p => p.type === 'day')?.value || '';
+          const month = parts.find(p => p.type === 'month')?.value || '';
+          const year = parts.find(p => p.type === 'year')?.value || '';
+          const hour = parts.find(p => p.type === 'hour')?.value || '';
+          const minute = parts.find(p => p.type === 'minute')?.value || '';
+          
+          // Capitaliza primeira letra do dia da semana
+          const capitalizedDayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+          
+          // Garante formato HH:mm
+          const formattedHour = hour.padStart(2, '0');
+          const formattedMinute = minute.padStart(2, '0');
+          
+          return {
+            date: `${capitalizedDayName}, ${day} de ${month} de ${year}`,
+            time: `${formattedHour}:${formattedMinute}`,
+            dayName: capitalizedDayName,
+          };
+        } catch {
+          return { date: '', time: '', dayName: '' };
+        }
+      };
+      
+      // Calcula horário de término
+      const calculateEndTime = (startTime: string, durationMinutes: number = 60): string => {
+        try {
+          const [hours, minutes] = startTime.split(':').map(Number);
+          const totalMinutes = hours * 60 + minutes + durationMinutes;
+          const endHours = Math.floor(totalMinutes / 60) % 24;
+          const endMins = totalMinutes % 60;
+          return `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
+        } catch {
+          return startTime;
+        }
+      };
+      
+      // Extrai informações da sessão
+      const startAtUtc = activeSlot.startAtUtc || sessionData.scheduledAt;
+      const duration = sessionData.duration || 60;
+      const timezone = activeSlot.timezone || 'America/Sao_Paulo';
+      const formatted = formatDateFromUtc(startAtUtc, timezone);
+      const endTime = calculateEndTime(formatted.time, duration);
+      
+      // Mensagem 1: Confirmação com nome do mentor
+      let confirmationMessage = "Sua sessão foi agendada com sucesso!";
+      if (sessionMentor) {
+        const mentorName = sessionMentor.name || 'mentor';
+        const mentorTitle = sessionMentor.role ? `, ${sessionMentor.role}` : '';
+        confirmationMessage = `Sua sessão com ${mentorName}${mentorTitle} foi agendada com sucesso!`;
+      }
+      
+      const confirmationMsg: JourneyMessage = {
+        id: messageIdCounter.current++,
+        sender: "mentor",
+        type: "text",
+        content: confirmationMessage,
+        timestamp: `${baseHours.toString().padStart(2, "0")}:${baseMinutes.toString().padStart(2, "0")}`,
+      };
+      setChatMessages(prev => [...prev, confirmationMsg]);
+      
+      // Mensagem 2: Detalhes da sessão
+      const detailsOffset = 1;
+      const detailsMinutes = (baseMinutes + detailsOffset) % 60;
+      const detailsHours = baseMinutes + detailsOffset >= 60 ? (baseHours + 1) % 24 : baseHours;
+      
+      let detailsContent = "Aqui estão os detalhes:\n\n";
+      if (sessionMentor) {
+        detailsContent += `• Mentora: ${sessionMentor.name}\n`;
+      }
+      if (formatted.date) {
+        detailsContent += `• Data: ${formatted.date}\n`;
+      }
+      if (formatted.time) {
+        detailsContent += `• Horário: ${formatted.time}h às ${endTime}h\n`;
+      }
+      detailsContent += `• Duração: ${duration} minutos`;
+      
+      const detailsMsg: JourneyMessage = {
+        id: messageIdCounter.current++,
+        sender: "mentor",
+        type: "text",
+        content: detailsContent,
+        timestamp: `${detailsHours.toString().padStart(2, "0")}:${detailsMinutes.toString().padStart(2, "0")}`,
+      };
+      setChatMessages(prev => [...prev, detailsMsg]);
+      
+      // Mensagem 3: Mensagem final de disponibilidade
+      const finalOffset = 2;
+      const finalMinutes = (baseMinutes + finalOffset) % 60;
+      const finalHours = baseMinutes + finalOffset >= 60 ? (baseHours + 1) % 24 : baseHours;
+      const finalMsg: JourneyMessage = {
+        id: messageIdCounter.current++,
+        sender: "mentor",
+        type: "text",
+        content: "Se precisar de mais alguma coisa ou tiver alguma dúvida, estou à disposição!",
+        timestamp: `${finalHours.toString().padStart(2, "0")}:${finalMinutes.toString().padStart(2, "0")}`,
+      };
+      setChatMessages(prev => [...prev, finalMsg]);
     } else if (isListMentors && mentor) {
       // Mensagem 1: Introdução
       const introMessage: JourneyMessage = {
@@ -519,23 +650,30 @@ export const ChatInterface = ({
           if (!userWhatsapp && userId) {
             // Busca do perfil via API (pode estar desatualizado no localStorage)
             try {
-              const profileResponse = await fetch('http://localhost:3005/api/auth/profile', {
-                headers: {
-                  'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
-                },
-              });
-              if (profileResponse.ok) {
-                const profileData = await profileResponse.json();
-                const profileUser = profileData.user || profileData;
-                userWhatsapp = profileUser.whatsappNumber;
-                // Atualiza o localStorage com o whatsappNumber se encontrado
-                if (userWhatsapp) {
-                  const updatedUser = { ...user, whatsappNumber: userWhatsapp };
-                  localStorage.setItem('user', JSON.stringify(updatedUser));
+              const token = localStorage.getItem('token');
+              if (token) {
+                const apiUrl = import.meta.env.VITE_AUTH_API_URL || import.meta.env.VITE_API_URL || 'http://localhost:3005/api';
+                const profileUrl = `${apiUrl}/auth/profile`;
+                const profileResponse = await fetch(profileUrl, {
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                  },
+                });
+                if (profileResponse.ok) {
+                  const profileData = await profileResponse.json();
+                  const profileUser = profileData.user || profileData;
+                  userWhatsapp = profileUser.whatsappNumber;
+                  // Atualiza o localStorage com o whatsappNumber se encontrado
+                  if (userWhatsapp) {
+                    const updatedUser = { ...user, whatsappNumber: userWhatsapp };
+                    localStorage.setItem('user', JSON.stringify(updatedUser));
+                  }
                 }
               }
             } catch (e) {
               // Ignora erro ao buscar perfil
+              console.error('Erro ao buscar whatsappNumber do perfil:', e);
             }
           }
         } catch (e) {

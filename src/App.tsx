@@ -20,6 +20,9 @@ import MyArea from "./presentation/pages/MyArea";
 import AdminRegisterUser from "./presentation/pages/AdminRegisterUser";
 import AdminUsers from "./presentation/pages/AdminUsers";
 import AdminEditUser from "./presentation/pages/AdminEditUser";
+import AdminMentors from "./presentation/pages/AdminMentors";
+import AdminMentorAvailability from "./presentation/pages/AdminMentorAvailability";
+import AdminEditMentor from "./presentation/pages/AdminEditMentor";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +78,21 @@ const App = () => (
             <Route path="/admin/users/:id/edit" element={
               <ProtectedRoute requireAdmin={true}>
                 <AdminEditUser />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/mentors" element={
+              <ProtectedRoute requireAdmin={true}>
+                <AdminMentors />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/mentors/:id/availability" element={
+              <ProtectedRoute>
+                <AdminMentorAvailability />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/mentors/:id/edit" element={
+              <ProtectedRoute>
+                <AdminEditMentor />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

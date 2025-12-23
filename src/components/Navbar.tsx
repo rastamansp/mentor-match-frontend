@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, X, User, Users, LogOut, Settings, Search, Calendar, MessageSquare, LayoutDashboard } from "lucide-react";
+import { Menu, X, User, Users, LogOut, Settings, Search, Calendar, MessageSquare, LayoutDashboard, GraduationCap } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -192,6 +192,16 @@ const Navbar = () => {
                         <Users className="mr-2 h-4 w-4" />
                         <span>Gerenciar Usuários</span>
                       </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          navigate("/admin/mentors");
+                          setMobileMenuOpen(false);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <GraduationCap className="mr-2 h-4 w-4" />
+                        <span>Gerenciar Mentores</span>
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                     </>
                   )}
@@ -286,6 +296,37 @@ const Navbar = () => {
                       <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                     </div>
                   </div>
+                  {isAdmin && (
+                    <>
+                      <NavLink
+                        to="/admin/register-user"
+                        className="text-muted-foreground hover:text-foreground transition-colors py-2 flex items-center"
+                        activeClassName="text-primary font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        Cadastrar Usuário
+                      </NavLink>
+                      <NavLink
+                        to="/admin/users"
+                        className="text-muted-foreground hover:text-foreground transition-colors py-2 flex items-center"
+                        activeClassName="text-primary font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Users className="mr-2 h-4 w-4" />
+                        Gerenciar Usuários
+                      </NavLink>
+                      <NavLink
+                        to="/admin/mentors"
+                        className="text-muted-foreground hover:text-foreground transition-colors py-2 flex items-center"
+                        activeClassName="text-primary font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <GraduationCap className="mr-2 h-4 w-4" />
+                        Gerenciar Mentores
+                      </NavLink>
+                    </>
+                  )}
                   <NavLink
                     to="/perfil"
                     className="text-muted-foreground hover:text-foreground transition-colors py-2 flex items-center"

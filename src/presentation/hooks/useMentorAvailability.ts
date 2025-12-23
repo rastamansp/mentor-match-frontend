@@ -4,9 +4,8 @@ import { Availability } from '@domain/entities/Availability.entity';
 
 export const useMentorAvailability = (mentorId: string) => {
   return useQuery<Availability[]>({
-    queryKey: ['mentor-availability', mentorId],
-    queryFn: () => container.getMentorAvailabilityUseCase.execute(mentorId),
+    queryKey: ['mentorAvailability', mentorId],
+    queryFn: () => container.availabilityRepository.findByMentorId(mentorId),
     enabled: !!mentorId,
   });
 };
-

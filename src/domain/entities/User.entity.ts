@@ -6,6 +6,7 @@ export const UserSchema = z.object({
   email: z.string().email(),
   role: z.enum(['USER', 'ADMIN', 'MENTOR']),
   phone: z.string().nullable().optional(), // Aceita string, null ou undefined
+  whatsappNumber: z.string().nullable().optional(), // Aceita string, null ou undefined
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });

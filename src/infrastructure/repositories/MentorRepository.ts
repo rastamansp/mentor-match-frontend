@@ -2,6 +2,7 @@ import { IMentorRepository, MentorFilters } from '@domain/repositories/IMentorRe
 import { Mentor, MentorSchema } from '@domain/entities/Mentor.entity';
 import { NotFoundError } from '@domain/errors/NotFoundError';
 import { ILogger } from '../logging/Logger';
+import { UpdateMentorDto } from '@application/dto/UpdateMentorDto';
 
 interface ApiMentorResponse {
   id: string;
@@ -189,6 +190,59 @@ export class MentorRepository implements IMentorRepository {
   async search(query: string): Promise<Mentor[]> {
     this.logger.debug('Searching mentors', { query });
     return this.findAll({ searchTerm: query });
+  }
+
+  private getAuthHeaders(): HeadersInit {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token.trim()}`;
+    }
+    return headers;
+  }
+
+  async update(id: string, dto: UpdateMentorDto): Promise<Mentor> {
+    this.logger.debug('Updating mentor', { id, dto });
+
+    try {
+      const url = `${this.apiUrl}/mentors/${id}`;
+
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(dto),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.error('Failed to update mentor', new Error(`HTTP ${response.status}: ${errorText}`));
+        
+        if (response.status === 401) {
+          throw new Error('Não autenticado. Por favor, faça login novamente.');
+        }
+        if (response.status === 403) {
+          throw new Error('Você não tem permissão para atualizar este mentor.');
+        }
+        if (response.status === 404) {
+          throw new Error('Mentor não encontrado.');
+        }
+        
+        throw new Error(`Erro ao atualizar mentor: ${response.status} ${response.statusText}`);
+      }
+
+      const apiMentor: ApiMentorResponse = await response.json();
+      const mentor = this.mapApiMentorToMentor(apiMentor);
+      const validatedMentor = MentorSchema.parse(mentor);
+
+      this.logger.info('Mentor updated successfully', { id });
+
+      return validatedMentor;
+    } catch (error) {
+      this.logger.error('Error updating mentor', error as Error);
+      throw error;
+    }
   }
 }
 
