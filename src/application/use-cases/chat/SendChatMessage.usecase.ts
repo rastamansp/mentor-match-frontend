@@ -25,15 +25,17 @@ export interface ChatMentor {
 
 export interface ChatResponse {
   answer: string;
+  sessionId?: string; // ID da sessão retornado pela API
   toolsUsed: Array<{
     name: string;
     arguments?: Record<string, unknown>;
   }>;
   formattedResponse: {
     answer: string;
+    message_type?: string;
     data: {
       type: string;
-      rawData: ChatMentor[] | null;
+      rawData: ChatMentor[] | Record<string, unknown> | null;
       suggestions?: string[];
     };
   };
@@ -46,22 +48,30 @@ export class SendChatMessageUseCase {
     this.apiUrl = import.meta.env.VITE_CHAT_API_URL || 'http://localhost:3005/api/chat';
   }
 
-  async execute(dto: ChatMessageDto | { message: string }): Promise<ChatResponse> {
+  async execute(dto: ChatMessageDto | { message: string }, token?: string): Promise<ChatResponse> {
     const message = dto.message;
     const userId = 'userCtx' in dto ? dto.userCtx?.userId : 'anonymous';
     
-    this.logger.debug('Sending chat message', { message, userId });
+    this.logger.debug('Sending chat message', { message, userId, hasToken: !!token });
 
     try {
       // Se for apenas uma mensagem simples, envia apenas o message
       const requestBody = 'userCtx' in dto ? dto : { message: dto.message };
       
+      // Prepara headers
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'accept': 'application/json',
+      };
+      
+      // Adiciona token de autenticação se fornecido
+      if (token) {
+        headers['Authorization'] = `Bearer ${token.trim()}`;
+      }
+      
       const response = await fetch(this.apiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'accept': 'application/json',
-        },
+        headers,
         body: JSON.stringify(requestBody),
       });
 

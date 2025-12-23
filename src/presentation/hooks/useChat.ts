@@ -9,7 +9,9 @@ const sendChatMessageUseCase = new SendChatMessageUseCase(container.logger);
 export const useChat = () => {
   const mutation = useMutation<ChatResponse, Error, ChatMessageDto | { message: string }>({
     mutationFn: async (dto: ChatMessageDto | { message: string }) => {
-      return await sendChatMessageUseCase.execute(dto);
+      // Obtém token do localStorage se o usuário estiver logado
+      const token = localStorage.getItem('token') || undefined;
+      return await sendChatMessageUseCase.execute(dto, token);
     },
     onError: (error) => {
       toast.error('Erro ao enviar mensagem', {

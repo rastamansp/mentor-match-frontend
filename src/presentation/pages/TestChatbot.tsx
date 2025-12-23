@@ -16,15 +16,21 @@ const TestChatbot = () => {
   const { selectedJourney, selectJourney, convertJourneyToMessages, journeys } = useInteractions();
   const phoneMockupRef = useRef<HTMLDivElement>(null);
   const journeySelectionCounterRef = useRef(0); // Contador para forçar atualização quando jornada é selecionada
+  const hasLoadedInitialJourney = useRef(false); // Flag para garantir que carregue apenas uma vez
 
   // Exibir automaticamente a jornada "Descoberta" ao carregar a página
   useEffect(() => {
-    const discoveryJourney = journeys.find(j => j.name === "1 - Descoberta");
-    if (discoveryJourney && !selectedJourney) {
-      journeySelectionCounterRef.current += 1; // Incrementa contador para a jornada inicial
-      selectJourney(discoveryJourney);
+    // Carrega apenas uma vez quando as jornadas estiverem disponíveis
+    if (journeys.length > 0 && !hasLoadedInitialJourney.current) {
+      const discoveryJourney = journeys.find(j => j.name === "1 - Descoberta");
+      if (discoveryJourney) {
+        hasLoadedInitialJourney.current = true; // Marca como carregada
+        journeySelectionCounterRef.current += 1; // Incrementa contador para a jornada inicial
+        selectJourney(discoveryJourney);
+      }
     }
-  }, [journeys, selectJourney, selectedJourney]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [journeys]); // Executa apenas quando journeys estiver disponível
 
   // Scroll automático para o iPhone quando uma jornada é selecionada (especialmente no mobile)
   useEffect(() => {

@@ -17,6 +17,18 @@ import { ChatMessageDto } from '@application/dto/ChatMessageDto';
 import { ChatMentor } from '@application/use-cases/chat/SendChatMessage.usecase';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { getChatContextFromRoute } from '@/shared/utils/chatContext';
+
+interface AvailableSlot {
+  startAtUtc: string;
+  endAtUtc: string;
+  timezone: string;
+  duration: number;
+  dayOfWeek: number;
+  localTime: string;
+  localDate: string;
+  dayName: string;
+}
 
 interface ChatMessage {
   id: string;
@@ -24,6 +36,7 @@ interface ChatMessage {
   isBot: boolean;
   suggestions?: string[];
   mentors?: ChatMentor[];
+  availableSlots?: AvailableSlot[];
 }
 
 export const Chatbot = () => {
@@ -53,14 +66,35 @@ export const Chatbot = () => {
     }
 
     const userMessage = message.trim();
-    const userId = user?.id || 'user-123';
-    const dto: ChatMessageDto = {
-      message: userMessage,
-      userCtx: {
+    const userId = user?.id;
+    
+    // Obtém contexto da rota atual
+    const routeContext = getChatContextFromRoute();
+    
+    // Constrói userCtx com todos os campos disponíveis
+    let dto: ChatMessageDto | { message: string };
+    
+    if (userId) {
+      const userCtx: Record<string, unknown> = {
         userId,
         language: 'pt-BR',
-      },
-    };
+      };
+      
+      if (routeContext.mentorId) {
+        userCtx.mentorId = routeContext.mentorId;
+      }
+      if (routeContext.sessionId) {
+        userCtx.sessionId = routeContext.sessionId;
+      }
+      if (routeContext.planId) {
+        userCtx.planId = routeContext.planId;
+      }
+      
+      dto = { message: userMessage, userCtx };
+    } else {
+      // Se não houver userId, envia apenas a mensagem
+      dto = { message: userMessage };
+    }
 
     // Adiciona mensagem do usuário ao chat
     const userMsg: ChatMessage = {
@@ -75,9 +109,47 @@ export const Chatbot = () => {
       const response = await sendMessageAsync(dto);
       
       // Verifica se há mentores nos dados
-      const mentors = Array.isArray(response.formattedResponse?.data?.rawData)
+      const rawData = Array.isArray(response.formattedResponse?.data?.rawData)
         ? response.formattedResponse.data.rawData
-        : undefined;
+        : [];
+      
+      // Filtra apenas mentores (objetos que têm 'mentor' ou 'name')
+      const mentors: ChatMentor[] = rawData
+        .filter((item: any) => {
+          // Pode ser um objeto UserMentor com propriedade 'mentor'
+          if (item.mentor && typeof item.mentor === 'object') {
+            return true;
+          }
+          // Ou pode ser um mentor direto com 'name'
+          if (item.name && typeof item.name === 'string') {
+            return true;
+          }
+          return false;
+        })
+        .map((item: any) => {
+          // Se tem propriedade 'mentor', extrai o mentor de dentro
+          if (item.mentor) {
+            return item.mentor;
+          }
+          // Caso contrário, retorna o item direto
+          return item;
+        });
+      
+      // Filtra slots de disponibilidade (objetos que têm 'localTime' e 'localDate')
+      const availableSlots: AvailableSlot[] = rawData.filter((item: any) => 
+        item.localTime && item.localDate && item.startAtUtc
+      );
+      
+      // Extrai mentorId do primeiro mentor encontrado ou do primeiro item UserMentor (para usar nos slots)
+      let mentorId: string | undefined = mentors.length > 0 ? mentors[0].id : undefined;
+      if (!mentorId && rawData.length > 0) {
+        const firstItem = rawData[0];
+        if (firstItem.mentorId) {
+          mentorId = firstItem.mentorId;
+        } else if (firstItem.mentor?.id) {
+          mentorId = firstItem.mentor.id;
+        }
+      }
       
       // Se houver mentores, usa mensagens personalizadas
       let botText: string;
@@ -101,8 +173,22 @@ export const Chatbot = () => {
         
         // Terceira mensagem: mensagem final
         botText = 'Se você estiver interessado em saber mais sobre algum mentor específico ou agendar uma sessão, é só me avisar!';
+      } else if (availableSlots && availableSlots.length > 0) {
+        // Se houver slots disponíveis, exibe a resposta do bot com os slots
+        botText = response.answer || response.formattedResponse?.answer || 'Resposta recebida';
+        
+        // Adiciona mensagem com slots disponíveis
+        const slotsMsg: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          text: botText,
+          isBot: true,
+          availableSlots,
+          mentors: mentorId ? [{ id: mentorId } as ChatMentor] : undefined, // Guarda mentorId para uso nos slots
+        };
+        setMessages((prev) => [...prev, slotsMsg]);
+        return; // Retorna para não adicionar mensagem duplicada
       } else {
-        // Sem mentores, usa a resposta normal
+        // Sem mentores nem slots, usa a resposta normal
         botText = response.answer || response.formattedResponse?.answer || 'Resposta recebida';
       }
       
@@ -213,7 +299,7 @@ export const Chatbot = () => {
                               {mentor.avatar ? (
                                 <img
                                   src={mentor.avatar}
-                                  alt={mentor.name}
+                                  alt={mentor.name || 'Mentor'}
                                   className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                                   onError={(e) => {
                                     // Fallback para inicial se a imagem falhar
@@ -230,13 +316,13 @@ export const Chatbot = () => {
                                 }`}
                               >
                                 <span className="text-white font-semibold text-lg">
-                                  {mentor.name.charAt(0).toUpperCase()}
+                                  {mentor.name?.charAt(0)?.toUpperCase() || 'M'}
                                 </span>
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-start justify-between gap-2 mb-1">
                                   <div>
-                                    <h4 className="font-semibold text-sm">{mentor.name}</h4>
+                                    <h4 className="font-semibold text-sm">{mentor.name || 'Mentor'}</h4>
                                     {(mentor.role || mentor.company) && (
                                       <p className="text-xs text-muted-foreground">
                                         {mentor.role}
@@ -316,6 +402,51 @@ export const Chatbot = () => {
                                   </div>
                                 </div>
                               </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Slots de Disponibilidade */}
+                    {msg.availableSlots && msg.availableSlots.length > 0 && (
+                      <div className="space-y-3 mt-3">
+                        <div className="text-sm font-semibold mb-2">Horários Disponíveis:</div>
+                        {Object.entries(
+                          msg.availableSlots.reduce((acc: Record<string, AvailableSlot[]>, slot) => {
+                            const key = `${slot.localDate} - ${slot.dayName}`;
+                            if (!acc[key]) {
+                              acc[key] = [];
+                            }
+                            acc[key].push(slot);
+                            return acc;
+                          }, {})
+                        ).map(([dateKey, slots]) => (
+                          <Card key={dateKey} className="p-3">
+                            <div className="font-semibold text-sm mb-2">{dateKey}</div>
+                            <div className="flex flex-wrap gap-2">
+                              {slots.map((slot, idx) => {
+                                // Extrai mentorId dos mentores da mensagem ou do primeiro mentor disponível
+                                const mentorId = msg.mentors && msg.mentors.length > 0 
+                                  ? msg.mentors[0].id 
+                                  : undefined;
+                                return (
+                                  <Button
+                                    key={idx}
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-xs h-7"
+                                    onClick={() => {
+                                      if (mentorId) {
+                                        setIsOpen(false);
+                                        navigate(`/agendar/${mentorId}?date=${slot.localDate}&time=${slot.localTime}`);
+                                      }
+                                    }}
+                                  >
+                                    {slot.localTime}
+                                  </Button>
+                                );
+                              })}
                             </div>
                           </Card>
                         ))}

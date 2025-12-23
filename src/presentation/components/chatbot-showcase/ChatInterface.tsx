@@ -6,6 +6,7 @@ import chatData from "@shared/data/chatData.json";
 import { useChat } from "@/presentation/hooks/useChat";
 import { toast } from "sonner";
 import { ChatMentor } from "@application/use-cases/chat/SendChatMessage.usecase";
+import { getChatContextFromRoute } from "@/shared/utils/chatContext";
 
 interface JourneyMessage {
   id: number;
@@ -42,9 +43,11 @@ export const ChatInterface = ({
   const messagesKeyRef = useRef<string>("");
   const [inputMessage, setInputMessage] = useState("");
   const [chatMessages, setChatMessages] = useState<JourneyMessage[]>([]);
-  const [isInitialMessageSent, setIsInitialMessageSent] = useState(false);
   const messageIdCounter = useRef(1);
   const lastJourneyKeyRef = useRef<string>(""); // Rastreia a última jornada adicionada para evitar duplicação imediata
+  const [sessionId, setSessionId] = useState<string | null>(null); // Armazena sessionId para manter histórico
+  const lastMessagesCountRef = useRef(0); // Rastreia o número de mensagens para detectar quando jornada é adicionada
+  const isJourneyBeingAddedRef = useRef(false); // Flag para indicar que uma jornada está sendo adicionada
   const { sendMessageAsync, isLoading } = useChat();
 
   const mentorName = headerName || conversation.participants.mentor.name;
@@ -57,6 +60,16 @@ export const ChatInterface = ({
       // Verifica se esta é uma nova seleção (chave diferente da última processada)
       if (lastJourneyKeyRef.current !== journeySelectionKey) {
         lastJourneyKeyRef.current = journeySelectionKey;
+        
+        // Marca que uma jornada está sendo adicionada
+        isJourneyBeingAddedRef.current = true;
+        
+        // Salva o número de mensagens anteriores antes de adicionar as novas
+        const previousCount = chatMessages.length;
+        
+        // Atualiza o contador de referência ANTES de adicionar as mensagens
+        // Isso permite detectar que foi uma jornada (muitas mensagens) vs mensagens individuais
+        lastMessagesCountRef.current = previousCount;
         
         // Adiciona as mensagens da jornada ao histórico existente
         setChatMessages(prev => {
@@ -73,13 +86,22 @@ export const ChatInterface = ({
           return [...prev, ...adjustedMessages];
         });
         
+        // Reseta o contador de mensagens visíveis para iniciar animação das novas mensagens
+        // Se já havia mensagens anteriores, mantém elas visíveis e anima apenas as novas
+        setVisibleMessagesCount(previousCount);
+        
+        // Marca que a jornada foi adicionada (após um pequeno delay para garantir que o estado foi atualizado)
+        setTimeout(() => {
+          isJourneyBeingAddedRef.current = false;
+        }, 100);
+        
         // Notifica que as mensagens foram adicionadas
         if (onJourneyMessagesAdded) {
           onJourneyMessagesAdded();
         }
       }
     }
-  }, [journeyMessages, journeySelectionKey, onJourneyMessagesAdded]);
+  }, [journeyMessages, journeySelectionKey, onJourneyMessagesAdded, chatMessages.length]);
 
   // Usa chatMessages como fonte principal (que agora contém jornadas + mensagens do usuário)
   // Se não houver chatMessages e houver journeyMessages, usa journeyMessages temporariamente (até serem adicionadas)
@@ -98,6 +120,35 @@ export const ChatInterface = ({
     return allMessages.map(m => `${m.id}-${m.content.substring(0, 20)}`).join("|");
   }, [allMessages]);
 
+  // Carrega sessionId do localStorage na inicialização
+  // Mas limpa se for uma nova sessão (usuário pode ter feito logout/login)
+  useEffect(() => {
+    const storedSessionId = localStorage.getItem('chatSessionId');
+    const storedUserId = localStorage.getItem('user');
+    let currentUserId: string | null = null;
+    
+    if (storedUserId) {
+      try {
+        const user = JSON.parse(storedUserId);
+        currentUserId = user.id;
+      } catch (e) {
+        // Ignora erro
+      }
+    }
+    
+    // Se o userId mudou, limpa o sessionId (nova sessão)
+    const lastUserId = localStorage.getItem('lastChatUserId');
+    if (lastUserId !== currentUserId) {
+      localStorage.removeItem('chatSessionId');
+      setSessionId(null);
+      if (currentUserId) {
+        localStorage.setItem('lastChatUserId', currentUserId);
+      }
+    } else if (storedSessionId) {
+      setSessionId(storedSessionId);
+    }
+  }, []);
+
   // Update messages ref when messages change
   useEffect(() => {
     messagesRef.current = allMessages as JourneyMessage[];
@@ -107,26 +158,48 @@ export const ChatInterface = ({
   useEffect(() => {
     if (messagesKeyRef.current !== messagesKey) {
       messagesKeyRef.current = messagesKey;
-      // Se for modo demo (journeyMessages) e não houver chatMessages, inicia animação
-      // Se for modo real (chatMessages), mostra todas imediatamente
-      if (journeyMessages && chatMessages.length === 0) {
-        setVisibleMessagesCount(0);
-      } else {
-        // Mostra todas as mensagens imediatamente quando há chatMessages
+      
+      const currentMessagesCount = allMessages.length;
+      const previousMessagesCount = lastMessagesCountRef.current;
+      const messagesAdded = currentMessagesCount - previousMessagesCount;
+      
+      // Se for modo demo (journeyMessages), inicia animação apenas quando jornada é adicionada
+      // Se for modo real (apenas chatMessages sem journeyMessages), mostra todas imediatamente
+      if (journeyMessages && messagesAdded > 0) {
+        // Verifica se uma jornada está sendo adicionada usando a flag
+        if (isJourneyBeingAddedRef.current) {
+          // Jornada está sendo adicionada - reseta o contador para animar
+          // Calcula quantas mensagens já existiam antes da jornada
+          const countBeforeJourney = currentMessagesCount - journeyMessages.length;
+          // Se há mensagens anteriores, mantém elas visíveis e anima apenas as novas
+          // Se não há mensagens anteriores, inicia do zero
+          setVisibleMessagesCount(countBeforeJourney > 0 ? countBeforeJourney : 0);
+        } else {
+          // Mensagens individuais do usuário/chatbot - mostra imediatamente
+          // Apenas incrementa o contador sem resetar
+          setVisibleMessagesCount(prev => Math.min(prev + messagesAdded, currentMessagesCount));
+        }
+      } else if (!journeyMessages) {
+        // Mostra todas as mensagens imediatamente quando não há journeyMessages
         setVisibleMessagesCount(allMessages.length);
       }
+      
+      // Atualiza o contador de referência
+      lastMessagesCountRef.current = currentMessagesCount;
     }
-  }, [messagesKey, journeyMessages, chatMessages.length, allMessages.length]);
+  }, [messagesKey, journeyMessages, allMessages.length]);
 
-  // Animate messages appearing one by one (apenas no modo demo, quando não há chatMessages)
+  // Animate messages appearing one by one (quando há journeyMessages)
   useEffect(() => {
-    // Não anima se já houver chatMessages (usuário interagiu ou jornada foi adicionada)
-    if (chatMessages.length > 0) return;
     if (!journeyMessages) return;
     
     const currentMessages = messagesRef.current;
-    if (visibleMessagesCount < currentMessages.length) {
-      const nextMessage = currentMessages[visibleMessagesCount];
+    const currentVisibleCount = visibleMessagesCount;
+    const totalToShow = currentMessages.length;
+    
+    // Se ainda há mensagens para mostrar
+    if (currentVisibleCount < totalToShow) {
+      const nextMessage = currentMessages[currentVisibleCount];
       // Mentor messages take longer to "type", user messages are faster
       const delay = nextMessage.sender === "mentor" ? 1500 : 800;
       const timer = setTimeout(() => {
@@ -134,7 +207,7 @@ export const ChatInterface = ({
       }, delay);
       return () => clearTimeout(timer);
     }
-  }, [visibleMessagesCount, journeyMessages, chatMessages.length]);
+  }, [visibleMessagesCount, journeyMessages]);
 
   // Auto-scroll when new message appears
   useEffect(() => {
@@ -150,18 +223,205 @@ export const ChatInterface = ({
 
   // Função para processar resposta do chatbot
   const processChatResponse = useCallback((response: any) => {
+    const rawData = response.formattedResponse?.data?.rawData;
+    const messageType = response.formattedResponse?.message_type;
+    
+    // Verifica se rawData é um objeto (nova estrutura) ou array (estrutura antiga)
+    let availableSlots: any[] = [];
+    let mentor: ChatMentor | null = null;
+    
+    if (rawData && typeof rawData === 'object' && !Array.isArray(rawData)) {
+      // Nova estrutura: { mentor: {...}, slots: [...] }
+      if (rawData.mentor) {
+        mentor = rawData.mentor as ChatMentor;
+      }
+      if (Array.isArray(rawData.slots)) {
+        availableSlots = rawData.slots;
+      }
+    } else if (Array.isArray(rawData)) {
+      // Estrutura antiga: array de itens
+      // Filtra slots de disponibilidade (objetos que têm 'localTime' e 'localDate')
+      availableSlots = rawData.filter((item: any) => 
+        item.localTime && item.localDate && item.startAtUtc
+      );
+      
+      // Filtra mentores (objetos que têm 'mentor' ou 'name')
+      const mentors = rawData
+        .filter((item: any) => {
+          if (item.mentor && typeof item.mentor === 'object') {
+            return true;
+          }
+          if (item.name && typeof item.name === 'string') {
+            return true;
+          }
+          return false;
+        })
+        .map((item: any) => {
+          if (item.mentor) {
+            return item.mentor;
+          }
+          return item;
+        }) as ChatMentor[];
+      
+      if (mentors.length > 0) {
+        mentor = mentors[0];
+      } else {
+        // Tenta encontrar mentor no rawData (pode ser um UserMentor com propriedade mentor)
+        const mentorItem = rawData.find((item: any) => item.mentor && typeof item.mentor === 'object');
+        if (mentorItem) {
+          mentor = mentorItem.mentor;
+        }
+      }
+    }
+    
     const isListMentors = response.toolsUsed?.some(
       (tool: { name: string }) => tool.name === 'list_mentors'
     );
-
-    if (isListMentors && response.formattedResponse?.data?.rawData) {
-      const mentors = response.formattedResponse.data.rawData as ChatMentor[];
+    
+    const hasAvailableSlots = availableSlots.length > 0;
+    const hasMentor = mentor !== null;
+    
+    // Gera timestamps no formato HH:mm para consistência
+    const now = new Date();
+    const baseHours = now.getHours();
+    const baseMinutes = now.getMinutes();
+    
+    // Se for appointment_list, formata de forma especial
+    if (messageType === 'appointment_list' && hasAvailableSlots) {
       
-      // Gera timestamps no formato HH:mm para consistência
-      const now = new Date();
-      const baseHours = now.getHours();
-      const baseMinutes = now.getMinutes();
+      // Mensagem 1: Informações do mentor e introdução dos horários
+      if (mentor) {
+        let mentorInfo = `Você tem acesso ao mentor **${mentor.name}**`;
+        if (mentor.role || mentor.company) {
+          const rolePart = mentor.role || '';
+          const companyPart = mentor.company || '';
+          if (rolePart && companyPart) {
+            mentorInfo += `, que é **${rolePart}** na **${companyPart}**`;
+          } else if (rolePart) {
+            mentorInfo += `, que é **${rolePart}**`;
+          } else if (companyPart) {
+            mentorInfo += ` da **${companyPart}**`;
+          }
+        }
+        if (mentor.specialty) {
+          mentorInfo += ` e especialista em **${mentor.specialty}**`;
+        }
+        mentorInfo += ". Aqui estão os horários disponíveis para agendar uma sessão:";
+        
+        const mentorDetailsMessage: JourneyMessage = {
+          id: messageIdCounter.current++,
+          sender: "mentor",
+          type: "text",
+          content: mentorInfo,
+          timestamp: `${baseHours.toString().padStart(2, "0")}:${baseMinutes.toString().padStart(2, "0")}`,
+        };
+        setChatMessages(prev => [...prev, mentorDetailsMessage]);
+      }
       
+      // Mensagem de introdução dos horários (se não houver mentor)
+      const introSlotsOffset = mentor ? 1 : 0;
+      if (!mentor) {
+        const introSlotsMinutes = (baseMinutes + introSlotsOffset + 1) % 60;
+        const introSlotsHours = baseMinutes + introSlotsOffset + 1 >= 60 ? (baseHours + 1) % 24 : baseHours;
+        const introSlotsMessage: JourneyMessage = {
+          id: messageIdCounter.current++,
+          sender: "mentor",
+          type: "text",
+          content: "### Horários Disponíveis:",
+          timestamp: `${introSlotsHours.toString().padStart(2, "0")}:${introSlotsMinutes.toString().padStart(2, "0")}`,
+        };
+        setChatMessages(prev => [...prev, introSlotsMessage]);
+      }
+      
+      // Agrupa slots por data
+      interface SlotItem {
+        localTime: string;
+        localDate: string;
+        dayName: string;
+        duration?: number;
+      }
+      
+      const slotsByDate: Record<string, SlotItem[]> = {};
+      availableSlots.forEach((slot: any) => {
+        const dateKey = `${slot.localDate} - ${slot.dayName}`;
+        if (!slotsByDate[dateKey]) {
+          slotsByDate[dateKey] = [];
+        }
+        slotsByDate[dateKey].push(slot);
+      });
+      
+      // Função auxiliar para formatar data (DD/MM/YYYY -> DD de mês de YYYY)
+      const formatDateFull = (dateStr: string): string => {
+        try {
+          const [day, month, year] = dateStr.split('/');
+          const monthNames = [
+            'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+            'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+          ];
+          const monthIndex = parseInt(month) - 1;
+          if (monthIndex >= 0 && monthIndex < 12) {
+            return `${day} de ${monthNames[monthIndex]} de ${year}`;
+          }
+          return dateStr;
+        } catch {
+          return dateStr;
+        }
+      };
+      
+      // Função auxiliar para calcular horário de término
+      const calculateEndTime = (startTime: string, durationMinutes: number = 60): string => {
+        try {
+          const [hours, minutes] = startTime.split(':').map(Number);
+          const totalMinutes = hours * 60 + minutes + durationMinutes;
+          const endHours = Math.floor(totalMinutes / 60) % 24;
+          const endMins = totalMinutes % 60;
+          return `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
+        } catch {
+          return startTime;
+        }
+      };
+      
+      // Função auxiliar para formatar horário com início e término
+      const formatTimeRange = (slot: SlotItem): string => {
+        const startTime = slot.localTime;
+        const duration = slot.duration || 60; // Default 60 minutos se não especificado
+        const endTime = calculateEndTime(startTime, duration);
+        return `${startTime}h às ${endTime}h`;
+      };
+      
+      // Cria uma mensagem para cada dia
+      let messageOffset = mentor ? 1 : (introSlotsOffset > 0 ? introSlotsOffset + 1 : 0);
+      for (const dateKey in slotsByDate) {
+        const slots = slotsByDate[dateKey];
+        messageOffset++;
+        const slotMinutes = (baseMinutes + messageOffset) % 60;
+        const slotHours = baseMinutes + messageOffset >= 60 ? (baseHours + 1) % 24 : baseHours;
+        
+        // Extrai apenas o nome do dia e a data (remove " - ")
+        const [date, dayName] = dateKey.split(' - ');
+        const dayMessage: JourneyMessage = {
+          id: messageIdCounter.current++,
+          sender: "mentor",
+          type: "text",
+          content: `${dayName} (${date}):\n${slots.map((slot) => `• ${formatTimeRange(slot)}`).join('\n')}`,
+          timestamp: `${slotHours.toString().padStart(2, "0")}:${slotMinutes.toString().padStart(2, "0")}`,
+        };
+        setChatMessages(prev => [...prev, dayMessage]);
+      }
+      
+      // Mensagem final
+      const finalOffset = messageOffset + 1;
+      const finalMinutes = (baseMinutes + finalOffset) % 60;
+      const finalHours = baseMinutes + finalOffset >= 60 ? (baseHours + 1) % 24 : baseHours;
+      const finalMessage: JourneyMessage = {
+        id: messageIdCounter.current++,
+        sender: "mentor",
+        type: "text",
+        content: "Por favor, me informe qual horário você gostaria de escolher!",
+        timestamp: `${finalHours.toString().padStart(2, "0")}:${finalMinutes.toString().padStart(2, "0")}`,
+      };
+      setChatMessages(prev => [...prev, finalMessage]);
+    } else if (isListMentors && mentor) {
       // Mensagem 1: Introdução
       const introMessage: JourneyMessage = {
         id: messageIdCounter.current++,
@@ -181,7 +441,7 @@ export const ChatInterface = ({
         type: "mentors",
         content: "Listagem dos mentores",
         timestamp: `${mentorsHours.toString().padStart(2, "0")}:${mentorsMinutes.toString().padStart(2, "0")}`,
-        mentors: mentors,
+        mentors: [mentor],
       };
       setChatMessages(prev => [...prev, mentorsMessage]);
 
@@ -208,46 +468,15 @@ export const ChatInterface = ({
         content: response.formattedResponse?.answer || response.answer,
         timestamp: `${hours}:${minutes}`,
       };
-      setChatMessages(prev => [...prev, botMessage]);
+      setChatMessages(prev => {
+        // Atualiza o contador de referência para mensagens individuais
+        lastMessagesCountRef.current = prev.length;
+        return [...prev, botMessage];
+      });
     }
   }, []);
 
-  // Enviar mensagem inicial automaticamente quando não houver journeyMessages e chatMessages estiver vazio
-  useEffect(() => {
-    if (!journeyMessages && !isInitialMessageSent && chatMessages.length === 0) {
-      const sendInitialMessage = async () => {
-        try {
-          setIsInitialMessageSent(true);
-          const initialMessage = "Olá, como posso ajudar?";
-          
-          // Gera timestamp no formato HH:mm
-          const now = new Date();
-          const hours = now.getHours().toString().padStart(2, "0");
-          const minutes = now.getMinutes().toString().padStart(2, "0");
-          
-          // Adiciona mensagem do usuário
-          const userMessage: JourneyMessage = {
-            id: messageIdCounter.current++,
-            sender: "mentee",
-            type: "text",
-            content: initialMessage,
-            timestamp: `${hours}:${minutes}`,
-          };
-          setChatMessages([userMessage]);
-
-          // Envia para API e aguarda resposta
-          const response = await sendMessageAsync({ message: initialMessage });
-          
-          // Processa resposta do chatbot
-          processChatResponse(response);
-        } catch (error) {
-          toast.error('Erro ao enviar mensagem inicial');
-        }
-      };
-
-      sendInitialMessage();
-    }
-  }, [journeyMessages, isInitialMessageSent, chatMessages.length, sendMessageAsync, processChatResponse]);
+  // Mensagem inicial automática removida - usuário deve enviar mensagem manualmente
 
   const handleSendMessage = useCallback(async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -269,18 +498,121 @@ export const ChatInterface = ({
       content: messageText,
       timestamp: timestamp,
     };
-    setChatMessages(prev => [...prev, userMessage]);
+    setChatMessages(prev => {
+      // Atualiza o contador de referência para mensagens individuais
+      lastMessagesCountRef.current = prev.length;
+      return [...prev, userMessage];
+    });
 
     try {
-      // Envia para API
-      const response = await sendMessageAsync({ message: messageText });
+      // Obtém userId do localStorage se o usuário estiver logado
+      const userStr = localStorage.getItem('user');
+      let userId: string | undefined;
+      let userWhatsapp: string | undefined;
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          userId = user.id;
+          // Tenta obter whatsappNumber do localStorage
+          userWhatsapp = user.whatsappNumber;
+          // Se não encontrar whatsappNumber, tenta buscar do perfil da API
+          if (!userWhatsapp && userId) {
+            // Busca do perfil via API (pode estar desatualizado no localStorage)
+            try {
+              const profileResponse = await fetch('http://localhost:3005/api/auth/profile', {
+                headers: {
+                  'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+                },
+              });
+              if (profileResponse.ok) {
+                const profileData = await profileResponse.json();
+                const profileUser = profileData.user || profileData;
+                userWhatsapp = profileUser.whatsappNumber;
+                // Atualiza o localStorage com o whatsappNumber se encontrado
+                if (userWhatsapp) {
+                  const updatedUser = { ...user, whatsappNumber: userWhatsapp };
+                  localStorage.setItem('user', JSON.stringify(updatedUser));
+                }
+              }
+            } catch (e) {
+              // Ignora erro ao buscar perfil
+            }
+          }
+        } catch (e) {
+          // Ignora erro de parsing
+        }
+      }
+      
+      // Obtém contexto da rota atual
+      const routeContext = getChatContextFromRoute();
+      
+      // Constrói DTO com sessionId ou phoneNumber
+      let dto: { 
+        message: string; 
+        userCtx?: Record<string, unknown>;
+        phoneNumber?: string;
+        sessionId?: string;
+      };
+      
+      if (userId) {
+        const userCtx: Record<string, unknown> = {
+          userId,
+          language: 'pt-BR',
+        };
+        
+        if (routeContext.mentorId) {
+          userCtx.mentorId = routeContext.mentorId;
+        }
+        if (routeContext.planId) {
+          userCtx.planId = routeContext.planId;
+        }
+        
+        // Se já temos sessionId, usa ele (chamadas subsequentes)
+        if (sessionId) {
+          dto = { 
+            message: messageText, 
+            userCtx,
+            sessionId: sessionId
+          };
+        } else if (userWhatsapp) {
+          // Primeira chamada: envia phoneNumber (whatsappNumber) para criar/buscar conversa
+          // Remove formatação e garante que tenha prefixo 55
+          let phoneNumber = userWhatsapp.replace(/\D/g, '');
+          if (phoneNumber && !phoneNumber.startsWith('55')) {
+            phoneNumber = `55${phoneNumber}`;
+          }
+          dto = { 
+            message: messageText, 
+            userCtx,
+            phoneNumber: phoneNumber
+          };
+        } else {
+          // Sem phoneNumber nem sessionId, envia apenas userCtx
+          // Mas tenta buscar whatsappNumber do perfil se não estiver no localStorage
+          dto = { message: messageText, userCtx };
+        }
+      } else {
+        dto = { message: messageText };
+      }
+      
+      const response = await sendMessageAsync(dto);
+      
+      // Captura sessionId da resposta e armazena
+      if (response.sessionId && response.sessionId !== sessionId) {
+        setSessionId(response.sessionId);
+        localStorage.setItem('chatSessionId', response.sessionId);
+        // Salva o userId atual para verificar mudanças de sessão
+        if (userId) {
+          localStorage.setItem('lastChatUserId', userId);
+        }
+      }
       
       // Processa resposta do chatbot
       processChatResponse(response);
     } catch (error) {
       toast.error('Erro ao enviar mensagem');
     }
-  }, [inputMessage, isLoading, sendMessageAsync, processChatResponse]);
+  }, [inputMessage, isLoading, sendMessageAsync, processChatResponse, sessionId]);
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
