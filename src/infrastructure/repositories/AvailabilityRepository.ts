@@ -40,7 +40,12 @@ export class AvailabilityRepository implements IAvailabilityRepository {
         throw new Error(`Erro ao buscar disponibilidade: ${response.status} ${response.statusText}`);
       }
 
-      const apiAvailabilities: ApiAvailabilityResponse[] = await response.json();
+      const responseData = await response.json();
+      
+      // Handle both array response and object with availability property
+      const apiAvailabilities: ApiAvailabilityResponse[] = Array.isArray(responseData) 
+        ? responseData 
+        : (responseData.availability || []);
 
       // Mapeia e valida as disponibilidades (incluindo inativas para gerenciamento)
       const availabilities = apiAvailabilities.map((apiAv) => {

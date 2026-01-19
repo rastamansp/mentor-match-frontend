@@ -1,17 +1,17 @@
 # Product Requirements Document (PRD)
-## Mentor Match - Plataforma de Mentoria Online
+## MentorMatch - Plataforma de Mentoria Online
 
 **Versão:** 1.0.0  
 **Data:** 27-11-2025
 **Status:** Em Desenvolvimento  
-**Cliente:** Mentor Match
+**Cliente:** MentorMatch
 
 ---
 
 ## 1. Visão Geral do Produto
 
 ### 1.1 Descrição
-O **Mentor Match** é uma plataforma web moderna e escalável que conecta profissionais em busca de mentoria com mentores experientes de diversas áreas. A plataforma oferece um sistema completo de busca, agendamento e gerenciamento de sessões de mentoria, com integração de chatbot inteligente para facilitar a descoberta de mentores.
+O **MentorMatch** é uma plataforma web moderna e escalável que conecta profissionais em busca de mentoria com mentores experientes de diversas áreas. A plataforma oferece um sistema completo de busca, agendamento e gerenciamento de sessões de mentoria, com integração de chatbot inteligente para facilitar a descoberta de mentores.
 
 ### 1.2 Objetivos de Negócio
 - Conectar profissionais com mentores qualificados
@@ -864,7 +864,7 @@ O **Mentor Match** é uma plataforma web moderna e escalável que conecta profis
 
 ## 15. Conclusão
 
-O **Mentor Match** é uma plataforma robusta e escalável desenvolvida com as melhores práticas de engenharia de software. A arquitetura Clean Architecture garante manutenibilidade e extensibilidade, enquanto a stack tecnológica moderna proporciona performance e experiência de usuário excepcionais.
+O **MentorMatch** é uma plataforma robusta e escalável desenvolvida com as melhores práticas de engenharia de software. A arquitetura Clean Architecture garante manutenibilidade e extensibilidade, enquanto a stack tecnológica moderna proporciona performance e experiência de usuário excepcionais.
 
 ### 15.1 Diferenciais Técnicos
 - ✅ Arquitetura limpa e escalável

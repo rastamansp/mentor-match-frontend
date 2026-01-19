@@ -22,8 +22,8 @@ export const MentorSchema = z.object({
     period: z.string(),
     description: z.string(),
   })).nullable().optional(),
-  pricePerHour: z.number().positive(),
-  price: z.number().positive().optional(), // Mantido para compatibilidade
+  pricePerHour: z.number().min(0),
+  price: z.number().min(0).optional(), // Mantido para compatibilidade
   status: z.string(),
   rating: z.number().nullable().optional(),
   reviews: z.number().int().min(0).optional(),

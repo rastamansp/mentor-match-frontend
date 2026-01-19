@@ -49,7 +49,7 @@ const Navbar = () => {
             <div className="w-8 h-8 rounded-lg bg-gradient-hero flex items-center justify-center">
               <span className="text-white font-bold text-xl">M</span>
             </div>
-            <span className="font-bold text-xl text-foreground">Mentor Match</span>
+            <span className="font-bold text-xl text-foreground">MentorMatch</span>
           </NavLink>
 
           {/* Desktop Navigation */}

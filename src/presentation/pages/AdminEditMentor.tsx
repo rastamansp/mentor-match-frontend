@@ -34,6 +34,7 @@ import Navbar from '@/components/Navbar';
 import { Loader2, ArrowLeft, Save, Calendar, Plus, Edit, Trash2, Clock } from 'lucide-react';
 import { useMentorById } from '../hooks/useMentorById';
 import { useUpdateMentor } from '../hooks/useUpdateMentor';
+import { useDeleteMentor } from '../hooks/useDeleteMentor';
 import { useMentorAvailability } from '../hooks/useMentorAvailability';
 import { useCreateAvailability } from '../hooks/useCreateAvailability';
 import { useUpdateAvailability } from '../hooks/useUpdateAvailability';
@@ -52,7 +53,9 @@ const AdminEditMentor = () => {
   const { user, isAdmin } = useAuth();
   const { data: mentor, isLoading: isLoadingMentor, error: mentorError } = useMentorById(id || '');
   const updateMentor = useUpdateMentor();
+  const deleteMentor = useDeleteMentor();
   const [hasPermission, setHasPermission] = useState(false);
+  const [isDeleteMentorDialogOpen, setIsDeleteMentorDialogOpen] = useState(false);
   
   // Availability states
   const { data: availabilities = [], isLoading: isLoadingAvailability } = useMentorAvailability(id || '');
@@ -278,6 +281,20 @@ const AdminEditMentor = () => {
     }
   };
 
+  // Handle delete mentor
+  const handleDeleteMentor = async () => {
+    if (!id) return;
+    
+    try {
+      await deleteMentor.mutateAsync(id);
+      toast.success('Mentor deletado com sucesso!');
+      navigate('/admin/mentors');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao deletar mentor';
+      toast.error(message);
+    }
+  };
+
   if (isLoadingMentor || !hasPermission) {
     return (
       <div className="min-h-screen bg-background">
@@ -465,36 +482,59 @@ const AdminEditMentor = () => {
                   placeholder="Descrição sobre o mentor..."
                 />
               </div>
-              <div className="flex justify-end gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    if (isAdmin) {
-                      navigate('/admin/mentors');
-                    } else {
-                      navigate('/dashboard-mentor');
-                    }
-                  }}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={updateMentor.isPending}
-                >
-                  {updateMentor.isPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Salvando...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Salvar Alterações
-                    </>
-                  )}
-                </Button>
+              <div className="flex justify-between items-center">
+                {isAdmin && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => setIsDeleteMentorDialogOpen(true)}
+                    disabled={deleteMentor.isPending}
+                  >
+                    {deleteMentor.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Deletando...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Deletar Mentor
+                      </>
+                    )}
+                  </Button>
+                )}
+                {!isAdmin && <div />}
+                <div className="flex gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      if (isAdmin) {
+                        navigate('/admin/mentors');
+                      } else {
+                        navigate('/dashboard-mentor');
+                      }
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={updateMentor.isPending}
+                  >
+                    {updateMentor.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Salvar Alterações
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </form>
           </Card>
@@ -541,7 +581,6 @@ const AdminEditMentor = () => {
                             <Clock className="w-4 h-4" />
                             <span>{availability.startTime.substring(0, 5)} - {availability.endTime.substring(0, 5)}</span>
                           </div>
-                          <span>Timezone: {availability.timezone}</span>
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -616,12 +655,14 @@ const AdminEditMentor = () => {
             </div>
             <div>
               <Label htmlFor="timezone">Timezone</Label>
-              <Input
-                id="timezone"
-                value={timezone}
-                onChange={(e) => setTimezone(e.target.value)}
-                placeholder="America/Sao_Paulo"
-              />
+              <Select value={timezone} onValueChange={setTimezone} disabled>
+                <SelectTrigger id="timezone">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="America/Sao_Paulo">America/Sao_Paulo</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex items-center space-x-2">
               <input
@@ -702,12 +743,14 @@ const AdminEditMentor = () => {
             </div>
             <div>
               <Label htmlFor="editTimezone">Timezone</Label>
-              <Input
-                id="editTimezone"
-                value={timezone}
-                onChange={(e) => setTimezone(e.target.value)}
-                placeholder="America/Sao_Paulo"
-              />
+              <Select value={timezone} onValueChange={setTimezone} disabled>
+                <SelectTrigger id="editTimezone">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="America/Sao_Paulo">America/Sao_Paulo</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex items-center space-x-2">
               <input
@@ -763,6 +806,34 @@ const AdminEditMentor = () => {
                 </>
               ) : (
                 'Deletar'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Mentor Dialog */}
+      <AlertDialog open={isDeleteMentorDialogOpen} onOpenChange={setIsDeleteMentorDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão de Mentor</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja deletar o mentor <strong>{mentor?.name}</strong>? Esta ação não pode ser desfeita e todos os dados relacionados serão removidos permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteMentor}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMentor.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deletando...
+                </>
+              ) : (
+                'Deletar Mentor'
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

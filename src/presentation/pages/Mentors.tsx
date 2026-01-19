@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Star, MapPin, DollarSign } from "lucide-react";
+import { Search, Star, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { useMentors } from "../hooks/useMentors";
@@ -167,10 +167,10 @@ const Mentors = () => {
             {filteredMentors.map((mentor) => (
               <Card 
                 key={mentor.id} 
-                className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col h-full"
                 onClick={() => navigate(`/mentor/${mentor.id}`)}
               >
-                <div className="p-6">
+                <div className="p-6 flex flex-col flex-1">
                   {/* Avatar & Basic Info */}
                   <div className="flex items-start space-x-4 mb-4">
                     {mentor.avatar ? (
@@ -199,16 +199,20 @@ const Mentors = () => {
 
                   {/* Areas Badge */}
                   {mentor.areas && mentor.areas.length > 0 && (
-                    <Badge className="mb-4 bg-primary/10 text-primary hover:bg-primary/20">
-                      {mentor.areas[0]}
-                    </Badge>
+                    <div className="mb-4 flex flex-wrap gap-2">
+                      {mentor.areas.slice(0, 1).map((area, index) => (
+                        <Badge key={index} className="bg-primary/10 text-primary hover:bg-primary/20 text-xs whitespace-nowrap">
+                          {area}
+                        </Badge>
+                      ))}
+                    </div>
                   )}
 
                   {/* Skills */}
                   {mentor.skills && mentor.skills.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">
                       {mentor.skills.slice(0, 3).map((skill, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
+                        <Badge key={index} variant="secondary" className="text-xs whitespace-nowrap">
                           {skill}
                         </Badge>
                       ))}
@@ -222,12 +226,14 @@ const Mentors = () => {
 
                   {/* Stats */}
                   <div className="flex items-center justify-between mb-4 text-sm">
-                    {mentor.rating !== null && mentor.rating !== undefined && (
+                    {mentor.rating !== null && mentor.rating !== undefined ? (
                       <div className="flex items-center space-x-1">
                         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                         <span className="font-medium">{mentor.rating.toFixed(1)}</span>
                         <span className="text-muted-foreground">({mentor.reviews || 0})</span>
                       </div>
+                    ) : (
+                      <div></div>
                     )}
                     {mentor.location && (
                       <div className="flex items-center space-x-1 text-muted-foreground">
@@ -237,13 +243,11 @@ const Mentors = () => {
                     )}
                   </div>
 
-                  {/* Price & CTA */}
-                  <div className="flex items-center justify-between pt-4 border-t border-border">
-                    <div className="flex items-center space-x-1">
-                      <DollarSign className="w-5 h-5 text-accent" />
-                      <span className="font-bold text-xl">R$ {mentor.pricePerHour || mentor.price}</span>
-                      <span className="text-sm text-muted-foreground">/hora</span>
-                    </div>
+                  {/* Spacer to push button to bottom */}
+                  <div className="flex-1"></div>
+
+                  {/* CTA */}
+                  <div className="flex justify-end pt-4 border-t border-border mt-auto">
                     <Button 
                       size="sm"
                       onClick={(e) => {

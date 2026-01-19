@@ -40,7 +40,7 @@ export const SessionSchema = z.object({
   topic: z.string(),
   notes: z.string().optional(),
   status: z.enum(['scheduled', 'completed', 'cancelled']),
-  price: z.number().positive().optional(),
+  price: z.number().min(0).optional(),
   createdAt: z.string().datetime(),
   // Novos campos da API com session_slots
   activeSlot: SessionSlotSchema.nullable().optional(),

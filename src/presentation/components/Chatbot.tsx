@@ -45,7 +45,7 @@ export const Chatbot = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
-      text: 'Olá! Sou o assistente virtual do Mentor Match. Como posso ajudá-lo hoje? Você pode perguntar sobre mentores disponíveis, agendamentos e muito mais.',
+      text: 'Olá! Sou o assistente virtual do MentorMatch. Como posso ajudá-lo hoje? Você pode perguntar sobre mentores disponíveis, agendamentos e muito mais.',
       isBot: true,
     },
   ]);
@@ -249,7 +249,7 @@ export const Chatbot = () => {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-[500px] h-[600px] flex flex-col p-0">
           <DialogHeader className="px-6 pt-6 pb-4 border-b">
-            <DialogTitle className="text-xl font-bold">Chatbot Mentor Match</DialogTitle>
+            <DialogTitle className="text-xl font-bold">Chatbot MentorMatch</DialogTitle>
             <DialogDescription className="mt-1">
               Faça perguntas sobre mentores e agendamentos
             </DialogDescription>

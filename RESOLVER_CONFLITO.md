@@ -4,7 +4,7 @@ O erro indica que existe um container antigo `gwan-events-backend` que está em 
 
 ## ⚠️ Importante
 
-O container `gwan-events-backend` parece ser de outro projeto (Gwan Events). Você precisa removê-lo antes de fazer o deploy do Mentor Match.
+O container `gwan-events-backend` parece ser de outro projeto (Gwan Events). Você precisa removê-lo antes de fazer o deploy do MentorMatch.
 
 ## 🚀 Soluções
 
@@ -89,5 +89,5 @@ O container `gwan-events-backend` é de outro projeto. Se você ainda precisa de
 - Renomeá-lo antes de remover
 - Ou usar um nome diferente no docker-compose do projeto Events
 
-Mas para o Mentor Match, você só precisa remover o container antigo que está causando conflito.
+Mas para o MentorMatch, você só precisa remover o container antigo que está causando conflito.
 

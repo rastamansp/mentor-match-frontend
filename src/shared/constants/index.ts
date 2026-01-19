@@ -1,4 +1,4 @@
-export const APP_NAME = 'Mentor Match';
+export const APP_NAME = 'MentorMatch';
 
 export const ROUTES = {
   HOME: '/',

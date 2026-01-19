@@ -60,7 +60,7 @@ const Home = () => {
                 que transformam carreiras
               </h1>
               <p className="text-xl text-muted-foreground">
-                Encontre especialistas, agende sessões e acelere seu desenvolvimento profissional com o Mentor Match
+                Encontre especialistas, agende sessões e acelere seu desenvolvimento profissional com o MentorMatch
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button 
@@ -126,7 +126,7 @@ const Home = () => {
       <section className="py-16 px-4">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Por que Mentor Match?</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Por que MentorMatch?</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Transforme sua carreira com orientação profissional personalizada
             </p>
@@ -166,7 +166,7 @@ const Home = () => {
       {/* Footer */}
       <footer className="py-8 px-4 border-t border-border">
         <div className="container mx-auto text-center text-muted-foreground">
-          <p>&copy; 2025 Mentor Match. Todos os direitos reservados.</p>
+          <p>&copy; 2025 MentorMatch. Todos os direitos reservados.</p>
         </div>
       </footer>
 

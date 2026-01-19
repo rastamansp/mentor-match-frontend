@@ -1,4 +1,4 @@
-# Docker Compose para Produção - Gwan Mentor Match Frontend
+# Docker Compose para Produção - Gwan MentorMatch Frontend
 # Frontend apenas - PostgreSQL, Redis, Traefik, Prometheus e Grafana já estão em produção
 
 services:
@@ -11,7 +11,7 @@ services:
         - NODE_ENV=production
         - VITE_API_URL=${VITE_API_URL:-https://api-mentor-match.gwan.com.br/api}
         - VITE_CHAT_API_URL=${VITE_CHAT_API_URL:-https://api-mentor-match.gwan.com.br/api/chat}
-        - VITE_APP_NAME=${VITE_APP_NAME:-Gwan Mentor Match}
+        - VITE_APP_NAME=${VITE_APP_NAME:-Gwan MentorMatch}
         - VITE_APP_VERSION=${VITE_APP_VERSION:-1.0.0}
     container_name: gwan-mentor-match-frontend
     restart: unless-stopped
@@ -20,7 +20,7 @@ services:
       - NGINX_LOG_LEVEL=debug
       - VITE_API_URL=${VITE_API_URL:-https://api-mentor-match.gwan.com.br/api}
       - VITE_CHAT_API_URL=${VITE_CHAT_API_URL:-https://api-mentor-match.gwan.com.br/api/chat}
-      - VITE_APP_NAME=${VITE_APP_NAME:-Gwan Mentor Match}
+      - VITE_APP_NAME=${VITE_APP_NAME:-Gwan MentorMatch}
       - VITE_APP_VERSION=${VITE_APP_VERSION:-1.0.0}
     # Usando configuração padrão do Dockerfile
     networks:

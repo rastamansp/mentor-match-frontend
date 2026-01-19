@@ -608,81 +608,130 @@ const AdminEditUser = () => {
 
             {/* Formulário de Edição */}
             <div className="lg:col-span-2">
-              <Card className="p-6">
-                <div className="mb-6">
-                  <h2 className="text-xl font-semibold mb-2">Informações do Usuário</h2>
-                  <p className="text-sm text-muted-foreground">
+              <Card className="p-8 shadow-lg">
+                <div className="mb-8">
+                  <h2 className="text-2xl font-semibold mb-2">Informações do Usuário</h2>
+                  <p className="text-muted-foreground">
                     Modifique os campos abaixo para atualizar as informações do usuário
                   </p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <Label htmlFor="name">Nome Completo</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Nome completo do usuário"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="mt-2"
-                  required
-                  disabled={loading}
-                  minLength={3}
-                />
-              </div>
+                <form onSubmit={handleSubmit} className="space-y-8">
+                  {/* Informações Básicas */}
+                  <div>
+                    <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                      <UserIcon className="w-5 h-5 text-primary" />
+                      Informações Básicas
+                    </h3>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <Label htmlFor="name" className="text-base font-medium">
+                          Nome Completo <span className="text-destructive">*</span>
+                        </Label>
+                        <div className="relative mt-2">
+                          <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                          <Input
+                            id="name"
+                            type="text"
+                            placeholder="Nome completo do usuário"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="pl-10 h-11"
+                            required
+                            disabled={loading}
+                            minLength={3}
+                          />
+                        </div>
+                      </div>
 
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="email@exemplo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-2"
-                  required
-                  disabled={loading}
-                />
-              </div>
+                      <div>
+                        <Label htmlFor="email" className="text-base font-medium">
+                          Email <span className="text-destructive">*</span>
+                        </Label>
+                        <div className="relative mt-2">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="email@exemplo.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="pl-10 h-11"
+                            required
+                            disabled={loading}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-              <div>
-                <Label htmlFor="phone">Telefone</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="(11) 98722-1050"
-                  value={phone}
-                  onChange={handlePhoneChange}
-                  className="mt-2"
-                  required
-                  disabled={loading}
-                  minLength={14}
-                  maxLength={15}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Digite apenas números (10 ou 11 dígitos)
-                </p>
-              </div>
+                  {/* Contato e Permissões */}
+                  <div>
+                    <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                      <Phone className="w-5 h-5 text-primary" />
+                      Contato e Permissões
+                    </h3>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <Label htmlFor="phone" className="text-base font-medium">
+                          Telefone <span className="text-destructive">*</span>
+                        </Label>
+                        <div className="relative mt-2">
+                          <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                          <Input
+                            id="phone"
+                            type="tel"
+                            placeholder="(11) 98722-1050"
+                            value={phone}
+                            onChange={handlePhoneChange}
+                            className="pl-10 h-11"
+                            required
+                            disabled={loading}
+                            minLength={14}
+                            maxLength={15}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Digite apenas números (10 ou 11 dígitos)
+                        </p>
+                      </div>
 
-              <div>
-                <Label htmlFor="role">Role</Label>
-                <Select value={role} onValueChange={(value) => setRole(value as 'USER' | 'ADMIN' | 'MENTOR')} disabled={loading}>
-                  <SelectTrigger id="role" className="mt-2">
-                    <SelectValue placeholder="Selecione o role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USER">Usuário</SelectItem>
-                    <SelectItem value="ADMIN">Administrador</SelectItem>
-                    <SelectItem value="MENTOR">Mentor</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                      <div>
+                        <Label htmlFor="role" className="text-base font-medium">
+                          Permissão <span className="text-destructive">*</span>
+                        </Label>
+                        <div className="relative mt-2">
+                          <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
+                          <Select value={role} onValueChange={(value) => setRole(value as 'USER' | 'ADMIN' | 'MENTOR')} disabled={loading}>
+                            <SelectTrigger id="role" className="pl-10 h-11">
+                              <SelectValue placeholder="Selecione o role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="USER">Usuário</SelectItem>
+                              <SelectItem value="ADMIN">Administrador</SelectItem>
+                              <SelectItem value="MENTOR">Mentor</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-                  <div className="flex gap-4 pt-4 border-t">
+                  {/* Actions */}
+                  <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-border">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => navigate('/admin/users')}
+                      className="flex-1 h-11"
+                      disabled={loading || deleting}
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      Cancelar
+                    </Button>
                     <Button
                       type="submit"
-                      className="flex-1"
+                      className="flex-1 h-11 bg-gradient-hero border-0 hover:opacity-90"
                       disabled={loading || deleting}
                     >
                       {loading ? (
@@ -696,15 +745,6 @@ const AdminEditUser = () => {
                           Salvar Alterações
                         </>
                       )}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => navigate('/admin/users')}
-                      className="flex-1"
-                      disabled={loading || deleting}
-                    >
-                      Cancelar
                     </Button>
                   </div>
                 </form>

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, Briefcase, Award, Calendar, DollarSign } from "lucide-react";
+import { Star, MapPin, Briefcase, Award, Calendar } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { useMentorById } from "../hooks/useMentorById";
@@ -135,17 +135,6 @@ const MentorProfile = () => {
                   <Badge className="mb-6 bg-primary/10 text-primary hover:bg-primary/20 text-base px-4 py-1">
                     {displayMentor.specialty}
                   </Badge>
-                </div>
-
-                <div className="border-t border-border pt-6 mb-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-muted-foreground">Valor por sessão:</span>
-                    <div className="flex items-center">
-                      <DollarSign className="w-5 h-5 text-accent" />
-                      <span className="font-bold text-2xl">R$ {displayMentor.price}</span>
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground text-center mb-4">Sessões de 1 hora via Zoom</p>
                 </div>
 
                 <Button 

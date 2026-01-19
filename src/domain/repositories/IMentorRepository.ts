@@ -17,5 +17,6 @@ export interface IMentorRepository {
   findById(id: string): Promise<Mentor | null>;
   search(query: string): Promise<Mentor[]>;
   update(id: string, dto: UpdateMentorDto): Promise<Mentor>;
+  delete(id: string): Promise<void>;
 }
 

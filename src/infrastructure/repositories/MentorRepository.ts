@@ -244,5 +244,40 @@ export class MentorRepository implements IMentorRepository {
       throw error;
     }
   }
+
+  async delete(id: string): Promise<void> {
+    this.logger.debug('Deleting mentor', { id });
+
+    try {
+      const url = `${this.apiUrl}/mentors/${id}`;
+
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.error('Failed to delete mentor', new Error(`HTTP ${response.status}: ${errorText}`));
+        
+        if (response.status === 401) {
+          throw new Error('Não autenticado. Por favor, faça login novamente.');
+        }
+        if (response.status === 403) {
+          throw new Error('Você não tem permissão para deletar este mentor.');
+        }
+        if (response.status === 404) {
+          throw new Error('Mentor não encontrado.');
+        }
+        
+        throw new Error(`Erro ao deletar mentor: ${response.status} ${response.statusText}`);
+      }
+
+      this.logger.info('Mentor deleted successfully', { id });
+    } catch (error) {
+      this.logger.error('Error deleting mentor', error as Error);
+      throw error;
+    }
+  }
 }
 

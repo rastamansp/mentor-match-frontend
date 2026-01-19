@@ -11,6 +11,7 @@ import { ListMentorsUseCase } from '@application/use-cases/mentors/ListMentors.u
 import { GetMentorByIdUseCase } from '@application/use-cases/mentors/GetMentorById.usecase';
 import { SearchMentorsUseCase } from '@application/use-cases/mentors/SearchMentors.usecase';
 import { UpdateMentorUseCase } from '@application/use-cases/mentors/UpdateMentor.usecase';
+import { DeleteMentorUseCase } from '@application/use-cases/mentors/DeleteMentor.usecase';
 import { CreateSessionUseCase } from '@application/use-cases/sessions/CreateSession.usecase';
 import { CreateSessionAdminUseCase } from '@application/use-cases/sessions/CreateSessionAdmin.usecase';
 import { RescheduleSessionUseCase } from '@application/use-cases/sessions/RescheduleSession.usecase';
@@ -48,6 +49,8 @@ class Container {
   private _listMentorsUseCase: ListMentorsUseCase | null = null;
   private _getMentorByIdUseCase: GetMentorByIdUseCase | null = null;
   private _searchMentorsUseCase: SearchMentorsUseCase | null = null;
+  private _updateMentorUseCase: UpdateMentorUseCase | null = null;
+  private _deleteMentorUseCase: DeleteMentorUseCase | null = null;
   private _createSessionUseCase: CreateSessionUseCase | null = null;
   private _createSessionAdminUseCase: CreateSessionAdminUseCase | null = null;
   private _rescheduleSessionUseCase: RescheduleSessionUseCase | null = null;
@@ -61,6 +64,9 @@ class Container {
   private _registerWithRoleUseCase: RegisterWithRoleUseCase | null = null;
   private _logoutUseCase: LogoutUseCase | null = null;
   private _getMentorAvailabilityUseCase: GetMentorAvailabilityUseCase | null = null;
+  private _createAvailabilityUseCase: CreateAvailabilityUseCase | null = null;
+  private _updateAvailabilityUseCase: UpdateAvailabilityUseCase | null = null;
+  private _deleteAvailabilityUseCase: DeleteAvailabilityUseCase | null = null;
   private _listUsersUseCase: ListUsersUseCase | null = null;
   private _updateUserUseCase: UpdateUserUseCase | null = null;
   private _deleteUserUseCase: DeleteUserUseCase | null = null;
@@ -139,6 +145,13 @@ class Container {
       this._updateMentorUseCase = new UpdateMentorUseCase(this.mentorRepository);
     }
     return this._updateMentorUseCase;
+  }
+
+  get deleteMentorUseCase(): DeleteMentorUseCase {
+    if (!this._deleteMentorUseCase) {
+      this._deleteMentorUseCase = new DeleteMentorUseCase(this.mentorRepository);
+    }
+    return this._deleteMentorUseCase;
   }
 
   get createSessionUseCase(): CreateSessionUseCase {

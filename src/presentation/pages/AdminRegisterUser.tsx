@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import Navbar from '@/components/Navbar';
 import { container } from '@/shared/di/container';
+import { User, Mail, Phone, MessageSquare, Lock, ArrowLeft, UserPlus } from 'lucide-react';
 
 const AdminRegisterUser = () => {
   const navigate = useNavigate();
@@ -91,117 +92,196 @@ const AdminRegisterUser = () => {
       <Navbar />
       
       <div className="pt-24 pb-16 px-4">
-        <div className="container mx-auto max-w-md">
-          <Card className="p-8">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold mb-2">Cadastrar Novo Usuário</h1>
-              <p className="text-muted-foreground">
+        <div className="container mx-auto max-w-4xl">
+          {/* Header */}
+          <div className="mb-8">
+            <Button
+              variant="ghost"
+              onClick={() => navigate(-1)}
+              className="mb-4"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+                <UserPlus className="w-8 h-8 text-primary" />
+              </div>
+              <h1 className="text-4xl font-bold mb-2">Cadastrar Novo Usuário</h1>
+              <p className="text-lg text-muted-foreground">
                 Preencha os dados para cadastrar um novo usuário no sistema
               </p>
             </div>
+          </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <Card className="p-8 shadow-lg">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Informações Básicas */}
               <div>
-                <Label htmlFor="name">Nome Completo</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Nome completo do usuário"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="mt-2"
-                  required
-                  disabled={loading}
-                  minLength={3}
-                />
+                <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                  <User className="w-5 h-5 text-primary" />
+                  Informações Básicas
+                </h2>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="name" className="text-base font-medium">
+                      Nome Completo <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative mt-2">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        id="name"
+                        type="text"
+                        placeholder="Nome completo do usuário"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="pl-10 h-11"
+                        required
+                        disabled={loading}
+                        minLength={3}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="email" className="text-base font-medium">
+                      Email <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative mt-2">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="email@exemplo.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10 h-11"
+                        required
+                        disabled={loading}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
+              {/* Contato */}
               <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="email@exemplo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-2"
-                  required
-                  disabled={loading}
-                />
+                <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                  <Phone className="w-5 h-5 text-primary" />
+                  Informações de Contato
+                </h2>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="phone" className="text-base font-medium">
+                      Telefone <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative mt-2">
+                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="(11) 98722-1050"
+                        value={phone}
+                        onChange={handlePhoneChange}
+                        className="pl-10 h-11"
+                        required
+                        disabled={loading}
+                        minLength={14}
+                        maxLength={15}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Digite apenas números (10 ou 11 dígitos)
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="whatsappNumber" className="text-base font-medium">
+                      WhatsApp <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative mt-2">
+                      <MessageSquare className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        id="whatsappNumber"
+                        type="tel"
+                        placeholder="(11) 98722-1050"
+                        value={whatsappNumber}
+                        onChange={handleWhatsappChange}
+                        className="pl-10 h-11"
+                        required
+                        disabled={loading}
+                        minLength={14}
+                        maxLength={15}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Digite apenas números (10 ou 11 dígitos)
+                    </p>
+                  </div>
+                </div>
               </div>
 
+              {/* Segurança */}
               <div>
-                <Label htmlFor="phone">Telefone</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="(11) 98722-1050"
-                  value={phone}
-                  onChange={handlePhoneChange}
-                  className="mt-2"
-                  required
-                  disabled={loading}
-                  minLength={14}
-                  maxLength={15}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Digite apenas números (10 ou 11 dígitos)
-                </p>
+                <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                  <Lock className="w-5 h-5 text-primary" />
+                  Segurança
+                </h2>
+                <div>
+                  <Label htmlFor="password" className="text-base font-medium">
+                    Senha <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="relative mt-2">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Mínimo 6 caracteres"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pl-10 h-11"
+                      required
+                      disabled={loading}
+                      minLength={6}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    A senha deve ter no mínimo 6 caracteres
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <Label htmlFor="whatsappNumber">WhatsApp</Label>
-                <Input
-                  id="whatsappNumber"
-                  type="tel"
-                  placeholder="(11) 98722-1050"
-                  value={whatsappNumber}
-                  onChange={handleWhatsappChange}
-                  className="mt-2"
-                  required
+              {/* Actions */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-border">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate(-1)}
+                  className="flex-1 h-11"
                   disabled={loading}
-                  minLength={14}
-                  maxLength={15}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Digite apenas números (10 ou 11 dígitos)
-                </p>
-              </div>
-
-              <div>
-                <Label htmlFor="password">Senha</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Mínimo 6 caracteres"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="mt-2"
-                  required
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1 h-11 bg-gradient-hero border-0 hover:opacity-90"
                   disabled={loading}
-                  minLength={6}
-                />
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                      Cadastrando...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Cadastrar Usuário
+                    </>
+                  )}
+                </Button>
               </div>
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading}
-              >
-                {loading ? 'Cadastrando...' : 'Cadastrar Usuário'}
-              </Button>
             </form>
-
-            <div className="mt-6 text-center">
-              <Button
-                variant="outline"
-                onClick={() => navigate(-1)}
-                className="w-full"
-                disabled={loading}
-              >
-                Voltar
-              </Button>
-            </div>
           </Card>
         </div>
       </div>
