@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, X, User, Users, LogOut, Settings, Search, Calendar, MessageSquare, LayoutDashboard, GraduationCap } from "lucide-react";
+import { Menu, X, User, Users, LogOut, Settings, Search, Calendar, MessageSquare, LayoutDashboard, GraduationCap, Home } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -55,6 +55,13 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <NavLink
+              to="/"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              activeClassName="text-primary font-medium"
+            >
+              Home
+            </NavLink>
+            <NavLink
               to="/mentors"
               className="text-muted-foreground hover:text-foreground transition-colors"
               activeClassName="text-primary font-medium"
@@ -70,13 +77,15 @@ const Navbar = () => {
                 Minhas Sessões
               </NavLink>
             )}
-            <NavLink
-              to="/dashboard-mentor"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              activeClassName="text-primary font-medium"
-            >
-              Dashboard Mentor
-            </NavLink>
+            {isAuthenticated && (
+              <NavLink
+                to="/dashboard-mentor"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                activeClassName="text-primary font-medium"
+              >
+                Dashboard Mentor
+              </NavLink>
+            )}
             <NavLink
               to="/testar-chatbot"
               className="text-muted-foreground hover:text-foreground transition-colors"
@@ -119,6 +128,16 @@ const Navbar = () => {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => {
+                      navigate("/");
+                      setMobileMenuOpen(false);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    <Home className="mr-2 h-4 w-4" />
+                    <span>Home</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
                       navigate("/mentors");
@@ -245,6 +264,14 @@ const Navbar = () => {
           <div className="md:hidden py-4 border-t border-border">
             <div className="flex flex-col space-y-4">
               <NavLink
+                to="/"
+                className="text-muted-foreground hover:text-foreground transition-colors py-2"
+                activeClassName="text-primary font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Home
+              </NavLink>
+              <NavLink
                 to="/mentors"
                 className="text-muted-foreground hover:text-foreground transition-colors py-2"
                 activeClassName="text-primary font-medium"
@@ -262,14 +289,16 @@ const Navbar = () => {
                   Minhas Sessões
                 </NavLink>
               )}
-              <NavLink
-                to="/dashboard-mentor"
-                className="text-muted-foreground hover:text-foreground transition-colors py-2"
-                activeClassName="text-primary font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Dashboard Mentor
-              </NavLink>
+              {isAuthenticated && (
+                <NavLink
+                  to="/dashboard-mentor"
+                  className="text-muted-foreground hover:text-foreground transition-colors py-2"
+                  activeClassName="text-primary font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Dashboard Mentor
+                </NavLink>
+              )}
               <NavLink
                 to="/testar-chatbot"
                 className="text-muted-foreground hover:text-foreground transition-colors py-2"

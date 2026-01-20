@@ -5,12 +5,14 @@ import { Star, MapPin, Briefcase, Award, Calendar } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { useMentorById } from "../hooks/useMentorById";
+import { useAuth } from "@/contexts/AuthContext";
 
 const MentorProfile = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const mentorId = id || '';
   const { data: mentor, isLoading, error } = useMentorById(mentorId);
+  const { isAuthenticated } = useAuth();
 
   // Mock data - fallback
   const fallbackMentor = {
@@ -137,12 +139,21 @@ const MentorProfile = () => {
                   </Badge>
                 </div>
 
-                <Button 
-                  className="w-full bg-gradient-hero border-0 hover:opacity-90 text-lg py-6"
-                  onClick={() => navigate(`/agendar/${displayMentor.id}`)}
-                >
-                  Agendar Sessão
-                </Button>
+                {isAuthenticated ? (
+                  <Button 
+                    className="w-full bg-gradient-hero border-0 hover:opacity-90 text-lg py-6"
+                    onClick={() => navigate(`/agendar/${displayMentor.id}`)}
+                  >
+                    Agendar Sessão
+                  </Button>
+                ) : (
+                  <Button 
+                    className="w-full bg-gradient-hero border-0 hover:opacity-90 text-lg py-6"
+                    onClick={() => navigate('/login')}
+                  >
+                    Entre para Agendar Mentoria
+                  </Button>
+                )}
               </Card>
             </div>
 

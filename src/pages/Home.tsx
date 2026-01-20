@@ -88,7 +88,9 @@ const Home = () => {
               </div>
               <div className="absolute -bottom-6 -left-6 bg-card p-4 rounded-xl shadow-lg border border-border">
                 <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-hero"></div>
+                  <div className="w-12 h-12 rounded-full bg-gradient-hero flex items-center justify-center">
+                    <Users className="w-6 h-6 text-white" />
+                  </div>
                   <div>
                     <p className="font-semibold">500+ Mentores</p>
                     <p className="text-sm text-muted-foreground">Especialistas disponíveis</p>
