@@ -247,20 +247,19 @@ export class SessionRepository implements ISessionRepository {
       }
 
       // Monta o body conforme a especificação da API
-      // A API espera: mentorId, planId (opcional), scheduledAt (UTC), duration, notes, timezone
+      // A API espera: mentorId, planId (opcional), scheduledAt (UTC), duration, notes
+      // O timezone é usado apenas no frontend para converter o horário local para UTC
       const requestBody: {
         mentorId: string;
         planId: string | null;
         scheduledAt: string;
         duration: number;
         notes?: string;
-        timezone?: string;
       } = {
         mentorId: data.mentorId,
         planId: null,
         scheduledAt,
         duration: 60, // Duração padrão de 1 hora (60 minutos)
-        timezone, // Envia timezone para o backend processar
       };
 
       // Adiciona notes se fornecido

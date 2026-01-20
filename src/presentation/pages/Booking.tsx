@@ -142,9 +142,8 @@ const Booking = () => {
       });
 
       toast.success("Sessão agendada com sucesso!");
-      setTimeout(() => {
-        navigate('/minhas-sessoes');
-      }, 1500);
+      // Redireciona imediatamente para a página de minhas sessões
+      navigate('/minhas-sessoes');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao agendar sessão';
       toast.error(message);
