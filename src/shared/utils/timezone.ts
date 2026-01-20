@@ -41,11 +41,11 @@ export function convertLocalToUtc(
   // Cria uma string representando a data/hora local no formato ISO
   const localDateTimeString = `${year}-${month}-${day}T${hoursStr}:${minutesStr}:00`;
 
-  // Método mais direto: usa uma data de referência para calcular o offset do timezone
-  // Cria uma data temporária em UTC
+  // Método mais simples e confiável:
+  // 1. Cria uma data assumindo que a string está em UTC
   const tempUtc = new Date(localDateTimeString + 'Z');
   
-  // Formata essa data no timezone especificado para obter o que seria a hora local
+  // 2. Formata essa data no timezone especificado para ver o que aparece
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: timezone,
     year: 'numeric',
@@ -64,21 +64,23 @@ export function convertLocalToUtc(
   const tzHour = parseInt(parts.find(p => p.type === 'hour')!.value);
   const tzMinute = parseInt(parts.find(p => p.type === 'minute')!.value);
   
-  // Cria uma data UTC com os valores que apareceriam no timezone
+  // 3. Cria uma data UTC com os valores que apareceriam no timezone
   const tzAsUtc = new Date(Date.UTC(tzYear, tzMonth, tzDay, tzHour, tzMinute));
   
-  // Calcula o offset: diferença entre tempUtc e tzAsUtc
+  // 4. Calcula o offset: diferença entre tempUtc e tzAsUtc
+  // Se tempUtc é 14:00 UTC e no timezone aparece como 11:00, então offset = 3 horas
   const offsetMs = tempUtc.getTime() - tzAsUtc.getTime();
   
-  // Agora cria a data final que queremos converter
-  // Assumimos que localDateTimeString está no timezone especificado
-  // Criamos uma data UTC que representa esse momento
+  // 5. Agora queremos converter: se no timezone é 14:00, qual é o UTC?
+  // Criamos uma data local assumindo que está no timezone
   const targetLocal = new Date(`${year}-${month}-${day}T${hoursStr}:${minutesStr}:00`);
   
-  // Ajusta pelo offset para obter o UTC correto
-  // Se o timezone está atrás de UTC (offset negativo), adicionamos o offset
-  // Se o timezone está à frente de UTC (offset positivo), subtraímos o offset
-  const utcTime = targetLocal.getTime() - offsetMs;
+  // 6. Ajusta pelo offset para obter o UTC correto
+  // Se o timezone está atrás de UTC (offset negativo, ex: UTC-3), 
+  // então para ter 14:00 no timezone, precisamos de 17:00 UTC (14 + 3)
+  // offsetMs será positivo (ex: 3 horas = 10800000 ms)
+  // Então: utcTime = targetLocal + offsetMs
+  const utcTime = targetLocal.getTime() + offsetMs;
   
   return new Date(utcTime).toISOString();
 }

@@ -13,6 +13,7 @@ import { useMentorById } from "../hooks/useMentorById";
 import { useCreateSession } from "../hooks/useCreateSession";
 import { useMentorAvailability } from "../hooks/useMentorAvailability";
 import { Availability } from "@domain/entities/Availability.entity";
+import { convertLocalToUtc } from "@shared/utils/timezone";
 
 const Booking = () => {
   const { id } = useParams<{ id: string }>();
@@ -120,14 +121,22 @@ const Booking = () => {
     }
 
     try {
-      const dateTime = new Date(date);
-      const [hours, minutes] = selectedTime.split(':');
-      dateTime.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+      // Converte data para string YYYY-MM-DD
+      const dateStr = date.toISOString().split('T')[0];
+      
+      // Timezone padrão America/Sao_Paulo
+      const timezone = 'America/Sao_Paulo';
+      
+      // Converte horário local para UTC usando a função correta
+      // A função convertLocalToUtc já faz a conversão considerando o timezone
+      const scheduledAtUtc = convertLocalToUtc(dateStr, selectedTime, timezone);
 
+      // Envia scheduledAt em UTC diretamente, sem tratamento no frontend
+      // O backend receberá o horário em UTC e o timezone para fazer o tratamento necessário
       await createSession.mutateAsync({
         mentorId: mentor.id,
-        date: dateTime.toISOString(),
-        time: selectedTime,
+        scheduledAt: scheduledAtUtc, // Horário em UTC (ISO datetime)
+        timezone, // Timezone para o backend processar
         topic: topic.trim(),
         notes: notes.trim() || undefined,
       });

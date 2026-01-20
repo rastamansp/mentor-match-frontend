@@ -24,15 +24,17 @@ export class CreateSessionUseCase {
     // Obtém timezone (padrão America/Sao_Paulo)
     const timezone = validated.timezone || 'America/Sao_Paulo';
 
-    // Create session (timezone será usado no repositório para converter para UTC)
+    // Create session
+    // Se scheduledAt foi fornecido, usa diretamente; senão, usa date + time
     const session = await this.sessionRepository.create({
       mentorId: validated.mentorId,
       userId,
-      date: validated.date,
-      time: validated.time,
+      date: validated.date || '',
+      time: validated.time || '',
       topic: validated.topic,
       notes: validated.notes,
       price: mentor.price || mentor.pricePerHour,
+      scheduledAt: validated.scheduledAt, // Passa scheduledAt em UTC se fornecido
       timezone, // Passa timezone para o repositório
     } as any);
 

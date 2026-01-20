@@ -232,25 +232,35 @@ export class SessionRepository implements ISessionRepository {
         'Authorization': `Bearer ${token.trim()}`, // Remove espaços extras
       };
 
-      // Obtém timezone (padrão America/Sao_Paulo)
+      // Verifica se scheduledAt já foi fornecido (em UTC) ou se precisa converter
+      let scheduledAt: string;
       const timezone = (data as any).timezone || 'America/Sao_Paulo';
       
-      // Converte date + time + timezone para scheduledAt (ISO datetime UTC)
-      const scheduledAt = this.combineDateAndTimeToUtc(data.date, data.time, timezone);
+      if ((data as any).scheduledAt) {
+        // Se scheduledAt já foi fornecido em UTC, usa diretamente
+        scheduledAt = (data as any).scheduledAt;
+        this.logger.debug('Using provided scheduledAt in UTC', { scheduledAt, timezone });
+      } else {
+        // Caso contrário, converte date + time + timezone para scheduledAt (ISO datetime UTC)
+        scheduledAt = this.combineDateAndTimeToUtc(data.date, data.time, timezone);
+        this.logger.debug('Converted date+time to UTC', { date: data.date, time: data.time, timezone, scheduledAt });
+      }
 
       // Monta o body conforme a especificação da API
-      // A API espera: mentorId, planId (opcional), scheduledAt (UTC), duration, notes
+      // A API espera: mentorId, planId (opcional), scheduledAt (UTC), duration, notes, timezone
       const requestBody: {
         mentorId: string;
         planId: string | null;
         scheduledAt: string;
         duration: number;
         notes?: string;
+        timezone?: string;
       } = {
         mentorId: data.mentorId,
         planId: null,
         scheduledAt,
         duration: 60, // Duração padrão de 1 hora (60 minutos)
+        timezone, // Envia timezone para o backend processar
       };
 
       // Adiciona notes se fornecido
