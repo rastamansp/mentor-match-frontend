@@ -3,6 +3,7 @@ import { Mentor, MentorSchema } from '@domain/entities/Mentor.entity';
 import { NotFoundError } from '@domain/errors/NotFoundError';
 import { ILogger } from '../logging/Logger';
 import { UpdateMentorDto } from '@application/dto/UpdateMentorDto';
+import { CreateMentorDto } from '@application/dto/CreateMentorDto';
 
 interface ApiMentorResponse {
   id: string;
@@ -190,6 +191,45 @@ export class MentorRepository implements IMentorRepository {
   async search(query: string): Promise<Mentor[]> {
     this.logger.debug('Searching mentors', { query });
     return this.findAll({ searchTerm: query });
+  }
+
+  async create(dto: CreateMentorDto): Promise<Mentor> {
+    this.logger.debug('Creating mentor', { dto });
+
+    try {
+      const url = `${this.apiUrl}/mentors`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(dto),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.error('Failed to create mentor', new Error(`HTTP ${response.status}: ${errorText}`));
+        
+        if (response.status === 401) {
+          throw new Error('Não autenticado. Por favor, faça login novamente.');
+        }
+        if (response.status === 403) {
+          throw new Error('Você não tem permissão para criar mentores.');
+        }
+        
+        throw new Error(`Erro ao criar mentor: ${response.status} ${response.statusText}`);
+      }
+
+      const apiMentor: ApiMentorResponse = await response.json();
+      const mentor = this.mapApiMentorToMentor(apiMentor);
+      const validatedMentor = MentorSchema.parse(mentor);
+
+      this.logger.info('Mentor created successfully', { id: validatedMentor.id });
+
+      return validatedMentor;
+    } catch (error) {
+      this.logger.error('Error creating mentor', error as Error);
+      throw error;
+    }
   }
 
   private getAuthHeaders(): HeadersInit {

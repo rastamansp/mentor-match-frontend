@@ -23,6 +23,7 @@ import AdminEditUser from "./presentation/pages/AdminEditUser";
 import AdminMentors from "./presentation/pages/AdminMentors";
 import AdminMentorAvailability from "./presentation/pages/AdminMentorAvailability";
 import AdminEditMentor from "./presentation/pages/AdminEditMentor";
+import AdminCreateMentor from "./presentation/pages/AdminCreateMentor";
 
 const queryClient = new QueryClient();
 
@@ -83,6 +84,11 @@ const App = () => (
             <Route path="/admin/mentors" element={
               <ProtectedRoute requireAdmin={true}>
                 <AdminMentors />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/mentors/create" element={
+              <ProtectedRoute requireAdmin={true}>
+                <AdminCreateMentor />
               </ProtectedRoute>
             } />
             <Route path="/admin/mentors/:id/availability" element={

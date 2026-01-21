@@ -10,6 +10,7 @@ import { UserRepository } from '@infrastructure/repositories/UserRepository';
 import { ListMentorsUseCase } from '@application/use-cases/mentors/ListMentors.usecase';
 import { GetMentorByIdUseCase } from '@application/use-cases/mentors/GetMentorById.usecase';
 import { SearchMentorsUseCase } from '@application/use-cases/mentors/SearchMentors.usecase';
+import { CreateMentorUseCase } from '@application/use-cases/mentors/CreateMentor.usecase';
 import { UpdateMentorUseCase } from '@application/use-cases/mentors/UpdateMentor.usecase';
 import { DeleteMentorUseCase } from '@application/use-cases/mentors/DeleteMentor.usecase';
 import { CreateSessionUseCase } from '@application/use-cases/sessions/CreateSession.usecase';
@@ -49,6 +50,7 @@ class Container {
   private _listMentorsUseCase: ListMentorsUseCase | null = null;
   private _getMentorByIdUseCase: GetMentorByIdUseCase | null = null;
   private _searchMentorsUseCase: SearchMentorsUseCase | null = null;
+  private _createMentorUseCase: CreateMentorUseCase | null = null;
   private _updateMentorUseCase: UpdateMentorUseCase | null = null;
   private _deleteMentorUseCase: DeleteMentorUseCase | null = null;
   private _createSessionUseCase: CreateSessionUseCase | null = null;
@@ -138,6 +140,13 @@ class Container {
       this._searchMentorsUseCase = new SearchMentorsUseCase(this.mentorRepository);
     }
     return this._searchMentorsUseCase;
+  }
+
+  get createMentorUseCase(): CreateMentorUseCase {
+    if (!this._createMentorUseCase) {
+      this._createMentorUseCase = new CreateMentorUseCase(this.mentorRepository);
+    }
+    return this._createMentorUseCase;
   }
 
   get updateMentorUseCase(): UpdateMentorUseCase {

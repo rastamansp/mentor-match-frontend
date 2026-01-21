@@ -11,7 +11,7 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { Search, Calendar, Loader2, Users, Edit } from 'lucide-react';
+import { Search, Calendar, Loader2, Users, Edit, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { useMentors } from '../hooks/useMentors';
@@ -100,11 +100,20 @@ const AdminMentors = () => {
       
       <div className="pt-24 pb-16 px-4">
         <div className="container mx-auto max-w-7xl">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-4">Administração de Mentores</h1>
-            <p className="text-lg text-muted-foreground">
-              Gerencie disponibilidades de agendamento dos mentores
-            </p>
+          <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-4xl font-bold mb-4">Administração de Mentores</h1>
+              <p className="text-lg text-muted-foreground">
+                Gerencie disponibilidades de agendamento dos mentores
+              </p>
+            </div>
+            <Button
+              onClick={() => navigate('/admin/mentors/create')}
+              className="bg-gradient-hero border-0 hover:opacity-90"
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Criar Novo Mentor
+            </Button>
           </div>
 
           {/* Filtros e Busca */}

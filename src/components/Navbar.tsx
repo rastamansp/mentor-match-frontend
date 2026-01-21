@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, X, User, Users, LogOut, Settings, Search, Calendar, MessageSquare, LayoutDashboard, GraduationCap, Home } from "lucide-react";
+import { Menu, X, User, Users, LogOut, Search, Calendar, LayoutDashboard, GraduationCap, Home } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -86,13 +86,6 @@ const Navbar = () => {
                 Dashboard Mentor
               </NavLink>
             )}
-            <NavLink
-              to="/testar-chatbot"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              activeClassName="text-primary font-medium"
-            >
-              Testar Chatbot
-            </NavLink>
           </div>
 
           {/* Desktop Actions */}
@@ -178,29 +171,9 @@ const Navbar = () => {
                     <LayoutDashboard className="mr-2 h-4 w-4" />
                     <span>Dashboard Mentor</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      navigate("/testar-chatbot");
-                      setMobileMenuOpen(false);
-                    }}
-                    className="cursor-pointer"
-                  >
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    <span>Testar Chatbot</span>
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   {isAdmin && (
                     <>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          navigate("/admin/register-user");
-                          setMobileMenuOpen(false);
-                        }}
-                        className="cursor-pointer"
-                      >
-                        <User className="mr-2 h-4 w-4" />
-                        <span>Cadastrar Usuário</span>
-                      </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
                           navigate("/admin/users");
@@ -224,16 +197,6 @@ const Navbar = () => {
                       <DropdownMenuSeparator />
                     </>
                   )}
-                  <DropdownMenuItem
-                    onClick={() => {
-                      navigate("/perfil");
-                      setMobileMenuOpen(false);
-                    }}
-                    className="cursor-pointer"
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Perfil</span>
-                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={handleLogout}
                     className="text-destructive focus:text-destructive cursor-pointer"
@@ -299,14 +262,6 @@ const Navbar = () => {
                   Dashboard Mentor
                 </NavLink>
               )}
-              <NavLink
-                to="/testar-chatbot"
-                className="text-muted-foreground hover:text-foreground transition-colors py-2"
-                activeClassName="text-primary font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Testar Chatbot
-              </NavLink>
               {isAuthenticated ? (
                 <div className="flex flex-col space-y-2 pt-4 border-t border-border">
                   <div className="flex items-center space-x-3 px-2 py-2">
@@ -328,15 +283,6 @@ const Navbar = () => {
                   {isAdmin && (
                     <>
                       <NavLink
-                        to="/admin/register-user"
-                        className="text-muted-foreground hover:text-foreground transition-colors py-2 flex items-center"
-                        activeClassName="text-primary font-medium"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <User className="mr-2 h-4 w-4" />
-                        Cadastrar Usuário
-                      </NavLink>
-                      <NavLink
                         to="/admin/users"
                         className="text-muted-foreground hover:text-foreground transition-colors py-2 flex items-center"
                         activeClassName="text-primary font-medium"
@@ -356,15 +302,6 @@ const Navbar = () => {
                       </NavLink>
                     </>
                   )}
-                  <NavLink
-                    to="/perfil"
-                    className="text-muted-foreground hover:text-foreground transition-colors py-2 flex items-center"
-                    activeClassName="text-primary font-medium"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    Perfil
-                  </NavLink>
                   <button
                     onClick={handleLogout}
                     className="text-destructive hover:text-destructive/80 transition-colors py-2 flex items-center text-left"

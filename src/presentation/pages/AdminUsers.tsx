@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Edit, Shield, Loader2 } from 'lucide-react';
+import { Search, Edit, Shield, Loader2, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { useUsers } from '../hooks/useUsers';
@@ -138,11 +138,20 @@ const AdminUsers = () => {
       
       <div className="pt-24 pb-16 px-4">
         <div className="container mx-auto max-w-7xl">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-4">Administração de Usuários</h1>
-            <p className="text-lg text-muted-foreground">
-              Gerencie todos os usuários da plataforma
-            </p>
+          <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-4xl font-bold mb-4">Administração de Usuários</h1>
+              <p className="text-lg text-muted-foreground">
+                Gerencie todos os usuários da plataforma
+              </p>
+            </div>
+            <Button
+              onClick={() => navigate('/admin/register-user')}
+              className="bg-gradient-hero border-0 hover:opacity-90"
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Cadastrar Usuário
+            </Button>
           </div>
 
           {/* Filtros e Busca */}
