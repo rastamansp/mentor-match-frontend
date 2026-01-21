@@ -121,8 +121,12 @@ const Booking = () => {
     }
 
     try {
-      // Converte data para string YYYY-MM-DD
-      const dateStr = date.toISOString().split('T')[0];
+      // Extrai a data local (sem conversão para UTC) para evitar mudança de dia
+      // Usa getFullYear(), getMonth(), getDate() para obter a data local correta
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
       
       // Timezone padrão America/Sao_Paulo
       const timezone = 'America/Sao_Paulo';

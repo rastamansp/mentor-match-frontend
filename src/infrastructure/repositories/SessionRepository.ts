@@ -658,39 +658,59 @@ export class SessionRepository implements ISessionRepository {
 
       const apiSessions: ApiSessionResponse[] = await response.json();
       
-      // Filtra por userId e converte para formato Session
-      // Busca informações dos mentores em batch (ou individualmente se necessário)
-      const sessions = await Promise.all(
-        apiSessions
-          .filter(s => s.menteeId === userId)
-          .map(async (apiSession) => {
-            // Busca informações do mentor
-            let mentorName = 'Mentor Name';
-            let mentorAvatar: string | null = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mentor';
-            
-            try {
-              const mentorUrl = `${this.apiUrl}/mentors/${apiSession.mentorId}`;
-              const mentorResponse = await fetch(mentorUrl, {
-                method: 'GET',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token.trim()}`,
-                },
+      // Filtra por userId
+      const userSessions = apiSessions.filter(s => s.menteeId === userId);
+      
+      // Otimização: busca mentores únicos apenas uma vez
+      const uniqueMentorIds = [...new Set(userSessions.map(s => s.mentorId))];
+      const mentorCache = new Map<string, { name: string; avatar: string | null }>();
+      
+      // Busca todos os mentores únicos em paralelo
+      await Promise.all(
+        uniqueMentorIds.map(async (mentorId) => {
+          try {
+            const mentorUrl = `${this.apiUrl}/mentors/${mentorId}`;
+            const mentorResponse = await fetch(mentorUrl, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token.trim()}`,
+              },
+            });
+
+            if (mentorResponse.ok) {
+              const mentorData: any = await mentorResponse.json();
+              mentorCache.set(mentorId, {
+                name: mentorData.name || 'Mentor Name',
+                avatar: mentorData.avatar || null,
               });
-
-              if (mentorResponse.ok) {
-                const mentorData: any = await mentorResponse.json();
-                mentorName = mentorData.name || 'Mentor Name';
-                mentorAvatar = mentorData.avatar || null;
-              }
-            } catch (mentorError) {
-              this.logger.warn('Could not fetch mentor data', mentorError as Error);
-              // Continua com valores padrão
+            } else {
+              // Se falhar, usa valores padrão
+              mentorCache.set(mentorId, {
+                name: 'Mentor Name',
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mentor',
+              });
             }
-
-            return this.convertApiSessionToSession(apiSession, mentorName, mentorAvatar);
-          })
+          } catch (mentorError) {
+            this.logger.warn('Could not fetch mentor data', mentorError as Error);
+            // Usa valores padrão em caso de erro
+            mentorCache.set(mentorId, {
+              name: 'Mentor Name',
+              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mentor',
+            });
+          }
+        })
       );
+      
+      // Converte sessões usando o cache de mentores
+      const sessions = userSessions.map((apiSession) => {
+        const mentorInfo = mentorCache.get(apiSession.mentorId) || {
+          name: 'Mentor Name',
+          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mentor',
+        };
+        
+        return this.convertApiSessionToSession(apiSession, mentorInfo.name, mentorInfo.avatar);
+      });
 
       return sessions;
     } catch (error) {
@@ -743,15 +763,15 @@ export class SessionRepository implements ISessionRepository {
 
       const apiSessions: ApiSessionResponse[] = await response.json();
       
-      // Converte para formato Session usando método auxiliar
-      const sessions = await Promise.all(
-        apiSessions.map(async (apiSession) => {
-          // Busca informações do mentor para preencher mentorName e mentorAvatar
-          let mentorName = 'Mentor Name';
-          let mentorAvatar: string | null = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mentor';
-          
+      // Otimização: busca mentores únicos apenas uma vez
+      const uniqueMentorIds = [...new Set(apiSessions.map(s => s.mentorId))];
+      const mentorCache = new Map<string, { name: string; avatar: string | null }>();
+      
+      // Busca todos os mentores únicos em paralelo
+      await Promise.all(
+        uniqueMentorIds.map(async (mentorId) => {
           try {
-            const mentorUrl = `${this.apiUrl}/mentors/${apiSession.mentorId}`;
+            const mentorUrl = `${this.apiUrl}/mentors/${mentorId}`;
             const mentorResponse = await fetch(mentorUrl, {
               method: 'GET',
               headers: {
@@ -762,17 +782,37 @@ export class SessionRepository implements ISessionRepository {
 
             if (mentorResponse.ok) {
               const mentorData: any = await mentorResponse.json();
-              mentorName = mentorData.name || 'Mentor Name';
-              mentorAvatar = mentorData.avatar || null;
+              mentorCache.set(mentorId, {
+                name: mentorData.name || 'Mentor Name',
+                avatar: mentorData.avatar || null,
+              });
+            } else {
+              // Se falhar, usa valores padrão
+              mentorCache.set(mentorId, {
+                name: 'Mentor Name',
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mentor',
+              });
             }
           } catch (mentorError) {
             this.logger.warn('Could not fetch mentor data', mentorError as Error);
-            // Continua com valores padrão
+            // Usa valores padrão em caso de erro
+            mentorCache.set(mentorId, {
+              name: 'Mentor Name',
+              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mentor',
+            });
           }
-
-          return this.convertApiSessionToSession(apiSession, mentorName, mentorAvatar);
         })
       );
+      
+      // Converte sessões usando o cache de mentores
+      const sessions = apiSessions.map((apiSession) => {
+        const mentorInfo = mentorCache.get(apiSession.mentorId) || {
+          name: 'Mentor Name',
+          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mentor',
+        };
+        
+        return this.convertApiSessionToSession(apiSession, mentorInfo.name, mentorInfo.avatar);
+      });
 
       this.logger.info('Sessions fetched by admin successfully', { userId, count: sessions.length });
       return sessions;
