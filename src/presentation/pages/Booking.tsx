@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { useParams, useNavigate } from "react-router-dom";
-import { Calendar as CalendarIcon, Clock, DollarSign, Video } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Video } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { toast } from "sonner";
 import { useMentorById } from "../hooks/useMentorById";
@@ -357,31 +357,12 @@ const Booking = () => {
                   )}
                 </div>
 
-                {/* Price */}
-                <div className="border-t border-border pt-6 mb-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-muted-foreground">Valor da sessão:</span>
-                    <span className="font-medium">R$ {displayMentor.pricePerHour || displayMentor.price}</span>
-                  </div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-muted-foreground">Taxa da plataforma:</span>
-                    <span className="font-medium">R$ 20</span>
-                  </div>
-                  <div className="flex items-center justify-between text-lg font-bold pt-2 border-t border-border">
-                    <span>Total:</span>
-                    <div className="flex items-center">
-                      <DollarSign className="w-5 h-5 text-accent" />
-                      <span>R$ {(displayMentor.pricePerHour || displayMentor.price) + 20}</span>
-                    </div>
-                  </div>
-                </div>
-
                 <Button 
                   className="w-full bg-gradient-hero border-0 hover:opacity-90 text-lg py-6"
                   onClick={handleBooking}
                   disabled={createSession.isPending}
                 >
-                  {createSession.isPending ? 'Agendando...' : 'Confirmar e Pagar'}
+                  {createSession.isPending ? 'Agendando...' : 'Agendar Sessão'}
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground mt-4">
