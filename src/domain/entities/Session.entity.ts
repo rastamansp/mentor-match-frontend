@@ -14,6 +14,7 @@ export const SessionSlotSchema = z.object({
   rescheduleFromSlotId: z.string().nullable().optional(),
   provider: z.string().nullable().optional(),
   providerMeetingId: z.string().nullable().optional(),
+  providerMeetingUuid: z.string().nullable().optional(),
   providerJoinUrl: z.string().nullable().optional(),
   providerPayload: z.any().nullable().optional(),
   createdAt: z.string().datetime(),
@@ -49,6 +50,7 @@ export const SessionSchema = z.object({
   duration: z.number().optional(), // Computado do activeSlot
   zoomLink: z.string().nullable().optional(), // Computado do activeSlot
   zoomMeetingId: z.string().nullable().optional(), // Computado do activeSlot
+  providerMeetingUuid: z.string().nullable().optional(), // UUID da reunião do Zoom para buscar resumo
 });
 
 export type Session = z.infer<typeof SessionSchema>;

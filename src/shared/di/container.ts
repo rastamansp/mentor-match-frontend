@@ -21,6 +21,7 @@ import { CancelSessionUseCase } from '@application/use-cases/sessions/CancelSess
 import { ListUserSessionsUseCase } from '@application/use-cases/sessions/ListUserSessions.usecase';
 import { ListUserSessionsAdminUseCase } from '@application/use-cases/sessions/ListUserSessionsAdmin.usecase';
 import { GetSessionByIdUseCase } from '@application/use-cases/sessions/GetSessionById.usecase';
+import { GetSessionSummaryUseCase } from '@application/use-cases/sessions/GetSessionSummary.usecase';
 import { LoginUseCase } from '@application/use-cases/auth/Login.usecase';
 import { RegisterUseCase } from '@application/use-cases/auth/Register.usecase';
 import { RegisterWithRoleUseCase } from '@application/use-cases/auth/RegisterWithRole.usecase';
@@ -61,6 +62,7 @@ class Container {
   private _listUserSessionsUseCase: ListUserSessionsUseCase | null = null;
   private _listUserSessionsAdminUseCase: ListUserSessionsAdminUseCase | null = null;
   private _getSessionByIdUseCase: GetSessionByIdUseCase | null = null;
+  private _getSessionSummaryUseCase: GetSessionSummaryUseCase | null = null;
   private _loginUseCase: LoginUseCase | null = null;
   private _registerUseCase: RegisterUseCase | null = null;
   private _registerWithRoleUseCase: RegisterWithRoleUseCase | null = null;
@@ -223,6 +225,13 @@ class Container {
       this._getSessionByIdUseCase = new GetSessionByIdUseCase(this.sessionRepository);
     }
     return this._getSessionByIdUseCase;
+  }
+
+  get getSessionSummaryUseCase(): GetSessionSummaryUseCase {
+    if (!this._getSessionSummaryUseCase) {
+      this._getSessionSummaryUseCase = new GetSessionSummaryUseCase(this.sessionRepository);
+    }
+    return this._getSessionSummaryUseCase;
   }
 
   get loginUseCase(): LoginUseCase {

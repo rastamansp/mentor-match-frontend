@@ -3,9 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Clock, User, MessageSquare, Video, Loader2, Edit, ExternalLink, History, CheckCircle2, XCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, User, MessageSquare, Video, Loader2, Edit, ExternalLink, History, CheckCircle2, XCircle, FileText } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { useSessionById } from '../hooks/useSessionById';
+import { useSessionSummary } from '../hooks/useSessionSummary';
 import EditSessionDialog from '../components/EditSessionDialog';
 import { useQueryClient } from '@tanstack/react-query';
 import { useConfirmSession } from '../hooks/useConfirmSession';
@@ -31,6 +32,11 @@ const SessionDetails = () => {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const confirmSession = useConfirmSession(id || '');
   const cancelSession = useCancelSession(id || '');
+
+  // Extrai o meeting_uuid do providerMeetingUuid do activeSlot
+  const meetingUuid = session?.activeSlot?.providerMeetingUuid || null;
+  
+  const { data: summary, isLoading: isLoadingSummary, error: summaryError } = useSessionSummary(meetingUuid);
 
   if (isLoading) {
     return (
@@ -417,10 +423,142 @@ const SessionDetails = () => {
                         <p className="font-mono text-xs">{session.activeSlot.providerMeetingId}</p>
                       </div>
                     )}
+                    {session.activeSlot.providerMeetingUuid && (
+                      <div>
+                        <p className="text-muted-foreground mb-1">UUID da Reunião</p>
+                        <p className="font-mono text-xs break-all">{session.activeSlot.providerMeetingUuid}</p>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
             </Card>
+
+            {/* Card de Resumo da Reunião */}
+            <Card className="p-6">
+              <div className="flex items-start gap-3 mb-4">
+                <FileText className="w-5 h-5 text-primary mt-0.5" />
+                <h3 className="text-xl font-semibold">Resumo da Reunião</h3>
+              </div>
+              
+              {!meetingUuid ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    Resumo da reunião não disponível. O resumo será exibido após a conclusão da sessão.
+                  </p>
+                </div>
+              ) : isLoadingSummary ? (
+                <div className="flex justify-center items-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : summaryError ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    {summaryError instanceof Error 
+                      ? summaryError.message 
+                      : 'Não foi possível carregar o resumo da reunião'}
+                  </p>
+                </div>
+              ) : summary ? (
+                  <div className="space-y-6">
+                    {/* Informações da Reunião */}
+                    <div className="grid md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground mb-1">Tópico</p>
+                        <p className="font-medium">{summary.meeting_topic}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground mb-1">Host</p>
+                        <p className="font-medium">{summary.meeting_host_email}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground mb-1">Início</p>
+                        <p className="font-medium">
+                          {new Date(summary.meeting_start_time).toLocaleString('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground mb-1">Fim</p>
+                        <p className="font-medium">
+                          {new Date(summary.meeting_end_time).toLocaleString('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Visão Geral */}
+                    {summary.summary_overview && (
+                      <div>
+                        <h4 className="font-semibold mb-2">Visão Geral</h4>
+                        <p className="text-muted-foreground whitespace-pre-wrap">{summary.summary_overview}</p>
+                      </div>
+                    )}
+
+                    {/* Detalhes do Resumo */}
+                    {summary.summary_details && summary.summary_details.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold mb-3">Detalhes</h4>
+                        <div className="space-y-4">
+                          {summary.summary_details.map((detail, index) => (
+                            <div key={index} className="border-l-4 border-primary pl-4">
+                              <h5 className="font-medium mb-1">{detail.label}</h5>
+                              <p className="text-muted-foreground text-sm whitespace-pre-wrap">{detail.summary}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Próximas Etapas */}
+                    {summary.next_steps && summary.next_steps.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold mb-3">Próximas Etapas</h4>
+                        <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                          {summary.next_steps.map((step, index) => (
+                            <li key={index}>{step}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Conteúdo Completo do Resumo */}
+                    {summary.summary_content && (
+                      <div>
+                        <h4 className="font-semibold mb-3">Resumo Completo</h4>
+                        <div className="text-muted-foreground whitespace-pre-wrap">
+                          {summary.summary_content}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Link do Documento */}
+                    {summary.summary_doc_url && (
+                      <div className="pt-4 border-t">
+                        <a
+                          href={summary.summary_doc_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline flex items-center gap-2"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          Ver documento completo no Zoom
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+              </Card>
           </div>
         </div>
       </div>

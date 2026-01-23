@@ -3,6 +3,8 @@ import { Session, SessionSchema, SessionSlot } from '@domain/entities/Session.en
 import { NotFoundError } from '@domain/errors/NotFoundError';
 import { ILogger } from '../logging/Logger';
 import { convertLocalToUtc, convertUtcToLocal, calculateEndAtUtc } from '@shared/utils/timezone';
+import { SessionSummaryDto } from '@application/dto/SessionSummaryDto';
+import { validateSessionSummary } from '@application/validators/SessionSummaryValidator';
 
 interface ApiSessionSlot {
   id: string;
@@ -18,6 +20,7 @@ interface ApiSessionSlot {
   rescheduleFromSlotId?: string | null;
   provider?: string | null;
   providerMeetingId?: string | number | null; // Backend pode retornar número ou string
+  providerMeetingUuid?: string | null;
   providerJoinUrl?: string | null;
   providerPayload?: any | null;
   createdAt: string;
@@ -40,6 +43,7 @@ interface ApiSessionResponse {
   duration?: number; // Computado do activeSlot
   zoomLink?: string | null; // Computado do activeSlot
   zoomMeetingId?: string | number | null; // Computado do activeSlot (pode vir como número do backend)
+  providerMeetingUuid?: string | null; // UUID da reunião do Zoom para buscar resumo
 }
 
 export class SessionRepository implements ISessionRepository {
@@ -177,6 +181,7 @@ export class SessionRepository implements ISessionRepository {
         providerMeetingId: apiSession.activeSlot.providerMeetingId != null 
           ? String(apiSession.activeSlot.providerMeetingId) 
           : null, // Converte número para string
+        providerMeetingUuid: apiSession.activeSlot.providerMeetingUuid || null,
         providerJoinUrl: apiSession.activeSlot.providerJoinUrl || null,
         providerPayload: apiSession.activeSlot.providerPayload || null,
         createdAt: apiSession.activeSlot.createdAt,
@@ -198,6 +203,7 @@ export class SessionRepository implements ISessionRepository {
         providerMeetingId: slot.providerMeetingId != null 
           ? String(slot.providerMeetingId) 
           : null, // Converte número para string
+        providerMeetingUuid: slot.providerMeetingUuid || null,
         providerJoinUrl: slot.providerJoinUrl || null,
         providerPayload: slot.providerPayload || null,
         createdAt: slot.createdAt,
@@ -209,6 +215,7 @@ export class SessionRepository implements ISessionRepository {
       zoomMeetingId: apiSession.zoomMeetingId != null 
         ? String(apiSession.zoomMeetingId) 
         : null, // Converte número para string
+      providerMeetingUuid: apiSession.providerMeetingUuid || null,
     };
 
     return SessionSchema.parse(session);
@@ -1067,6 +1074,64 @@ export class SessionRepository implements ISessionRepository {
         });
     } catch (error) {
       this.logger.error('Error fetching sessions', error as Error);
+      throw error;
+    }
+  }
+
+  async getSummary(meetingUuid: string): Promise<SessionSummaryDto> {
+    this.logger.debug('Fetching session summary', { meetingUuid });
+
+    try {
+      const url = `${this.apiUrl}/sessions/summary/${encodeURIComponent(meetingUuid)}`;
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        this.logger.error('No token found in localStorage');
+        throw new Error('Usuário não autenticado. Por favor, faça login novamente.');
+      }
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token.trim()}`,
+      };
+
+      this.logger.debug('Fetching session summary', { url, meetingUuid });
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+      });
+
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        this.logger.error('Unauthorized - token invalid or expired');
+        throw new Error('Sessão expirada. Por favor, faça login novamente.');
+      }
+
+      if (response.status === 403) {
+        this.logger.error('Forbidden - user does not have permission');
+        throw new Error('Você não tem permissão para acessar esta funcionalidade.');
+      }
+
+      if (response.status === 404) {
+        this.logger.error('Session summary not found', { meetingUuid });
+        throw new Error('Resumo da sessão não encontrado ou ainda não disponível.');
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.error('Failed to fetch session summary', new Error(`HTTP ${response.status}: ${errorText}`));
+        throw new Error(`Erro ao buscar resumo da sessão: ${response.status} ${response.statusText}`);
+      }
+
+      const summaryData = await response.json();
+      const validatedSummary = validateSessionSummary(summaryData);
+      
+      this.logger.info('Session summary fetched successfully', { meetingUuid });
+      return validatedSummary;
+    } catch (error) {
+      this.logger.error('Error fetching session summary', error as Error);
       throw error;
     }
   }

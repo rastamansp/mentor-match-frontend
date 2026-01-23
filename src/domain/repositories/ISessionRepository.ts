@@ -1,4 +1,5 @@
 import { Session } from '../entities/Session.entity';
+import { SessionSummaryDto } from '@application/dto/SessionSummaryDto';
 
 export interface CreateSessionData {
   mentorId: string;
@@ -20,5 +21,6 @@ export interface ISessionRepository {
   findByUserId(userId: string): Promise<Session[]>;
   findByUserIdAdmin(userId: string): Promise<Session[]>;
   findByMentorId(mentorId: string): Promise<Session[]>;
+  getSummary(meetingUuid: string): Promise<SessionSummaryDto>;
 }
 
