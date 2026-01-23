@@ -13,8 +13,54 @@ const MySessions = () => {
   const [activeTab, setActiveTab] = useState("upcoming");
   const { data: sessions = [], isLoading, error } = useUserSessions();
 
-  const upcomingSessions = sessions.filter(s => s.status === 'scheduled');
-  const pastSessions = sessions.filter(s => s.status === 'completed');
+  // Função auxiliar para obter a data/hora da sessão em UTC
+  const getSessionDateTime = (session: typeof sessions[0]): Date | null => {
+    // Prioridade 1: scheduledAt (já está em UTC)
+    if (session.scheduledAt) {
+      return new Date(session.scheduledAt);
+    }
+    // Prioridade 2: activeSlot.startAtUtc
+    if (session.activeSlot?.startAtUtc) {
+      return new Date(session.activeSlot.startAtUtc);
+    }
+    // Se não tiver data UTC disponível, retorna null
+    return null;
+  };
+
+  const now = new Date();
+
+  // Sessões próximas: status 'scheduled' E data/hora ainda não passou
+  const upcomingSessions = sessions.filter(s => {
+    if (s.status !== 'scheduled') return false;
+    
+    const sessionDateTime = getSessionDateTime(s);
+    // Se não tiver data/hora, considera como próxima (fallback)
+    if (!sessionDateTime) return true;
+    
+    // Verifica se a data/hora ainda não passou
+    return sessionDateTime > now;
+  });
+
+  // Sessões anteriores: status 'completed' OU status 'scheduled' mas data/hora já passou OU status 'cancelled'
+  const pastSessions = sessions.filter(s => {
+    // Sessões completadas sempre vão para anteriores
+    if (s.status === 'completed') return true;
+    
+    // Sessões canceladas também vão para anteriores
+    if (s.status === 'cancelled') return true;
+    
+    // Sessões agendadas que já passaram também vão para anteriores
+    if (s.status === 'scheduled') {
+      const sessionDateTime = getSessionDateTime(s);
+      // Se não tiver data/hora, não considera como passada (fica nas próximas)
+      if (!sessionDateTime) return false;
+      
+      // Se a data/hora já passou, considera como passada
+      return sessionDateTime <= now;
+    }
+    
+    return false;
+  });
 
   const oldUpcomingSessions = [
     {
