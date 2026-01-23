@@ -51,7 +51,7 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/dashboard-mentor" element={
-              <ProtectedRoute>
+              <ProtectedRoute requireMentorOrAdmin={true}>
                 <MentorDashboard />
               </ProtectedRoute>
             } />

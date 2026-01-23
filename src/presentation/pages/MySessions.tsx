@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, Video, MessageSquare, Download } from "lucide-react";
+import { Calendar, Clock, Video, MessageSquare, Download, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { useUserSessions } from "../hooks/useUserSessions";
@@ -17,11 +17,24 @@ const MySessions = () => {
   const getSessionDateTime = (session: typeof sessions[0]): Date | null => {
     // Prioridade 1: scheduledAt (já está em UTC)
     if (session.scheduledAt) {
-      return new Date(session.scheduledAt);
+      const date = new Date(session.scheduledAt);
+      if (isNaN(date.getTime())) return null;
+      return date;
     }
     // Prioridade 2: activeSlot.startAtUtc
     if (session.activeSlot?.startAtUtc) {
-      return new Date(session.activeSlot.startAtUtc);
+      const date = new Date(session.activeSlot.startAtUtc);
+      if (isNaN(date.getTime())) return null;
+      return date;
+    }
+    // Prioridade 3: Fallback usando o primeiro slot disponível (quando activeSlot é null)
+    if (session.slots && session.slots.length > 0) {
+      const firstSlot = session.slots[0];
+      if (firstSlot.startAtUtc) {
+        const date = new Date(firstSlot.startAtUtc);
+        if (isNaN(date.getTime())) return null;
+        return date;
+      }
     }
     // Se não tiver data UTC disponível, retorna null
     return null;
@@ -41,13 +54,13 @@ const MySessions = () => {
     return sessionDateTime > now;
   });
 
-  // Sessões anteriores: status 'completed' OU status 'scheduled' mas data/hora já passou OU status 'cancelled'
+  // Sessões anteriores: status 'completed' OU status 'scheduled' mas data/hora já passou (SEM canceladas)
   const pastSessions = sessions.filter(s => {
+    // Ignora sessões canceladas (elas vão para a aba "Canceladas")
+    if (s.status === 'cancelled') return false;
+    
     // Sessões completadas sempre vão para anteriores
     if (s.status === 'completed') return true;
-    
-    // Sessões canceladas também vão para anteriores
-    if (s.status === 'cancelled') return true;
     
     // Sessões agendadas que já passaram também vão para anteriores
     if (s.status === 'scheduled') {
@@ -61,6 +74,9 @@ const MySessions = () => {
     
     return false;
   });
+
+  // Sessões canceladas: todas as sessões com status 'cancelled'
+  const cancelledSessions = sessions.filter(s => s.status === 'cancelled');
 
   const oldUpcomingSessions = [
     {
@@ -197,12 +213,15 @@ const MySessions = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsList className="grid w-full max-w-2xl grid-cols-3">
               <TabsTrigger value="upcoming">
                 Próximas ({upcomingSessions.length})
               </TabsTrigger>
               <TabsTrigger value="past">
                 Anteriores ({pastSessions.length})
+              </TabsTrigger>
+              <TabsTrigger value="cancelled">
+                Canceladas ({cancelledSessions.length})
               </TabsTrigger>
             </TabsList>
 
@@ -315,6 +334,73 @@ const MySessions = () => {
                     </div>
                   </Card>
                 ))
+              )}
+            </TabsContent>
+
+            {/* Cancelled Sessions */}
+            <TabsContent value="cancelled" className="space-y-4">
+              {cancelledSessions.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <XCircle className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-xl font-semibold mb-2">Nenhuma sessão cancelada</h3>
+                  <p className="text-muted-foreground">
+                    Suas sessões canceladas aparecerão aqui
+                  </p>
+                </Card>
+              ) : (
+                cancelledSessions.map((session) => {
+                  const sessionDateTime = getSessionDateTime(session);
+                  const isPast = sessionDateTime ? sessionDateTime <= now : false;
+                  
+                  return (
+                    <Card key={session.id} className="p-6 border-destructive/20">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                        {/* Left Section - Mentor Info */}
+                        <div className="flex items-start space-x-4 flex-1">
+                          <img
+                            src={session.mentorAvatar}
+                            alt={session.mentorName}
+                            className="w-16 h-16 rounded-full bg-gradient-hero opacity-60"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-lg mb-1">{session.mentorName}</h3>
+                            <p className="font-medium text-foreground mb-2">{session.topic}</p>
+                            {sessionDateTime && (
+                              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                                <Calendar className="w-4 h-4" />
+                                <span>{formatDate(session.date)} às {session.time}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Middle Section - Status */}
+                        <div className="flex flex-col space-y-2 min-w-[150px]">
+                          <Badge variant="destructive" className="w-fit">
+                            Cancelada
+                          </Badge>
+                          {sessionDateTime && (
+                            <span className="text-sm text-muted-foreground">
+                              {isPast ? 'Data já passou' : 'Data futura'}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Right Section - Actions */}
+                        <div className="flex flex-col space-y-2 min-w-[200px]">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => navigate(`/sessao/${session.id}`)}
+                          >
+                            <MessageSquare className="w-4 h-4 mr-2" />
+                            Ver Detalhes
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })
               )}
             </TabsContent>
           </Tabs>

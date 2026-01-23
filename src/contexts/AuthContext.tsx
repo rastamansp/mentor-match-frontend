@@ -11,6 +11,7 @@ interface AuthContextType {
   refreshUser: () => Promise<User | null>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isMentor: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -86,6 +87,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     refreshUser,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'ADMIN',
+    isMentor: user?.role === 'MENTOR',
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -5,10 +5,11 @@ import { useAuth } from '@/contexts/AuthContext';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
+  requireMentorOrAdmin?: boolean;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin = false }) => {
-  const { isAuthenticated, isAdmin, loading } = useAuth();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin = false, requireMentorOrAdmin = false }) => {
+  const { isAuthenticated, isAdmin, isMentor, loading } = useAuth();
 
   // Verifica se há token no localStorage
   const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('token');
@@ -38,6 +39,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin 
   }
 
   if (requireAdmin && !isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (requireMentorOrAdmin && !isMentor && !isAdmin) {
     return <Navigate to="/" replace />;
   }
 

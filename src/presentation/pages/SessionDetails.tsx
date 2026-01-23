@@ -36,7 +36,21 @@ const SessionDetails = () => {
   // Extrai o meeting_uuid do providerMeetingUuid do activeSlot
   const meetingUuid = session?.activeSlot?.providerMeetingUuid || null;
   
-  const { data: summary, isLoading: isLoadingSummary, error: summaryError } = useSessionSummary(meetingUuid);
+  // Calcula se a sessão já terminou (data de agendamento + duração + 5 minutos)
+  const shouldFetchSummary = (() => {
+    if (!session?.activeSlot?.startAtUtc || !session.duration) {
+      return false;
+    }
+    
+    const startAt = new Date(session.activeSlot.startAtUtc);
+    const durationMinutes = session.duration || 60; // Default 60 minutos se não tiver
+    const endAt = new Date(startAt.getTime() + durationMinutes * 60 * 1000); // Adiciona duração em milissegundos
+    const endAtPlus5Min = new Date(endAt.getTime() + 5 * 60 * 1000); // Adiciona 5 minutos
+    
+    return endAtPlus5Min < new Date(); // Retorna true se já passou
+  })();
+  
+  const { data: summary, isLoading: isLoadingSummary, error: summaryError } = useSessionSummary(meetingUuid, shouldFetchSummary);
 
   if (isLoading) {
     return (
@@ -445,6 +459,12 @@ const SessionDetails = () => {
                 <div className="text-center py-8">
                   <p className="text-muted-foreground">
                     Resumo da reunião não disponível. O resumo será exibido após a conclusão da sessão.
+                  </p>
+                </div>
+              ) : !shouldFetchSummary ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    O resumo da reunião estará disponível após o término da sessão (data de agendamento + duração + 5 minutos).
                   </p>
                 </div>
               ) : isLoadingSummary ? (

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { container } from '@shared/di/container';
 import { SessionSummaryDto } from '@application/dto/SessionSummaryDto';
 
-export const useSessionSummary = (meetingUuid: string | undefined) => {
+export const useSessionSummary = (meetingUuid: string | undefined, enabled: boolean = true) => {
   const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('token');
 
   return useQuery<SessionSummaryDto>({
@@ -16,7 +16,7 @@ export const useSessionSummary = (meetingUuid: string | undefined) => {
       }
       return container.getSessionSummaryUseCase.execute(meetingUuid);
     },
-    enabled: !!meetingUuid && hasToken,
+    enabled: enabled && !!meetingUuid && hasToken,
     retry: false,
   });
 };

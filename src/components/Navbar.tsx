@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated, user, logout, isAdmin } = useAuth();
+  const { isAuthenticated, user, logout, isAdmin, isMentor } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -77,7 +77,7 @@ const Navbar = () => {
                 Minhas Sessões
               </NavLink>
             )}
-            {isAuthenticated && (
+            {isAuthenticated && (isMentor || isAdmin) && (
               <NavLink
                 to="/dashboard-mentor"
                 className="text-muted-foreground hover:text-foreground transition-colors"
@@ -161,16 +161,18 @@ const Navbar = () => {
                     <User className="mr-2 h-4 w-4" />
                     <span>Minha Área</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      navigate("/dashboard-mentor");
-                      setMobileMenuOpen(false);
-                    }}
-                    className="cursor-pointer"
-                  >
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    <span>Dashboard Mentor</span>
-                  </DropdownMenuItem>
+                  {(isMentor || isAdmin) && (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        navigate("/dashboard-mentor");
+                        setMobileMenuOpen(false);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      <span>Dashboard Mentor</span>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   {isAdmin && (
                     <>
@@ -252,7 +254,7 @@ const Navbar = () => {
                   Minhas Sessões
                 </NavLink>
               )}
-              {isAuthenticated && (
+              {isAuthenticated && (isMentor || isAdmin) && (
                 <NavLink
                   to="/dashboard-mentor"
                   className="text-muted-foreground hover:text-foreground transition-colors py-2"
