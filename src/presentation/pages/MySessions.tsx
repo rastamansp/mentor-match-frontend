@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, Video, MessageSquare, Download, XCircle } from "lucide-react";
+import { Calendar, Clock, Video, MessageSquare, Download, XCircle, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { useUserSessions } from "../hooks/useUserSessions";
@@ -206,10 +206,21 @@ const MySessions = () => {
       <div className="pt-24 pb-16 px-4">
         <div className="container mx-auto max-w-5xl">
           <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-4">Minhas Sessões</h1>
-            <p className="text-lg text-muted-foreground">
-              Gerencie suas mentorias agendadas e revise sessões anteriores
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+              <div>
+                <h1 className="text-4xl font-bold mb-2">Minhas Sessões</h1>
+                <p className="text-lg text-muted-foreground">
+                  Gerencie suas mentorias agendadas e revise sessões anteriores
+                </p>
+              </div>
+              <Button 
+                onClick={() => navigate('/mentors')}
+                className="w-full sm:w-auto"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Agendar Sessão
+              </Button>
+            </div>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

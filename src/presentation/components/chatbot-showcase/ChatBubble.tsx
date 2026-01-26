@@ -10,6 +10,37 @@ interface ChatBubbleProps {
   duration?: string;
 }
 
+// Função para converter URLs em links clicáveis
+const renderTextWithLinks = (text: string) => {
+  // Regex para detectar URLs
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  
+  return parts.map((part, index) => {
+    if (urlRegex.test(part)) {
+      // Remove caracteres finais que podem não fazer parte do link (pontuação)
+      const cleanUrl = part.replace(/[.,;:!?)]+$/, '');
+      const trailingChars = part.slice(cleanUrl.length);
+      
+      return (
+        <span key={index}>
+          <a 
+            href={cleanUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 underline break-all hover:text-blue-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {cleanUrl}
+          </a>
+          {trailingChars}
+        </span>
+      );
+    }
+    return <span key={index}>{part}</span>;
+  });
+};
+
 export const ChatBubble = ({ type, content, sender, timestamp, caption, duration }: ChatBubbleProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const isSent = sender === "mentee";
@@ -47,7 +78,7 @@ export const ChatBubble = ({ type, content, sender, timestamp, caption, duration
     return (
       <div className={`max-w-[75%] ${isSent ? "ml-auto" : "mr-auto"} mb-2 animate-fade-in`}>
         <div className={`${bubbleClass} px-4 py-2 shadow-sm`}>
-          <p className="text-gray-900 text-sm leading-relaxed whitespace-pre-wrap">{content}</p>
+          <p className="text-gray-900 text-sm leading-relaxed whitespace-pre-wrap">{renderTextWithLinks(content)}</p>
           <span className="text-xs text-gray-600 mt-1 block text-right">{formattedTime}</span>
         </div>
       </div>

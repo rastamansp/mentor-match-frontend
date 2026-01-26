@@ -37,14 +37,13 @@
     },
     {
       "name": "3 - Agendamento",
-      "description": "Processo de agendamento da primeira sessão",
+      "description": "Processo de agendamento de sessão com mentor",
       "messages": [
-        { "from": "concierge", "text": "Para agendarmos a primeira mentoria, preciso apenas que você me envie 2 ou 3 janelas de horário que funcionem para você.\n\nPode ser no formato:\n\n\"Terça à noite\"\n\n\"Quarta das 18h às 21h\"\n\n\"Sábado pela manhã\"\n\nO que funcionar melhor pra você." },
-        { "from": "user", "text": "Pode ser:\n\nAmanhã entre 18h e 20h\n\nQuinta das 19h às 21h\n\nSábado das 9h às 12h" },
-        { "from": "concierge", "text": "Obrigado pelas opções, Pedro.\n\nVou consultar a disponibilidade do seu mentor agora mesmo." },
-        { "from": "concierge", "text": "⏳ 3 minutos depois\n\nPerfeito, boa notícia: ele está disponível amanhã às 19h.\n\nDeseja confirmar esse horário?" },
-        { "from": "user", "text": "Sim, pode confirmar." },
-        { "from": "concierge", "text": "Ótimo, sessão confirmada. ✔️\n\nAqui está o seu link do Zoom:\n\n🔗 https://zoom.com/meeting/12345\n\nE também já enviei para o seu e-mail o convite de calendário com lembrete automático.\n\nSe precisar reagendar, é só me chamar por aqui. Estou à disposição." }
+        { "from": "concierge", "text": "Como posso ajudar você hoje? Se precisar de informações sobre suas sessões, mentores ou agendar uma nova sessão, estou à disposição!" },
+        { "from": "user", "text": "quero agendar uma sessao" },
+        { "from": "concierge", "text": "Perfeito 😊\nAqui estão os horários disponíveis para agendar uma sessão com Naiara Bertholim:\n\n📅 Quinta–feira – 22 de janeiro de 2026\n• 17:00h às 18:00h\n• 18:00h às 19:00h\n• 19:00h às 20:00h\n• 20:00h às 21:00h\n• 21:00h às 22:00h\n• 22:00h às 23:00h\n\n📅 Segunda–feira – 26 de janeiro de 2026\n• 14:00h às 15:00h\n• 15:00h às 16:00h\n• 16:00h às 17:00h\n• 17:00h às 18:00h\n\n📅 Terça–feira – 27 de janeiro de 2026\n• 09:00h às 10:00h\n• 10:00h às 11:00h\n• 11:00h às 12:00h\n• 12:00h às 13:00h\n• 13:00h às 14:00h\n• 14:00h às 15:00h\n• 15:00h às 16:00h\n• 16:00h às 17:00h\n• 17:00h às 18:00h\n\n📅 Quarta–feira – 28 de janeiro de 2026\n• 09:00h às 10:00h\n• 10:00h às 11:00h\n• 11:00h às 12:00h\n• 12:00h às 13:00h\n• 13:00h às 14:00h\n• 14:00h às 15:00h\n• 15:00h às 16:00h\n• 16:00h às 17:00h\n• 17:00h às 18:00h\n\nQuando preferir, é só me dizer o dia e horário 😊" },
+        { "from": "user", "text": "Quarta–feira – 28 de janeiro de 2026\n09:00h às 10:00h" },
+        { "from": "concierge", "text": "✅ Agendamento confirmado!\n\nSua sessão foi criada com sucesso:\n\n🧠 Mentor: Naiara Bertholim\n📅 Data: Quarta-feira, 28 de janeiro de 2026\n⏰ Horário: 09:00h\n⏳ Duração: 60 minutos\n🆔 ID da Sessão: e8495fe8-b074-4456-98d2-2de741f4b51f\n🔗 Link do Zoom: https://us06web.zoom.us/j/84748667564?pwd=Dv6WS5mBxR7BOv00ZVklsabiQbCW6n.1\n\nVocê pode usar este link para acessar a reunião no horário agendado. Se precisar de mais alguma coisa, é só avisar! 😊" }
       ]
     },
     {

@@ -137,11 +137,25 @@ export class SessionRepository implements ISessionRepository {
       zoomMeetingId = apiSession.zoomMeetingId != null 
         ? String(apiSession.zoomMeetingId) 
         : null; // Converte número para string
+    } else if (apiSession.slots && apiSession.slots.length > 0) {
+      // Fallback para o primeiro slot disponível (quando activeSlot é null mas há slots)
+      const firstSlot = apiSession.slots[0];
+      const localDateTime = convertUtcToLocal(firstSlot.startAtUtc, firstSlot.timezone);
+      dateStr = localDateTime.date;
+      timeStr = localDateTime.time;
+      scheduledAt = firstSlot.startAtUtc;
+      duration = Math.round((new Date(firstSlot.endAtUtc).getTime() - new Date(firstSlot.startAtUtc).getTime()) / (1000 * 60));
+      zoomLink = firstSlot.providerJoinUrl || null;
+      zoomMeetingId = firstSlot.providerMeetingId != null 
+        ? String(firstSlot.providerMeetingId) 
+        : null;
     } else {
-      // Fallback para data atual (não deveria acontecer)
-      const now = new Date();
-      dateStr = now.toISOString().split('T')[0];
-      timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      // Último fallback - usa createdAt se disponível, senão data atual
+      // Isso não deveria acontecer em sessões válidas
+      const fallbackDate = apiSession.createdAt ? new Date(apiSession.createdAt) : new Date();
+      dateStr = fallbackDate.toISOString().split('T')[0];
+      timeStr = `${String(fallbackDate.getUTCHours()).padStart(2, '0')}:${String(fallbackDate.getUTCMinutes()).padStart(2, '0')}`;
+      this.logger.warn('Session without activeSlot, scheduledAt or slots', { sessionId: apiSession.id });
     }
 
     // Extrai topic das notes se existir

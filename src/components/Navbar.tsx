@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, X, User, Users, LogOut, Search, Calendar, LayoutDashboard, GraduationCap, Home } from "lucide-react";
+import { Menu, X, User, Users, LogOut, Search, Calendar, LayoutDashboard, GraduationCap, Home, Bot } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -86,6 +86,13 @@ const Navbar = () => {
                 Dashboard Mentor
               </NavLink>
             )}
+            <NavLink
+              to="/testar-chatbot"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              activeClassName="text-primary font-medium"
+            >
+              Teste Chatbot
+            </NavLink>
           </div>
 
           {/* Desktop Actions */}
@@ -173,6 +180,16 @@ const Navbar = () => {
                       <span>Dashboard Mentor</span>
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuItem
+                    onClick={() => {
+                      navigate("/testar-chatbot");
+                      setMobileMenuOpen(false);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    <Bot className="mr-2 h-4 w-4" />
+                    <span>Teste Chatbot</span>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   {isAdmin && (
                     <>
@@ -264,6 +281,14 @@ const Navbar = () => {
                   Dashboard Mentor
                 </NavLink>
               )}
+              <NavLink
+                to="/testar-chatbot"
+                className="text-muted-foreground hover:text-foreground transition-colors py-2"
+                activeClassName="text-primary font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Teste Chatbot
+              </NavLink>
               {isAuthenticated ? (
                 <div className="flex flex-col space-y-2 pt-4 border-t border-border">
                   <div className="flex items-center space-x-3 px-2 py-2">

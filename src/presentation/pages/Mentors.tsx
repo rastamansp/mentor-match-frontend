@@ -7,11 +7,27 @@ import { Search, Star, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { useMentors } from "../hooks/useMentors";
+import { useUserMentors } from "../hooks/useUserMentors";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Mentors = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const { user, isAuthenticated } = useAuth();
   const { data: mentors = [], isLoading, error } = useMentors({ searchTerm: searchTerm || undefined });
+  
+  // Busca mentores associados ao usuário se estiver logado
+  const { 
+    data: userMentors = [], 
+    isLoading: isLoadingUserMentors 
+  } = useUserMentors(user?.id || '', 'ACTIVE');
+  
+  // Se o usuário estiver logado, usa os mentores associados, senão usa a lista geral
+  const mentorsToDisplay = isAuthenticated && user && userMentors.length > 0 
+    ? userMentors.map(um => um.mentor)
+    : mentors;
+  
+  const isLoadingData = isLoading || (isAuthenticated && isLoadingUserMentors);
 
   const oldMentors = [
     {
@@ -94,7 +110,7 @@ const Mentors = () => {
     }
   ];
 
-  if (isLoading) {
+  if (isLoadingData) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -125,8 +141,6 @@ const Mentors = () => {
     );
   }
 
-  const filteredMentors = mentors;
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -135,36 +149,42 @@ const Mentors = () => {
         <div className="container mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-4">Encontre seu Mentor</h1>
+            <h1 className="text-4xl font-bold mb-4">
+              {isAuthenticated && userMentors.length > 0 ? 'Meus Mentores' : 'Encontre seu Mentor'}
+            </h1>
             <p className="text-lg text-muted-foreground">
-              Conecte-se com especialistas que podem ajudar você a crescer
+              {isAuthenticated && userMentors.length > 0 
+                ? 'Mentores associados à sua conta'
+                : 'Conecte-se com especialistas que podem ajudar você a crescer'}
             </p>
           </div>
 
-          {/* Search Bar */}
-          <div className="mb-8">
-            <div className="relative max-w-2xl">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-              <Input
-                type="text"
-                placeholder="Buscar por nome, especialidade ou habilidade..."
-                className="pl-12 h-14 text-lg"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          {/* Search Bar - apenas se não estiver mostrando mentores associados */}
+          {(!isAuthenticated || userMentors.length === 0) && (
+            <div className="mb-8">
+              <div className="relative max-w-2xl">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                <Input
+                  type="text"
+                  placeholder="Buscar por nome, especialidade ou habilidade..."
+                  className="pl-12 h-14 text-lg"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Results Count */}
           <div className="mb-6">
             <p className="text-muted-foreground">
-              {filteredMentors.length} mentor{filteredMentors.length !== 1 ? 'es' : ''} encontrado{filteredMentors.length !== 1 ? 's' : ''}
+              {mentorsToDisplay.length} mentor{mentorsToDisplay.length !== 1 ? 'es' : ''} encontrado{mentorsToDisplay.length !== 1 ? 's' : ''}
             </p>
           </div>
 
           {/* Mentors Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredMentors.map((mentor) => (
+            {mentorsToDisplay.map((mentor) => (
               <Card 
                 key={mentor.id} 
                 className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col h-full"
@@ -264,14 +284,18 @@ const Mentors = () => {
           </div>
 
           {/* Empty State */}
-          {filteredMentors.length === 0 && (
+          {mentorsToDisplay.length === 0 && (
             <div className="text-center py-16">
               <p className="text-lg text-muted-foreground mb-4">
-                Nenhum mentor encontrado com esses critérios
+                {isAuthenticated && userMentors.length === 0
+                  ? 'Você ainda não possui mentores associados'
+                  : 'Nenhum mentor encontrado com esses critérios'}
               </p>
-              <Button variant="outline" onClick={() => setSearchTerm("")}>
-                Limpar Busca
-              </Button>
+              {!isAuthenticated || userMentors.length === 0 ? (
+                <Button variant="outline" onClick={() => setSearchTerm("")}>
+                  Limpar Busca
+                </Button>
+              ) : null}
             </div>
           )}
         </div>
