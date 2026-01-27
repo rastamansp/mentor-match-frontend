@@ -24,5 +24,6 @@ export interface ISessionRepository {
   findByMentorId(mentorId: string): Promise<Session[]>;
   getSummary(meetingUuid: string): Promise<SessionSummaryDto>;
   getTranscript(sessionId: string, meetingId: string): Promise<SessionTranscriptDto>;
+  sendSummaryByWhatsApp(sessionId: string): Promise<{ success: boolean; message: string }>;
 }
 

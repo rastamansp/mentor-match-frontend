@@ -23,6 +23,7 @@ import { ListUserSessionsAdminUseCase } from '@application/use-cases/sessions/Li
 import { GetSessionByIdUseCase } from '@application/use-cases/sessions/GetSessionById.usecase';
 import { GetSessionSummaryUseCase } from '@application/use-cases/sessions/GetSessionSummary.usecase';
 import { GetSessionTranscriptUseCase } from '@application/use-cases/sessions/GetSessionTranscript.usecase';
+import { SendSessionSummaryByWhatsAppUseCase } from '@application/use-cases/sessions/SendSessionSummaryByWhatsApp.usecase';
 import { LoginUseCase } from '@application/use-cases/auth/Login.usecase';
 import { RegisterUseCase } from '@application/use-cases/auth/Register.usecase';
 import { RegisterWithRoleUseCase } from '@application/use-cases/auth/RegisterWithRole.usecase';
@@ -64,6 +65,8 @@ class Container {
   private _listUserSessionsAdminUseCase: ListUserSessionsAdminUseCase | null = null;
   private _getSessionByIdUseCase: GetSessionByIdUseCase | null = null;
   private _getSessionSummaryUseCase: GetSessionSummaryUseCase | null = null;
+  private _getSessionTranscriptUseCase: GetSessionTranscriptUseCase | null = null;
+  private _sendSessionSummaryByWhatsAppUseCase: SendSessionSummaryByWhatsAppUseCase | null = null;
   private _loginUseCase: LoginUseCase | null = null;
   private _registerUseCase: RegisterUseCase | null = null;
   private _registerWithRoleUseCase: RegisterWithRoleUseCase | null = null;
@@ -240,6 +243,13 @@ class Container {
       this._getSessionTranscriptUseCase = new GetSessionTranscriptUseCase(this.sessionRepository);
     }
     return this._getSessionTranscriptUseCase;
+  }
+
+  get sendSessionSummaryByWhatsAppUseCase(): SendSessionSummaryByWhatsAppUseCase {
+    if (!this._sendSessionSummaryByWhatsAppUseCase) {
+      this._sendSessionSummaryByWhatsAppUseCase = new SendSessionSummaryByWhatsAppUseCase(this.sessionRepository);
+    }
+    return this._sendSessionSummaryByWhatsAppUseCase;
   }
 
   get loginUseCase(): LoginUseCase {

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Clock, User, MessageSquare, Video, Loader2, Edit, ExternalLink, History, CheckCircle2, XCircle, FileText } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, User, MessageSquare, Video, Loader2, Edit, ExternalLink, History, CheckCircle2, XCircle, FileText, Send } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { useSessionById } from '../hooks/useSessionById';
 import { useSessionSummary } from '../hooks/useSessionSummary';
@@ -12,6 +12,7 @@ import EditSessionDialog from '../components/EditSessionDialog';
 import { useQueryClient } from '@tanstack/react-query';
 import { useConfirmSession } from '../hooks/useConfirmSession';
 import { useCancelSession } from '../hooks/useCancelSession';
+import { useSendSessionSummaryByWhatsApp } from '../hooks/useSendSessionSummaryByWhatsApp';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +34,7 @@ const SessionDetails = () => {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const confirmSession = useConfirmSession(id || '');
   const cancelSession = useCancelSession(id || '');
+  const sendSummaryWhatsApp = useSendSessionSummaryByWhatsApp(id || '');
 
   // Extrai o meeting_uuid do providerMeetingUuid do activeSlot
   const meetingUuid = session?.activeSlot?.providerMeetingUuid || null;
@@ -487,6 +489,25 @@ const SessionDetails = () => {
                 </div>
               ) : summary ? (
                   <div className="space-y-6">
+                    <div className="flex justify-end">
+                      <Button
+                        onClick={() =>
+                          sendSummaryWhatsApp.mutate(undefined, {
+                            onSuccess: (data) => toast.success(data.message),
+                            onError: (err) =>
+                              toast.error(err instanceof Error ? err.message : 'Erro ao enviar resumo por WhatsApp.'),
+                          })
+                        }
+                        disabled={sendSummaryWhatsApp.isPending}
+                      >
+                        {sendSummaryWhatsApp.isPending ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="mr-2 h-4 w-4" />
+                        )}
+                        {sendSummaryWhatsApp.isPending ? 'Enviando...' : 'Receber Resumo'}
+                      </Button>
+                    </div>
                     {/* Informações da Reunião */}
                     <div className="grid md:grid-cols-2 gap-4 text-sm">
                       <div>

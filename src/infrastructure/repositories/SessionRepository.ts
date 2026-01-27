@@ -1213,5 +1213,59 @@ export class SessionRepository implements ISessionRepository {
       throw error;
     }
   }
+
+  async sendSummaryByWhatsApp(sessionId: string): Promise<{ success: boolean; message: string }> {
+    this.logger.debug('Sending session summary by WhatsApp', { sessionId });
+
+    try {
+      const url = `${this.apiUrl}/sessions/${sessionId}/summarize`;
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        this.logger.error('No token found in localStorage');
+        throw new Error('Usuário não autenticado. Por favor, faça login novamente.');
+      }
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token.trim()}`,
+      };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+      });
+
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        this.logger.error('Unauthorized - token invalid or expired');
+        throw new Error('Sessão expirada. Por favor, faça login novamente.');
+      }
+
+      if (response.status === 403) {
+        this.logger.error('Forbidden - user does not have permission');
+        throw new Error('Você não tem permissão para acessar esta funcionalidade.');
+      }
+
+      if (response.status === 404) {
+        this.logger.error('Session summary not found for WhatsApp', { sessionId });
+        throw new Error('Resumo da sessão não encontrado ou ainda não disponível.');
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.error('Failed to send session summary by WhatsApp', new Error(`HTTP ${response.status}: ${errorText}`));
+        throw new Error(`Erro ao enviar resumo por WhatsApp: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      this.logger.info('Session summary sent by WhatsApp successfully', { sessionId });
+      return { success: data.success ?? true, message: data.message ?? 'Resumo da sessão enviado via WhatsApp com sucesso' };
+    } catch (error) {
+      this.logger.error('Error sending session summary by WhatsApp', error as Error);
+      throw error;
+    }
+  }
 }
 
