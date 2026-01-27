@@ -4,6 +4,7 @@ import { NotFoundError } from '@domain/errors/NotFoundError';
 import { ILogger } from '../logging/Logger';
 import { convertLocalToUtc, convertUtcToLocal, calculateEndAtUtc } from '@shared/utils/timezone';
 import { SessionSummaryDto } from '@application/dto/SessionSummaryDto';
+import { SessionTranscriptDto } from '@application/dto/SessionTranscriptDto';
 import { validateSessionSummary } from '@application/validators/SessionSummaryValidator';
 
 interface ApiSessionSlot {
@@ -163,7 +164,13 @@ export class SessionRepository implements ISessionRepository {
     let notes = apiSession.notes || undefined;
     if (notes && notes.startsWith('Tópico: ')) {
       const lines = notes.split('\n');
-      topic = lines[0].replace('Tópico: ', '');
+      const rawTopic = lines[0].replace('Tópico: ', '').trim();
+      // Não usar como tópico quando for texto de slot do formulário (ex.: "Data ... Horário ...")
+      if (!rawTopic || /^Data\s+/i.test(rawTopic)) {
+        topic = '';
+      } else {
+        topic = rawTopic;
+      }
       notes = lines.slice(1).join('\n') || undefined;
     }
 
@@ -1146,6 +1153,63 @@ export class SessionRepository implements ISessionRepository {
       return validatedSummary;
     } catch (error) {
       this.logger.error('Error fetching session summary', error as Error);
+      throw error;
+    }
+  }
+
+  async getTranscript(sessionId: string, meetingId: string): Promise<SessionTranscriptDto> {
+    this.logger.debug('Fetching session transcript', { sessionId, meetingId });
+
+    try {
+      const url = `${this.apiUrl}/sessions/${sessionId}/transcript`;
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        this.logger.error('No token found in localStorage');
+        throw new Error('Usuário não autenticado. Por favor, faça login novamente.');
+      }
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token.trim()}`,
+      };
+
+      this.logger.debug('Fetching session transcript', { url, sessionId, meetingId });
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ meetingId }),
+      });
+
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        this.logger.error('Unauthorized - token invalid or expired');
+        throw new Error('Sessão expirada. Por favor, faça login novamente.');
+      }
+
+      if (response.status === 403) {
+        this.logger.error('Forbidden - user does not have permission');
+        throw new Error('Você não tem permissão para acessar esta funcionalidade.');
+      }
+
+      if (response.status === 404) {
+        this.logger.error('Session transcript not found', { sessionId, meetingId });
+        throw new Error('Transcrição da sessão não encontrada ou ainda não disponível.');
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.error('Failed to fetch session transcript', new Error(`HTTP ${response.status}: ${errorText}`));
+        throw new Error(`Erro ao buscar transcrição da sessão: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      this.logger.info('Session transcript fetched successfully', { sessionId, meetingId });
+      return data as SessionTranscriptDto;
+    } catch (error) {
+      this.logger.error('Error fetching session transcript', error as Error);
       throw error;
     }
   }

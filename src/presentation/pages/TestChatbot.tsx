@@ -88,17 +88,17 @@ const TestChatbot = () => {
           <div className="flex-1 max-w-2xl text-center lg:text-left space-y-6 animate-fade-in">
             <div className="inline-block">
               <span className="bg-primary/20 text-primary px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm">
-                🤖 Teste do Chatbot MentorMatch
+                🤖 Experimente a Plataforma MentorMatch
               </span>
             </div>
             
             <h1 className="text-5xl lg:text-7xl font-bold text-foreground leading-tight">
-              Teste o
-              <span className="block text-primary animate-gradient">Chatbot MentorMatch</span>
+              Experimente a
+              <span className="block text-primary animate-gradient">Plataforma MentorMatch</span>
             </h1>
             
             <p className="text-xl text-muted-foreground leading-relaxed max-w-xl">
-              Experimente diferentes jornadas de conversação e veja como nosso chatbot inteligente 
+              Experimente diferentes jornadas de conversação e veja como nossa plataforma 
               guia usuários desde o primeiro contato até o agendamento de sessões de mentoria.
             </p>
             

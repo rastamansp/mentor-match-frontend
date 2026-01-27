@@ -7,6 +7,7 @@ import { ArrowLeft, Calendar, Clock, User, MessageSquare, Video, Loader2, Edit, 
 import Navbar from '@/components/Navbar';
 import { useSessionById } from '../hooks/useSessionById';
 import { useSessionSummary } from '../hooks/useSessionSummary';
+import { useSessionTranscript } from '../hooks/useSessionTranscript';
 import EditSessionDialog from '../components/EditSessionDialog';
 import { useQueryClient } from '@tanstack/react-query';
 import { useConfirmSession } from '../hooks/useConfirmSession';
@@ -51,6 +52,11 @@ const SessionDetails = () => {
   })();
   
   const { data: summary, isLoading: isLoadingSummary, error: summaryError } = useSessionSummary(meetingUuid, shouldFetchSummary);
+  const { data: transcript, isLoading: isLoadingTranscript, error: transcriptError } = useSessionTranscript(
+    id || undefined,
+    meetingUuid ?? undefined,
+    shouldFetchSummary
+  );
 
   if (isLoading) {
     return (
@@ -552,33 +558,53 @@ const SessionDetails = () => {
                       </div>
                     )}
 
-                    {/* Conteúdo Completo do Resumo */}
-                    {summary.summary_content && (
-                      <div>
-                        <h4 className="font-semibold mb-3">Resumo Completo</h4>
-                        <div className="text-muted-foreground whitespace-pre-wrap">
-                          {summary.summary_content}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Link do Documento */}
-                    {summary.summary_doc_url && (
-                      <div className="pt-4 border-t">
-                        <a
-                          href={summary.summary_doc_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline flex items-center gap-2"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                          Ver documento completo no Zoom
-                        </a>
-                      </div>
-                    )}
                   </div>
                 ) : null}
               </Card>
+
+            {/* Card de Transcrição da Reunião */}
+            <Card className="p-6">
+              <div className="flex items-start gap-3 mb-4">
+                <FileText className="w-5 h-5 text-primary mt-0.5" />
+                <h3 className="text-xl font-semibold">Transcrição da Reunião</h3>
+              </div>
+
+              {!meetingUuid ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    Transcrição não disponível para esta sessão.
+                  </p>
+                </div>
+              ) : !shouldFetchSummary ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    A transcrição estará disponível após o término da sessão (data de agendamento + duração + 5 minutos).
+                  </p>
+                </div>
+              ) : isLoadingTranscript ? (
+                <div className="flex justify-center items-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : transcriptError ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    {transcriptError instanceof Error
+                      ? transcriptError.message
+                      : 'Não foi possível carregar a transcrição da reunião'}
+                  </p>
+                </div>
+              ) : transcript?.transcript_content ? (
+                <div className="max-h-96 overflow-y-auto rounded-md border bg-muted/30 p-4 text-sm font-mono whitespace-pre-wrap text-muted-foreground">
+                  {transcript.transcript_content}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    Transcrição da reunião não disponível.
+                  </p>
+                </div>
+              )}
+            </Card>
           </div>
         </div>
       </div>

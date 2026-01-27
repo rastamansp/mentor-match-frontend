@@ -22,6 +22,7 @@ import { ListUserSessionsUseCase } from '@application/use-cases/sessions/ListUse
 import { ListUserSessionsAdminUseCase } from '@application/use-cases/sessions/ListUserSessionsAdmin.usecase';
 import { GetSessionByIdUseCase } from '@application/use-cases/sessions/GetSessionById.usecase';
 import { GetSessionSummaryUseCase } from '@application/use-cases/sessions/GetSessionSummary.usecase';
+import { GetSessionTranscriptUseCase } from '@application/use-cases/sessions/GetSessionTranscript.usecase';
 import { LoginUseCase } from '@application/use-cases/auth/Login.usecase';
 import { RegisterUseCase } from '@application/use-cases/auth/Register.usecase';
 import { RegisterWithRoleUseCase } from '@application/use-cases/auth/RegisterWithRole.usecase';
@@ -232,6 +233,13 @@ class Container {
       this._getSessionSummaryUseCase = new GetSessionSummaryUseCase(this.sessionRepository);
     }
     return this._getSessionSummaryUseCase;
+  }
+
+  get getSessionTranscriptUseCase(): GetSessionTranscriptUseCase {
+    if (!this._getSessionTranscriptUseCase) {
+      this._getSessionTranscriptUseCase = new GetSessionTranscriptUseCase(this.sessionRepository);
+    }
+    return this._getSessionTranscriptUseCase;
   }
 
   get loginUseCase(): LoginUseCase {

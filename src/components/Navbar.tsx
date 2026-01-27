@@ -91,7 +91,7 @@ const Navbar = () => {
               className="text-muted-foreground hover:text-foreground transition-colors"
               activeClassName="text-primary font-medium"
             >
-              Teste Chatbot
+              Experimentar
             </NavLink>
           </div>
 
@@ -188,7 +188,7 @@ const Navbar = () => {
                     className="cursor-pointer"
                   >
                     <Bot className="mr-2 h-4 w-4" />
-                    <span>Teste Chatbot</span>
+                    <span>Experimentar</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   {isAdmin && (
@@ -287,7 +287,7 @@ const Navbar = () => {
                 activeClassName="text-primary font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Teste Chatbot
+                Experimentar
               </NavLink>
               {isAuthenticated ? (
                 <div className="flex flex-col space-y-2 pt-4 border-t border-border">

@@ -145,12 +145,14 @@ const MySessions = () => {
   ];
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    const date = dateString.includes('T')
+      ? new Date(dateString)
+      : new Date(dateString + 'T12:00:00');
+    return date.toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
   };
 
@@ -361,8 +363,7 @@ const MySessions = () => {
               ) : (
                 cancelledSessions.map((session) => {
                   const sessionDateTime = getSessionDateTime(session);
-                  const isPast = sessionDateTime ? sessionDateTime <= now : false;
-                  
+
                   return (
                     <Card key={session.id} className="p-6 border-destructive/20">
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -390,11 +391,6 @@ const MySessions = () => {
                           <Badge variant="destructive" className="w-fit">
                             Cancelada
                           </Badge>
-                          {sessionDateTime && (
-                            <span className="text-sm text-muted-foreground">
-                              {isPast ? 'Data já passou' : 'Data futura'}
-                            </span>
-                          )}
                         </div>
 
                         {/* Right Section - Actions */}

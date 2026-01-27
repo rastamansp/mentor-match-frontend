@@ -1,3 +1,11 @@
+# MentorMatch Frontend
+
+## Documentação
+
+- **[Roteiro de Demo (Jornadas do Produto)](docs/demo-jornadas.md)** — Organização das jornadas do MentorMatch para demos: cadastro, confirmação, intenção de agendar, oferta de horários e escolha do cliente.
+
+---
+
 # Welcome to your Lovable project
 
 ## Project info
