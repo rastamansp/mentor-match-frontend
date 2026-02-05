@@ -15,6 +15,7 @@ import MentorDashboard from "./presentation/pages/MentorDashboard";
 import NotFound from "./presentation/pages/NotFound";
 import Login from "./presentation/pages/Login";
 import TestChatbot from "./presentation/pages/TestChatbot";
+import ComoFunciona from "./presentation/pages/ComoFunciona";
 import Profile from "./presentation/pages/Profile";
 import MyArea from "./presentation/pages/MyArea";
 import AdminRegisterUser from "./presentation/pages/AdminRegisterUser";
@@ -56,6 +57,7 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/testar-chatbot" element={<TestChatbot />} />
+            <Route path="/como-funciona" element={<ComoFunciona />} />
             <Route path="/perfil" element={
               <ProtectedRoute>
                 <Profile />

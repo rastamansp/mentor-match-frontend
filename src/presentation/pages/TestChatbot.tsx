@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { PhoneMockup } from "@/presentation/components/chatbot-showcase/PhoneMockup";
 import { ChatInterface } from "@/presentation/components/chatbot-showcase/ChatInterface";
 import { InteractionsSelector } from "@/presentation/components/chatbot-showcase/InteractionsSelector";
@@ -12,6 +13,7 @@ interface Journey {
 }
 
 const TestChatbot = () => {
+  const navigate = useNavigate();
   const [isInteractionsOpen, setIsInteractionsOpen] = useState(false);
   const { selectedJourney, selectJourney, convertJourneyToMessages, journeys } = useInteractions();
   const phoneMockupRef = useRef<HTMLDivElement>(null);
@@ -67,12 +69,6 @@ const TestChatbot = () => {
     setIsInteractionsOpen(false); // Fecha o seletor após selecionar
   };
 
-  const handleResetChat = () => {
-    // Limpa a jornada selecionada, mas mantém o histórico de mensagens
-    // O usuário pode continuar conversando normalmente
-    selectJourney(null);
-  };
-
   const journeyMessages = selectedJourney ? convertJourneyToMessages(selectedJourney) : undefined;
   const headerName = selectedJourney ? "John — Concierge MentorMatch" : undefined;
   const headerAvatar = selectedJourney ? "🤖" : undefined;
@@ -110,11 +106,11 @@ const TestChatbot = () => {
                 Ver Jornadas de Conversação
               </button>
               {selectedJourney && (
-                <button 
-                  onClick={handleResetChat}
-                  className="bg-muted hover:bg-muted/80 text-muted-foreground px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 hover:scale-105"
+                <button
+                  onClick={() => navigate('/como-funciona')}
+                  className="bg-muted hover:bg-muted/80 text-foreground px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 hover:scale-105"
                 >
-                  Voltar ao Chat Padrão
+                  Ver Como Funciona
                 </button>
               )}
             </div>

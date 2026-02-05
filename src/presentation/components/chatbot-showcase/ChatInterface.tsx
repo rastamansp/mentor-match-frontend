@@ -8,6 +8,45 @@ import { toast } from "sonner";
 import { ChatMentor } from "@application/use-cases/chat/SendChatMessage.usecase";
 import { getChatContextFromRoute } from "@/shared/utils/chatContext";
 
+const INTENT_LABELS: Record<string, string> = {
+  GREETING: "Saudação",
+  LIST_MENTORS: "Listar Mentores",
+  LIST_SESSIONS: "Listar Sessões",
+  BOOK_SESSION: "Agendar Sessão",
+  SESSION_SUMMARY: "Resumo da Sessão",
+  FAREWELL: "Despedida",
+  UNKNOWN: "Não identificado",
+};
+
+function formatDetectIntentResponse(data: unknown): string {
+  if (data && typeof data === "object" && "intent" in data) {
+    const obj = data as { intent?: string; confidence?: number; metadata?: { keywords?: string[] } };
+    const intent = obj.intent ?? "UNKNOWN";
+    const label = INTENT_LABELS[intent] ?? intent.replace(/_/g, " ");
+    const confidence = typeof obj.confidence === "number"
+      ? Math.round(obj.confidence * 100)
+      : null;
+    const keywords = obj.metadata?.keywords;
+
+    const lines: string[] = [];
+    lines.push(`🎯 Intenção detectada: ${label}`);
+    if (confidence !== null) {
+      lines.push(`📊 Confiança: ${confidence}%`);
+    }
+    if (keywords && keywords.length > 0) {
+      lines.push(`🔑 Palavras-chave: ${keywords.join(", ")}`);
+    }
+    return lines.join("\n");
+  }
+  return (
+    (data as { answer?: string })?.answer ??
+    (data as { response?: string })?.response ??
+    (data as { message?: string })?.message ??
+    (data as { fulfillmentText?: string })?.fulfillmentText ??
+    (typeof data === "string" ? data : JSON.stringify(data))
+  );
+}
+
 interface JourneyMessage {
   id: number;
   sender: "mentor" | "mentee";
@@ -26,6 +65,8 @@ interface ChatInterfaceProps {
   headerName?: string;
   headerAvatar?: string;
   onJourneyMessagesAdded?: () => void;
+  /** Quando true, usa POST /chat/detect-intent em vez do chat padrão */
+  useDetectIntent?: boolean;
 }
 
 export const ChatInterface = ({ 
@@ -34,7 +75,8 @@ export const ChatInterface = ({
   journeySelectionKey,
   headerName, 
   headerAvatar,
-  onJourneyMessagesAdded
+  onJourneyMessagesAdded,
+  useDetectIntent = false,
 }: ChatInterfaceProps = {}) => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<JourneyMessage[]>([]);
@@ -48,7 +90,9 @@ export const ChatInterface = ({
   const [sessionId, setSessionId] = useState<string | null>(null); // Armazena sessionId para manter histórico
   const lastMessagesCountRef = useRef(0); // Rastreia o número de mensagens para detectar quando jornada é adicionada
   const isJourneyBeingAddedRef = useRef(false); // Flag para indicar que uma jornada está sendo adicionada
-  const { sendMessageAsync, isLoading } = useChat();
+  const [detectIntentLoading, setDetectIntentLoading] = useState(false);
+  const { sendMessageAsync, isLoading: chatLoading } = useChat();
+  const isLoading = useDetectIntent ? detectIntentLoading : chatLoading;
 
   const mentorName = headerName || conversation.participants.mentor.name;
   const mentorAvatar = headerAvatar || conversation.participants.mentor.avatar;
@@ -636,6 +680,40 @@ export const ChatInterface = ({
     });
 
     try {
+      if (useDetectIntent) {
+        setDetectIntentLoading(true);
+        const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3005/api';
+        const baseChatUrl = import.meta.env.VITE_CHAT_API_URL || `${apiBase.replace(/\/$/, '')}/chat`;
+        const url = `${baseChatUrl.replace(/\/$/, '')}/detect-intent`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: messageText }),
+        });
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(errText || `HTTP ${response.status}`);
+        }
+        const data = await response.json();
+        const answerText = formatDetectIntentResponse(data);
+        const now = new Date();
+        const resHours = now.getHours().toString().padStart(2, '0');
+        const resMinutes = now.getMinutes().toString().padStart(2, '0');
+        const botMessage: JourneyMessage = {
+          id: messageIdCounter.current++,
+          sender: 'mentor',
+          type: 'text',
+          content: answerText,
+          timestamp: `${resHours}:${resMinutes}`,
+        };
+        setChatMessages(prev => {
+          lastMessagesCountRef.current = prev.length;
+          return [...prev, botMessage];
+        });
+        setDetectIntentLoading(false);
+        return;
+      }
+
       // Obtém userId do localStorage se o usuário estiver logado
       const userStr = localStorage.getItem('user');
       let userId: string | undefined;
@@ -750,7 +828,7 @@ export const ChatInterface = ({
     } catch (error) {
       toast.error('Erro ao enviar mensagem');
     }
-  }, [inputMessage, isLoading, sendMessageAsync, processChatResponse, sessionId]);
+  }, [inputMessage, isLoading, sendMessageAsync, processChatResponse, sessionId, useDetectIntent]);
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
