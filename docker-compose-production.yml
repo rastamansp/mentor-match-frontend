@@ -27,7 +27,7 @@ services:
       - gwan
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`mentormatch.gwan.com.br`)"
+      - "traefik.http.routers.frontend.rule=Host(`mentormatch.gwan.com.br`,`piloto.mentormatch.com.br`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
