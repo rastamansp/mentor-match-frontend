@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -77,15 +77,38 @@ const Booking = () => {
     return availability.find(av => convertDayOfWeek(av.dayOfWeek) === dayOfWeek) || null;
   };
 
-  // Gera horários disponíveis para o dia selecionado
+  // Gera horários disponíveis para o dia selecionado (filtra horários já passados quando a data é hoje)
   const availableTimes = useMemo(() => {
     if (!date || !availability) return [];
-    
+
     const dayAvailability = getAvailabilityForDate(date);
     if (!dayAvailability) return [];
-    
-    return generateTimeSlots(dayAvailability.startTime, dayAvailability.endTime);
+
+    const slots = generateTimeSlots(dayAvailability.startTime, dayAvailability.endTime);
+    const now = new Date();
+
+    const isToday =
+      date.getFullYear() === now.getFullYear() &&
+      date.getMonth() === now.getMonth() &&
+      date.getDate() === now.getDate();
+
+    if (!isToday) return slots;
+
+    const nowHour = now.getHours();
+    const nowMinute = now.getMinutes();
+
+    return slots.filter((timeStr) => {
+      const [slotHour, slotMinute] = timeStr.split(':').map(Number);
+      return slotHour > nowHour || (slotHour === nowHour && slotMinute > nowMinute);
+    });
   }, [date, availability]);
+
+  // Limpa o horário selecionado se deixar de estar disponível (ex.: usuário com página aberta e horário passou)
+  useEffect(() => {
+    if (selectedTime && availableTimes.length > 0 && !availableTimes.includes(selectedTime)) {
+      setSelectedTime("");
+    }
+  }, [availableTimes, selectedTime]);
 
   // Dias da semana disponíveis (para desabilitar no calendário)
   const availableDaysOfWeek = useMemo(() => {

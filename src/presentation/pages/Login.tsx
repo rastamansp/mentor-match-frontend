@@ -41,7 +41,7 @@ const Login = () => {
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold mb-2">Entrar</h1>
               <p className="text-muted-foreground">
-                Use email: <strong>user</strong> e senha: <strong>senha</strong>
+                Digite seu e-mail e senha para acessar a plataforma.
               </p>
             </div>
 

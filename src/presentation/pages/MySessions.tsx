@@ -340,9 +340,6 @@ const MySessions = () => {
                           <MessageSquare className="w-4 h-4 mr-2" />
                           Ver Detalhes
                         </Button>
-                        <Button variant="outline" size="sm">
-                          Avaliar Sessão
-                        </Button>
                       </div>
                     </div>
                   </Card>

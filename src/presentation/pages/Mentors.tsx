@@ -14,7 +14,7 @@ const Mentors = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const { user, isAuthenticated } = useAuth();
-  const { data: mentors = [], isLoading, error } = useMentors({ searchTerm: searchTerm || undefined });
+  const { data: mentors = [], isLoading, error } = useMentors();
   
   // Busca mentores associados ao usuário se estiver logado
   const { 
@@ -26,6 +26,29 @@ const Mentors = () => {
   const mentorsToDisplay = isAuthenticated && user && userMentors.length > 0 
     ? userMentors.map(um => um.mentor)
     : mentors;
+
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredMentors = normalizedSearch
+    ? mentorsToDisplay.filter((mentor) => {
+        const term = normalizedSearch;
+        const fields: string[] = [];
+
+        if (mentor.name) fields.push(mentor.name);
+        if (mentor.role) fields.push(mentor.role);
+        if (mentor.company) fields.push(mentor.company);
+        // specialty pode existir em alguns contextos
+        // @ts-expect-error specialty pode não estar no tipo base, mas é seguro verificar
+        if (mentor.specialty) fields.push(mentor.specialty);
+        if (mentor.skills && mentor.skills.length > 0) {
+          fields.push(...mentor.skills);
+        }
+        if (mentor.areas && mentor.areas.length > 0) {
+          fields.push(...mentor.areas);
+        }
+
+        return fields.some((field) => field.toLowerCase().includes(term));
+      })
+    : mentorsToDisplay;
   
   const isLoadingData = isLoading || (isAuthenticated && isLoadingUserMentors);
 
@@ -178,13 +201,13 @@ const Mentors = () => {
           {/* Results Count */}
           <div className="mb-6">
             <p className="text-muted-foreground">
-              {mentorsToDisplay.length} mentor{mentorsToDisplay.length !== 1 ? 'es' : ''} encontrado{mentorsToDisplay.length !== 1 ? 's' : ''}
+              {filteredMentors.length} mentor{filteredMentors.length !== 1 ? 'es' : ''} encontrado{filteredMentors.length !== 1 ? 's' : ''}
             </p>
           </div>
 
           {/* Mentors Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mentorsToDisplay.map((mentor) => (
+            {filteredMentors.map((mentor) => (
               <Card 
                 key={mentor.id} 
                 className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col h-full"
@@ -284,7 +307,7 @@ const Mentors = () => {
           </div>
 
           {/* Empty State */}
-          {mentorsToDisplay.length === 0 && (
+          {filteredMentors.length === 0 && (
             <div className="text-center py-16">
               <p className="text-lg text-muted-foreground mb-4">
                 {isAuthenticated && userMentors.length === 0

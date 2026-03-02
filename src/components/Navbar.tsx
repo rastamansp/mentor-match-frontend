@@ -66,7 +66,7 @@ const Navbar = () => {
               className="text-muted-foreground hover:text-foreground transition-colors"
               activeClassName="text-primary font-medium"
             >
-              Encontrar Mentores
+              Mentores
             </NavLink>
             {isAuthenticated && (
               <NavLink
@@ -146,7 +146,7 @@ const Navbar = () => {
                     className="cursor-pointer"
                   >
                     <Search className="mr-2 h-4 w-4" />
-                    <span>Encontrar Mentores</span>
+                    <span>Mentores</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
@@ -259,7 +259,7 @@ const Navbar = () => {
                 activeClassName="text-primary font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Encontrar Mentores
+                Mentores
               </NavLink>
               {isAuthenticated && (
                 <NavLink
