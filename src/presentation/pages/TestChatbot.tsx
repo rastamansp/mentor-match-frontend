@@ -110,7 +110,7 @@ const TestChatbot = () => {
                   onClick={() => navigate('/como-funciona')}
                   className="bg-muted hover:bg-muted/80 text-foreground px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 hover:scale-105"
                 >
-                  Ver Como Funciona
+                  Testar Intenções
                 </button>
               )}
             </div>

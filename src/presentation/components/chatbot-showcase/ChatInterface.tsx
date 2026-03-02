@@ -67,6 +67,8 @@ interface ChatInterfaceProps {
   onJourneyMessagesAdded?: () => void;
   /** Quando true, usa POST /chat/detect-intent em vez do chat padrão */
   useDetectIntent?: boolean;
+  /** Callback com o resultado da última detecção de intenção (para exibir na página Como Funciona) */
+  onDetectIntentResult?: (data: { intent: string; confidence: number; keywords: string[]; intentLabel: string }) => void;
 }
 
 export const ChatInterface = ({ 
@@ -77,6 +79,7 @@ export const ChatInterface = ({
   headerAvatar,
   onJourneyMessagesAdded,
   useDetectIntent = false,
+  onDetectIntentResult,
 }: ChatInterfaceProps = {}) => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<JourneyMessage[]>([]);
@@ -695,6 +698,16 @@ export const ChatInterface = ({
           throw new Error(errText || `HTTP ${response.status}`);
         }
         const data = await response.json();
+        if (data && typeof data === "object" && "intent" in data && onDetectIntentResult) {
+          const obj = data as { intent?: string; confidence?: number; metadata?: { keywords?: string[] } };
+          const intent = obj.intent ?? "UNKNOWN";
+          onDetectIntentResult({
+            intent,
+            confidence: typeof obj.confidence === "number" ? obj.confidence : 0,
+            keywords: obj.metadata?.keywords ?? [],
+            intentLabel: INTENT_LABELS[intent] ?? intent.replace(/_/g, " "),
+          });
+        }
         const answerText = formatDetectIntentResponse(data);
         const now = new Date();
         const resHours = now.getHours().toString().padStart(2, '0');
@@ -828,7 +841,7 @@ export const ChatInterface = ({
     } catch (error) {
       toast.error('Erro ao enviar mensagem');
     }
-  }, [inputMessage, isLoading, sendMessageAsync, processChatResponse, sessionId, useDetectIntent]);
+  }, [inputMessage, isLoading, sendMessageAsync, processChatResponse, sessionId, useDetectIntent, onDetectIntentResult]);
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
