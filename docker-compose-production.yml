@@ -27,11 +27,11 @@ services:
       - gwan
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`mentormatch.gwan.com.br`,`piloto.mentormatch.com.br`)"
-      - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.frontend-mentormatch.rule=Host(`mentormatch.gwan.com.br`) || Host(`piloto.mentormatch.com.br`)"
+      - "traefik.http.routers.frontend-mentormatch.entrypoints=websecure"
+      - "traefik.http.routers.frontend-mentormatch.tls.certresolver=letsencrypt"
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
-      - "traefik.http.routers.frontend.middlewares=frontend-headers"
+      - "traefik.http.routers.frontend-mentormatch.middlewares=frontend-headers"
       - "traefik.http.middlewares.frontend-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
       - "traefik.http.middlewares.frontend-headers.headers.customrequestheaders.X-Forwarded-Port=443"
     # Dependências externas (PostgreSQL, Redis e Traefik já em produção)
